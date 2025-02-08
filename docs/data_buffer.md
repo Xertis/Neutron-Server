@@ -46,7 +46,7 @@ db.pack(format: str, values: table)
 > только выходной размер в 8 байт, значение может отличаться от ожидаемого.
 
 ```lua
-db.unpack(format: str) -> ...
+db.unpack(format: str) -> table<values>
 ```
 
 Извлекает значения из буффера, ориентируясь на строку формата.
