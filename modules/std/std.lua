@@ -1,5 +1,5 @@
 require "std/stdmin"
-local world = require "std/stdworld"
+require "std/stdworld"
 
 --Проверка на наличие файла конфига
 if not file.exists(CONFIG_PATH) then
@@ -13,6 +13,6 @@ end
 
 app.reconfig_packs(CONFIG.game.content_packs, {})
 
-world.open()
+world.open_main()
 
 server.log("std initialized")

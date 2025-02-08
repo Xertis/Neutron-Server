@@ -1,6 +1,4 @@
-local module = {}
-
-function module.open()
+function world.open_main()
     --Загружаем мир
     if not file.exists("user:worlds/" .. CONFIG.game.main_world .. "/world.json") then
         server.log("Creating a main world")
@@ -17,5 +15,3 @@ function module.open()
     server.log("Discovery of the main world")
     app.open_world(CONFIG.game.main_world)
 end
-
-return module
