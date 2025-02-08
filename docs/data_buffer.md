@@ -22,7 +22,7 @@ db.pack(format: str, values: table)
 | ------ | -------------------- |
 | `<`    | Little-endian        |
 | `>`    | Big-endian           |
-| `!`    | db.order             |
+| `!`    | db.order / Big-endian|
 
 
 Символы значений описывают тип и размер.
