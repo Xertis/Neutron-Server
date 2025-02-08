@@ -26,19 +26,19 @@ db.pack(format: str, values: table)
 
 Символы значений описывают тип и размер.
 
-| Символ | Аналог в С++ | Тип Lua  | Размер  |
+| Символ | Аналог в Rust | Тип Lua  | Размер  |
 | ------ | ------------ | -------- | ------- |
-| `b`    | int8_t       | number   | 1 байт  |
-| `B`    | uint8_t      | number   | 1 байт  |
+| `b`    | i8           | number   | 1 байт  |
+| `B`    | u8           | number   | 1 байт  |
 | `?`    | bool         | boolean  | 1 байт  |
-| `h`    | int16_t      | number   | 2 байта |
-| `H`    | uint16_t     | number   | 2 байта |
-| `i`    | int32_t      | number   | 4 байта |
-| `I`    | uint32_t     | number   | 4 байта |
-| `l`    | int64_t      | number   | 8 байта |
-| `L`    | uint64_t     | number   | 8 байта |
-| `F`    | float32      | number   | 4 байта |
-| `D`    | float64      | number   | 8 байт  |
+| `h`    | i16          | number   | 2 байта |
+| `H`    | u16          | number   | 2 байта |
+| `i`    | i32          | number   | 4 байта |
+| `I`    | u32          | number   | 4 байта |
+| `l`    | i64          | number   | 8 байта |
+| `L`    | u64          | number   | 8 байта |
+| `F`    | f32          | number   | 4 байта |
+| `D`    | f64          | number   | 8 байт  |
 | `S`    | string       | string   | >=2 байт|
 
 > [!WARNING]
