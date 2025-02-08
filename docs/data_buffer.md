@@ -54,7 +54,7 @@ db.unpack(format: str) -> table<values>
 ```lua
 db.create_type(symbol: string,
                min_size: num,
-               pack: function (values: table, order: string) return bytes end
+               pack: function (values: table, order: string) return bytes end,
                unpack: function (bytes: table, order: string, i: number, all_bytes_in_buffer: table) return i, values end
 )
 ```
