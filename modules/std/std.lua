@@ -11,6 +11,8 @@ if CONFIG.no_init == true then
     CONFIG = json.parse(file.read(CONFIG_PATH))
 end
 
+app.reconfig_packs(CONFIG.game.content_packs, {})
+
 world.open()
 
 server.log("std initialized")
