@@ -1,0 +1,21 @@
+{
+    "game": {
+      "content_packs": ["base"],
+      "worlds": {
+        "overworld":
+        {
+          "seed": "2124234234",
+          "generator": "base:demo"
+        }
+      },
+      "main_world": "overworld"
+    },
+    "server": {
+      "max_players": 16,
+      "name": "MasterServer",
+      "address": "127.0.0.1:25565",
+      "auto_save_interval": 5,
+      "show_players": true
+    }
+  }
+  
