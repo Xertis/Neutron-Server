@@ -2,10 +2,9 @@ app.config_packs({"server"})
 app.load_content()
 
 require "server:constants"
-require "server:std/std"
+require "server:init/server"
 
-server.log("main initialized")
-
+world.open_main()
 server.log("start world loop")
 IS_RUNNING = true
 
@@ -23,4 +22,5 @@ while IS_RUNNING do
     end
 end
 
+server.log("world loop is stoped")
 app.save_world()
