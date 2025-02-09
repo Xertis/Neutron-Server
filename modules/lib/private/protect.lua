@@ -23,6 +23,19 @@ local function get_traceback_length()
     return count-2
 end
 
+local function freeze(original)
+    local copy = {}
+    setmetatable(copy, {
+        __index = original,
+        __metatable = false,
+        __newindex = function(t, key, value)
+            logger.log("Some idiot is trying to gain access", "W")
+        end,
+    })
+
+    return copy
+end
+
 function module.protect_return(val)
     for call=1, get_traceback_length() do
         local source = debug.getinfo(call).source
@@ -49,4 +62,4 @@ function module.protect_require()
     end
 end
 
-return module
+return freeze(module)
