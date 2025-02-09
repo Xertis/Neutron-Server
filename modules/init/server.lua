@@ -1,5 +1,9 @@
-require "std/stdmin"
-require "std/stdworld"
+local lib = require "lib/private/min"
+
+if lib.protect.protect_require() then return end
+
+local server = lib.server
+local world = lib.world
 
 server.log("std initialized")
 
@@ -15,7 +19,6 @@ end
 
 server.log("config initialized")
 
-app.reconfig_packs(CONFIG.game.content_packs, {})
 world.preparation_main()
 
 server.log("world initialized")

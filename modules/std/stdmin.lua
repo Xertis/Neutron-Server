@@ -1,4 +1,3 @@
-server = {}
 
 function string.padding(str, size, char)
     char = char == nil and " " or char
@@ -20,19 +19,4 @@ end
 
 function string.first_up(str)
     return (str:gsub("^%l", string.upper))
-end
-
-function server.log(text, type) -- Костыли, ибо debug.log не поддерживает кастомный вывод
-    type = type or 'I'
-    text = string.first_up(text)
-
-    local source = file.name(debug.getinfo(2).source)
-    local out = '[SERVER: ' .. string.left_padding(source, 12) .. '] ' .. text
-
-    local uptime = tostring(math.round(time.uptime(), 8))
-    local deltatime = tostring(math.round(time.delta(), 8))
-
-    local timestamp = '[' .. type .. '] ' .. uptime .. ' | ' .. deltatime
-
-    print(timestamp .. string.left_padding(out, #out+33-#timestamp))
 end
