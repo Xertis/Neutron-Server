@@ -27,9 +27,9 @@ end
 
 logger = {}
 
-function logger.log(text, type, emitter)
+function logger.log(text, type)
     type = type or 'I'
-    emitter = emitter or "SERVER"
+    local emitter = "SERVER"
 
     text = string.first_up(text)
 
@@ -174,7 +174,7 @@ function functions.watch_dog(func) -- Считает и выводит коли�
     local calls = 0
     return function(...)
         calls = calls + 1
-        logger.log(string.format("%s calling from %s", calls, debug.getinfo(2).source), "T", "TESTER")
+        logger.log(string.format("%s calling from %s", calls, debug.getinfo(2).source), "T")
         return func(...)
     end
 end
