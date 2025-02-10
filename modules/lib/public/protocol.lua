@@ -1,8 +1,8 @@
-local bincode = require "lib/common/bincode"
+local bincode = require "lib/public/common/bincode"
 
 local protocol = {}
 local data_buffer = require "lib/public/data_buffer"
-protocol.data = json.parse(file.read("default_data/protocol.json"))
+protocol.data = json.parse(file.read("server:default_data/protocol.json"))
 
 ---Кодирование строки
 ---@param str string Строка, которая будет закодирована
@@ -34,11 +34,16 @@ end
 -- чтобы функции были доступны из DATA_DECODE
 local recursive_parse = function (data_struct, buffer, result) end
 local data_decode = function (data_type, buffer) end
+local data_encode = function (data_type, buffer) end
+
 
 -- Функции для кодирования и декодирования разных типов значений
 local DATA_ENCODE = {
     ["boolean"] = function(buffer, value)
         buffer:put_bool(value)
+    end,
+    ["byte"] = function(buffer, value)
+        buffer:put_bytes(bincode.encode_varint(value))
     end,
     ["int8"] = function(buffer, value)
         buffer:put_byte(value < 0 and value + 256 or value)
@@ -82,16 +87,15 @@ local DATA_ENCODE = {
         buffer:put_bytes(pack_string(value))
     end,
     ["byteArray"] = function(buffer, value)
-        buffer:put_leb128(#value)
+        buffer:put_bytes(bincode.encode_varint(#value))
         buffer:put_bytes(value)
     end,
     ["stringArray"] = function(buffer, value)
-        buffer:put_leb128(#value)
+        buffer:put_bytes(bincode.encode_varint(#value))
         for i = 1, #value, 1 do
             buffer:pack_string(value[i])
         end
-    end
-    -- TODO: structure и array
+    end,
 }
 
 local DATA_DECODE = {
@@ -177,6 +181,10 @@ local DATA_DECODE = {
 ---@return string|number|table|unknown
 data_decode = function (data_type, buffer)
     return DATA_DECODE[data_type](buffer)
+end
+
+data_encode = function (data_type, buffer)
+    DATA_ENCODE[data_type](buffer)
 end
 
 ---Помощник парсера пакетов. Используется в DATA_ENCODE

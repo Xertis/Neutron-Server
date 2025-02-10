@@ -1,4 +1,4 @@
-local socketlib = require "lib/socketlib"
+local socketlib = require "lib/public/socketlib"
 
 local Network = {}
 Network.__index = Network

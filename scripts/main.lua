@@ -2,6 +2,7 @@ app.config_packs({"server"})
 app.load_content()
 
 local lib = require "server:lib/private/min"
+local server = require "server:multiplayer/server/server"
 local protect = require "server:lib/private/protect"
 if protect.protect_require() then return end
 
@@ -17,8 +18,14 @@ IS_RUNNING = true
 local save_interval = CONFIG.server.auto_save_interval * 60
 local last_time_save = 0
 
+server = server.new(CONFIG.server.port)
+server:start()
+
+logger.log("server is started")
+
 while IS_RUNNING do
     app.tick()
+    server:tick()
 
     local ctime = math.round(time.uptime())
     if ctime % save_interval == 0 and ctime - last_time_save > 1 then
@@ -28,5 +35,7 @@ while IS_RUNNING do
     end
 end
 
-logger.log("world loop is stoped. Saving world...")
-app.save_world()
+server:stop()
+logger.log("world loop is stoped. Server is now offline.")
+logger.log("Saving and closing the world...")
+app.close_world(true)
