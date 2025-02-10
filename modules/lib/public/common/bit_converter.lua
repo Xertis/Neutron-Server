@@ -1,49 +1,53 @@
-local module = {}
+local bit_converter = { }
 
-function swap_endian(bytes)
-  local swapped = {}
-  local len = #bytes
+-- Credits to Iryont <https://github.com/iryont/lua-struct>
 
-  for i = len, 1, -1 do
-    table.insert(swapped, bytes[i])
-  end
-
-  return swapped
+local function reverse(tbl)
+      for i=1, math.floor(#tbl / 2) do
+        local tmp = tbl[i]
+        tbl[i] = tbl[#tbl - i + 1]
+        tbl[#tbl - i + 1] = tmp
+      end
+    return tbl
 end
 
+local orders = { "LE", "BE" }
 
-function module.string_to_bytes(str, order)
-	local bytes = { }
+local fromLEConvertors =
+{
+        LE = function(bytes) return bytes end,
+        BE = function(bytes) return reverse(bytes) end
+}
 
-	local len = string.len(str)
+local toLEConvertors =
+{
+        LE = function(bytes) return bytes end,
+        BE = function(bytes) return reverse(bytes) end
+}
 
-	local lenBytes = byteutil.tpack(order .. "H", len)
+bit_converter.default_order = "BE"
 
-	for i = 1, #lenBytes do
-		bytes[i] = lenBytes[i]
-	end
-
-	for i = 1, len do
-		bytes[#bytes + 1] = string.byte(string.sub(str, i, i))
-	end
-
-	return bytes
+local function fromLE(bytes, orderTo)
+    if orderTo then
+        bit_converter.validate_order(orderTo)
+        return fromLEConvertors[orderTo](bytes)
+    else return bytes end
 end
 
-function module.bytes_to_string(bytes, pos, order)
-	local len = byteutil.unpack(order .. "H",{ bytes[pos], bytes[pos+1] })
-
-	local str = ""
-  print(len)
-	for i = pos+2, len+pos+1 do
-    print(string.char(bytes[i]))
-		str = str..string.char(bytes[i])
-	end
-
-	return str
+local function toLE(bytes, orderFrom)
+    if orderFrom then
+        bit_converter.validate_order(orderFrom)
+        return toLEConvertors[orderFrom](bytes)
+    else return bytes end
 end
 
-function module.float_to_bytes(val, opt, order)
+function bit_converter.validate_order(order)
+    if not bit_converter.is_valid_order(order) then
+         error("invalid order: "..order)
+    end
+end
+
+local function floatOrDoubleToBytes(val, opt)
     local sign = 0
 
     if val < 0 then
@@ -79,18 +83,10 @@ function module.float_to_bytes(val, opt, order)
     bytes[#bytes + 1] = math.floor(sign * 128 + val) % (2 ^ 8)
     val = math.floor((sign * 128 + val) / (2 ^ 8))
 
-    if order == '>' then
-      return swap_endian(bytes)
-    end
-
     return bytes
 end
 
-function module.bytes_to_float(bytes, opt, order)
-    if order == '>' then
-      bytes = swap_endian(bytes)
-    end
-
+local function bytesToFloatOrDouble(bytes, opt)
     local n = (opt == 'd') and 8 or 4
 
     local sign = 1
@@ -112,4 +108,22 @@ function module.bytes_to_float(bytes, opt, order)
     end
 end
 
-return module
+function bit_converter.is_valid_order(order) return table.has(orders, order) end
+
+function bit_converter.float32_to_bytes(float, order)
+    return fromLE(floatOrDoubleToBytes(float, 'f'), order)
+end
+
+function bit_converter.float64_to_bytes(float, order)
+    return fromLE(floatOrDoubleToBytes(float, 'd'), order)
+end
+
+function bit_converter.bytes_to_float32(bytes, order)
+    return bytesToFloatOrDouble(toLE(bytes, order), 'f')
+end
+
+function bit_converter.bytes_to_float64(bytes, order)
+    return bytesToFloatOrDouble(toLE(bytes, order), 'd')
+end
+
+return bit_converter

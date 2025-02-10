@@ -1,4 +1,6 @@
-local bc = require "lib/common/bit_converter"
+local bit_converter = require "lib/public/common/bit_converter"
+
+-- Data buffer
 
 local STANDART_TYPES = {
     b = 1,
@@ -12,107 +14,25 @@ local STANDART_TYPES = {
     ['?'] = 1
 }
 
-local TYPES = {
-    b = 1,
-    B = 1,
-    h = 2,
-    H = 2,
-    i = 4,
-    I = 4,
-    l = 8,
-    L = 8,
-    ['?'] = 1,
-
-    F = {
-        4,
-        function (b, fchar) return bc.float_to_bytest(b[1], 'f', fchar) end,
-        function (b, fchar, i)
-            return i+4, bc.bytes_to_float(b, 'f', fchar)
-        end
-    },
-    D = {
-        8,
-        function (b, fchar) return bc.float_to_bytest(b[1], 'd', fchar) end,
-        function (b, fchar, i)
-            return i+8, bc.bytes_to_float(b, 'd', fchar)
-        end
-    },
-    S = {
-        2,
-        function (b, fchar) return bc.string_to_bytes(b[1], fchar) end,
-        function (b, fchar, i, all_bytes)
-            local len = byteutil.unpack(fchar .. 'H', {b[1], b[2]})
-            return i+len+2, bc.bytes_to_string(all_bytes, i-1, fchar)
-        end
-    }
-}
-
-local module =
+local data_buffer =
 {
 	__call =
-	function(module, ...)
-		return module:new(...)
+	function(data_buffer, ...)
+		return data_buffer:new(...)
 	end
 }
 
-function table.slice(arr, start, stop)
-    local sliced = {}
-    start = start or 1
-    stop = stop or #arr
-
-    for i = start, stop do
-        table.insert(sliced, arr[i])
-    end
-
-    return sliced
-end
-
-local function __get_size__(pattern, types)
-    local size = 0
-    for i=2, #pattern do
-        local vsize = types[pattern[i]]
-        if type(vsize)[1] == 't' then
-            vsize = types[pattern[i]][1]
-        end
-
-        size = size + vsize
-    end
-
-    return size
-end
-
-local function __slice__(pattern)
-    local first_char = pattern:sub(1, 1)
-
-    local parts = {}
-    local temp = ""
-    for i = 1, #pattern do
-        local char = pattern:sub(i, i)
-        if STANDART_TYPES[char] == nil then
-            if temp ~= "" then
-                table.insert(parts, temp)
-                temp = ""
-            end
-            table.insert(parts, char)
-        else
-            temp = temp .. char
-        end
-    end
-    if temp ~= "" then
-        table.insert(parts, temp)
-    end
-
-    return first_char, parts
-end
-
-function module:new(bytes)
+function data_buffer:new(bytes, order, useBytearray)
 	bytes = bytes or { }
 
+	if order then bit_converter.validate_order(order)
+	else order = bit_converter.default_order end
 
     local obj = {
         pos = 1,
-        bytes = bytes,
-        types = TYPES
+        order = order,
+        useBytearray = useBytearray or false,
+        bytes = useBytearray and Bytearray(bytes) or bytes
     }
 
     self.__index = self
@@ -121,99 +41,130 @@ function module:new(bytes)
     return obj
 end
 
-function module:create_type(type, min_size, pack, unpack)
-    self.types[type] = {min_size, pack, unpack}
-end
-
-function module:add(bytes)
-	for i = 1, #bytes do
-		self:put_byte(bytes[i])
-	end
-end
-
-function module:pack(format, values)
-    local fchar, formats = __slice__(format)
-    local res = {}
-
-    if formats[1] == '>' or formats[1] == '<' then
-        table.remove(formats, 1)
-    else
-        formats[1] = formats[1]:sub(2)
-    end
-
-    local i = 1
-
-    for _=1, #formats do
-        local pattern = formats[_]
-        local b = table.slice(values, i)
-
-        if STANDART_TYPES[pattern] == nil then
-            local bval = self.types[pattern][2](b, fchar)
-            self:add(bval)
-        else
-            pattern = fchar .. pattern
-            local x = byteutil.tpack(pattern, unpack(b))
-            i = i + #pattern - 2
-            self:add(x)
-        end
-
-        i = i + 1
+local function rep_order(order)
+	if order == "BE" then
+		return ">"
 	end
 
-    return res
+	return "<"
 end
 
-function module:unpack(format)
-    local fchar, formats = __slice__(format)
-    local res = {}
-
-    if formats[1] == '>' or formats[1] == '<' then
-        table.remove(formats, 1)
-    else
-        formats[1] = formats[1]:sub(2)
-    end
-
-    local i = self.pos
-
-    for _=1, #formats do
-        local pattern = formats[_]
-        local b = table.slice(self.bytes, i, i+__get_size__(' ' .. pattern, self.types))
-
-        if STANDART_TYPES[pattern] == nil then
-            local val = nil
-            i, val = self.types[pattern][3](b, fchar, i, self.bytes)
-            table.insert(res, val)
-        else
-            pattern = fchar .. pattern
-            local x = {byteutil.unpack(pattern, b)}
-            for _, val in ipairs(x) do
-                table.insert(res, val)
-            end
-
-            i = i + __get_size__(pattern, self.types)
-        end
-	end
-
-    self.pos = i
-
-    return res
+function data_buffer:pack(format, ...)
+	self:put_bytes(byteutil.tpack(rep_order(self.order) .. format, ...))
 end
 
-function module:put_byte(byte)
+function data_buffer:unpack(format)
+	return byteutil.unpack(rep_order(self.order) .. format, self:get_bytes(STANDART_TYPES[format]))
+end
+
+function data_buffer:set_order(order)
+	bit_converter.validate_order(order)
+
+	self.order = order
+	self.floatsOrder = order
+end
+
+-- Push functions
+
+function data_buffer:put_byte(byte)
 	if byte < 0 or byte > 255 then
 		error("invalid byte")
 	end
 
-	table.insert(self.bytes, byte)
+	if self.useBytearray then self.bytes:insert(self.pos, byte)
+	else table.insert(self.bytes, self.pos, byte) end
+
+	self.pos = self.pos + 1
 end
 
-function module:get_byte()
+function data_buffer:put_bytes(bytes)
+    if type(self.bytes) == 'table' then
+        for i = 1, #bytes do
+            self:put_byte(bytes[i])
+        end
+    else
+        self.bytes:insert(self.pos, bytes)
+        self.pos = self.pos + #bytes
+    end
+end
+
+function data_buffer:put_float32(single)
+	self:put_bytes(bit_converter.float32_to_bytes(single, self.order))
+end
+
+function data_buffer:put_float64(float)
+	self:put_bytes(bit_converter.float64_to_bytes(float, self.order))
+end
+
+function data_buffer:put_bool(bool)
+	self:pack("?", bool)
+end
+
+function data_buffer:put_uint16(uint16)
+	self:pack("H", uint16)
+end
+
+function data_buffer:put_uint32(uint32)
+	self:pack("I", uint32)
+end
+
+function data_buffer:put_sint16(int16)
+	self:pack("h", int16)
+end
+
+function data_buffer:put_sint32(int32)
+	self:pack("i", int32)
+end
+
+function data_buffer:put_int64(int64)
+	self:pack("l", int64)
+end
+
+-- Get functions
+
+function data_buffer:get_byte()
 	local byte = self.bytes[self.pos]
 	self.pos = self.pos + 1
 	return byte
 end
 
-function module:get_bytes(n)
+function data_buffer:get_float32()
+	return bit_converter.bytes_to_float32(self:get_bytes(4), self.order)
+end
+
+function data_buffer:get_float64()
+	return bit_converter.bytes_to_float64(self:get_bytes(8), self.order)
+end
+
+function data_buffer:get_bool()
+	return self:unpack("?")
+end
+
+function data_buffer:get_uint16()
+	return self:unpack("H")
+end
+
+function data_buffer:get_uint32()
+	return self:unpack("I")
+end
+
+function data_buffer:get_sint16()
+	return self:unpack("h")
+end
+
+function data_buffer:get_sint32()
+	return self:unpack("i")
+end
+
+function data_buffer:get_int64()
+	return self:unpack("l")
+end
+
+function data_buffer:size()
+	return #self.bytes
+end
+
+function data_buffer:get_bytes(n)
 	if n == nil then
 		return self.bytes
 	else
@@ -227,11 +178,11 @@ function module:get_bytes(n)
 	end
 end
 
-function module:set_position(pos)
+function data_buffer:set_position(pos)
 	self.pos = pos
 end
 
-function module:set_bytes(bytes)
+function data_buffer:set_bytes(bytes)
 	for i = 1, #bytes do
 		local byte = bytes[i]
 		if byte < 0 or byte > 255 then
@@ -242,19 +193,6 @@ function module:set_bytes(bytes)
 	self.bytes = bytes
 end
 
-function module:put_bytes(bytes)
-    if type(self.bytes) == 'table' then
-        for i = 1, #bytes do
-            self:put_byte(bytes[i])
-        end
-    else
-        self.bytes:insert(self.pos, bytes)
-        self.pos = self.pos + #bytes
-    end
-end
+setmetatable(data_buffer, data_buffer)
 
-function module:size()
-    return #self.bytes
-end
-
-return module
+return data_buffer

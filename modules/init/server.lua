@@ -14,7 +14,7 @@ end
 
 --Загружаем конфиг
 if CONFIG.no_init == true then
-    CONFIG = json.parse(file.read(CONFIG_PATH))
+    CONFIG = table.freeze(json.parse(file.read(CONFIG_PATH)))
 end
 
 logger.log("config initialized")

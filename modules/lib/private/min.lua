@@ -1,10 +1,12 @@
 require "std/stdmin"
 
 local protect = require "lib/private/protect"
+local hash = require "lib/private/hash"
 
 local lib = {
     server = {},
-    world = {}
+    world = {},
+    hash = hash
 }
 
 ---WORLD---

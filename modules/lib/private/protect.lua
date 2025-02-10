@@ -1,5 +1,8 @@
 local module = {}
 
+local LOG_ACCESS_DENIES = "Unauthorized Access attempt from "
+local ACCESS_DENIES = "Access denied"
+
 local function parse_path(path)
     if path == "main.lua" then
         return "server"
@@ -29,7 +32,7 @@ local function freeze(original)
         __index = original,
         __metatable = false,
         __newindex = function(t, key, value)
-            logger.log("Some idiot is trying to gain access", "W")
+            logger.log("Unauthorized Access attempt to the system meta-table", "W")
         end,
     })
 
@@ -42,8 +45,8 @@ function module.protect_return(val)
 
         local prefix = parse_path(source)
         if prefix ~= "server" and prefix ~= "core" then
-            logger.log("Unauthorized Access from " .. source, "W")
-            return "Access denied"
+            logger.log(LOG_ACCESS_DENIES .. source, "W")
+            return ACCESS_DENIES
         end
     end
 
@@ -56,8 +59,8 @@ function module.protect_require()
 
         local prefix = parse_path(source)
         if prefix ~= "server" and prefix ~= "core" then
-            logger.log("Unauthorized Access from " .. source, "W")
-            return "Access denied"
+            logger.log(LOG_ACCESS_DENIES .. source, "W")
+            return ACCESS_DENIES
         end
     end
 end

@@ -1,0 +1,52 @@
+{
+    "version": 1,
+    "order": "BE",
+    "client": [
+        ["HandShake", "version:string", "protocol_version:uint8", "next_state:uint8"],
+        ["StatusRequest"],
+        ["PingRequest", "payload:uint32"],
+        ["JoinGame", "username:string"],
+        ["KeepAlive", "challenge:uint32"],
+        ["PlayerPosition", "x:float", "y:float", "z:float", "yaw:float", "pitch:float"],
+        ["RequestChunk", "x:int32", "z:int32"],
+        ["ChatMessage", "message:string"],
+        ["BlockUpdate", "x:int32", "y:int32", "z:int32", "block_state:uint16", "block_id:uint8"],
+        ["Disconnect"]
+    ],
+    "server": [
+        ["JoinSuccess",
+            "entity_id:uint32",
+            "game_time:double",
+            "cheat_commands:boolean",
+            "content_access:boolean",
+            "flight:boolean",
+            "noclip:boolean",
+            "attack:boolean",
+            "destroy:boolean",
+            "cheat_movement:boolean",
+            "debug_cheats:boolean",
+            "fast_interaction:boolean"
+        ],
+        ["WorldData", "data:structure|Block", "progress:uint16", "max_progress:uint16"],
+        ["SynchronizePlayerPosition", "x:float", "y:float", "z:float", "yaw:float", "pitch:float"],
+        ["SetPlayerAbilities", "flags:uint8"],
+        ["TimeUpdate", "game_time:double"],
+        ["StatusResponse", "name:string", "favicon:array|byte", "version:string", "protocol:uint16", "players:array|string", "seed:string", "max:uint16", "online:uint16"],
+        ["PongResponse", "payload:uint32"],
+        ["KeepAlive", "challenge:uint32"],
+        ["PlayerJoined", "entity_id:uint32", "username:string", "x:float", "y:float", "z:float"],
+        ["PlayerMoved", "entity_id:uint8", "x:float", "y:float", "z:float", "yaw:float", "pitch:float"],
+        ["PlayerList", "list:structure|Player"],
+        ["PlayerListAdd", "username:string", "entity_id:uint32"],
+        ["PlayerListRemove", "username:string", "entity_id:uint32"],
+        ["ChunkData", "x:int32", "z:int32", "data:array|byte"],
+        ["ChatMessage", "message:string"],
+        ["BlockUpdate", "x:int32", "y:int32", "z:int32", "block_state:uint16", "block_id:uint8"],
+        ["Disconnect", "reason:string"]
+    ],
+    "states": ["Status", "Login", "Active"],
+    "structures": [
+        ["Block", "x:int32", "y:int32", "z:int32", "block_state:uint16", "block_id:uint8"],
+        ["Player", "entity_id:uint32", "username:string"]
+    ]
+}
