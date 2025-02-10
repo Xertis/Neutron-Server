@@ -1,26 +1,11 @@
 local Pipeline = require "lib/public/pipeline"
 local protocol = require "lib/public/protocol"
-local ssm = require "lib/public/common/ssm"
 local matcher = require "lib/public/common/matcher"
+local protect = require "lib/private/protect"
 
 local List = require "lib/public/common/list"
 
 local ServerPipe = Pipeline.new()
-
-local function push_packet(list, packet)
-    local buffer = protocol.create_databuffer()
-    buffer:put_packet(packet)
-    List.pushright(list, buffer.bytes)
-end
-
-local function global_chat(msg)
-    console.log("| " .. msg)
-    for _, client in ipairs(Session.server.clients) do
-        if client.active then
-            push_packet(client.response_queue, protocol.build_packet("server", protocol.ServerMsg.ChatMessage, 0, msg, 0))
-        end
-    end
-end
 
 -- Принимаем все пакеты
 ServerPipe:add_middleware(function(client)
@@ -44,7 +29,6 @@ ServerPipe:add_middleware(function(client)
     return client
 end)
 
--- TODO: перевести на новый протокол
 -- Обрабатываем пакеты
 
 ServerPipe:add_middleware(function(client)
@@ -52,21 +36,30 @@ ServerPipe:add_middleware(function(client)
         function ()
             logger.log("The expected package has been received, sending the status...")
             local buffer = protocol.create_databuffer()
+            local icon = nil
 
-            local STATUS = { -- В СКОРОМ БУДУЩЕМ ЗАМЕНИТЬ, НУЖНО ТОЛЬКО ДЛЯ ТЕСТА
+            if file.exists(USER_ICON_PATH) then
+                icon = file.read_bytes(USER_ICON_PATH)
+            else
+                icon = file.read_bytes(DEFAULT_ICON_PATH)
+            end
+
+            local players = {}
+
+            local STATUS = {
                 CONFIG.server.name,
-                file.read_bytes("user:icon.png"),
-                "0.26.0",
-                1,
-                {},
+                icon,
+                CONFIG.game.version,
+                protocol.data.version,
+                players,
                 CONFIG.game.worlds[CONFIG.game.main_world].seed,
                 CONFIG.server.max_players,
-                0
+                #players
             }
 
             buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.StatusResponse, unpack(STATUS)))
             client.network:send(buffer.bytes)
-            logger.log("Sended")
+            logger.log("Status has been sended")
         end
     )
 
@@ -109,4 +102,4 @@ ServerPipe:add_middleware(function(client)
     return client
 end)
 
-return ServerPipe
+return protect.protect_return(ServerPipe)

@@ -18,3 +18,7 @@ if not Session then
     Session.port = nil
 
 end
+
+--Прочее
+USER_ICON_PATH = "user:icon.png"
+DEFAULT_ICON_PATH = "server:default_data/server-icon.png"

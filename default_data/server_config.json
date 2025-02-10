@@ -1,5 +1,6 @@
 {
     "game": {
+      "version": "0.26.0",
       "content_packs": ["base"],
       "worlds": {
         "overworld":
