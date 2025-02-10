@@ -147,6 +147,18 @@ function table.sub(arr, start, stop)
     return res
 end
 
+function table.freeze_unpack(arr)
+    local i = 1
+    local res = {}
+
+    while arr[i] ~= nil do
+        table.insert(res, arr[i])
+        i = i + 1
+    end
+
+    return res
+end
+
 --- MATH
 
 function math.sum(...)

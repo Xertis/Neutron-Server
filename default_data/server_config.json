@@ -4,7 +4,7 @@
       "worlds": {
         "overworld":
         {
-          "seed": "2124234234",
+          "seed": "86935665463",
           "generator": "base:demo"
         }
       },
@@ -16,7 +16,9 @@
       "address": "127.0.0.1",
       "port": 25565,
       "auto_save_interval": 5,
-      "show_players": true
+      "show_players": true,
+      "chunks_loading_distance": 4,
+      "chunks_loading_speed": 4
     }
   }
   
