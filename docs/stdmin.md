@@ -78,7 +78,7 @@ logger.log(text: str, [опционально] type: str)
 ```
 
 Выводит в консоль **text**, 
-**type** - тип уведомления, по умолчанию **I** (I - info, W - warning, T - testing).
+**type** - тип уведомления, по умолчанию **I** (I - info, W - warning, T - testing, E - error).
 
 Пр: ```[I] 0:0:0 | 0.050545             [SERVER:     main.lua] World loop is started```
 
