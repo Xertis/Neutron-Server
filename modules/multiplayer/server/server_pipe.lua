@@ -1,7 +1,7 @@
 local Pipeline = require "lib/public/pipeline"
 local protocol = require "lib/public/protocol"
-local matcher = require "lib/public/common/matcher"
 local protect = require "lib/private/protect"
+local matches = require "multiplayer/server/server_pipe_matches"
 
 local List = require "lib/public/common/list"
 
@@ -32,57 +32,15 @@ end)
 -- Обрабатываем пакеты
 
 ServerPipe:add_middleware(function(client)
-    local client_match = matcher.new(
-        function ()
-            logger.log("The expected package has been received, sending the status...")
-            local buffer = protocol.create_databuffer()
-            local icon = nil
 
-            if file.exists(USER_ICON_PATH) then
-                icon = file.read_bytes(USER_ICON_PATH)
-            else
-                icon = file.read_bytes(DEFAULT_ICON_PATH)
-            end
-
-            local players = {}
-
-            local STATUS = {
-                CONFIG.server.name,
-                icon,
-                CONFIG.game.version,
-                protocol.data.version,
-                players,
-                CONFIG.game.worlds[CONFIG.game.main_world].seed,
-                CONFIG.server.max_players,
-                #players
-            }
-
-            buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.StatusResponse, unpack(STATUS)))
-            client.network:send(buffer.bytes)
-            logger.log("Status has been sended")
-        end
-    )
-
-    client_match:add_match(
-        function (val)
-            if val.packet_type == protocol.ClientMsg.HandShake then
-                return true
-            end
-        end
-    )
-    client_match:add_match(
-        function (val)
-            if val.packet_type == protocol.ClientMsg.StatusRequest then
-                return true
-            end
-        end
-    )
-
+    matches.status_request:set_default_data(client)
+    matches.logging:set_default_data(client)
 
     while not List.is_empty(client.received_packets) do
         local packet = List.popleft(client.received_packets)
         if client.active == false then
-            client_match:match(packet)
+            matches.status_request:match(packet)
+            matches.logging:match(packet)
         end
     end
     return client

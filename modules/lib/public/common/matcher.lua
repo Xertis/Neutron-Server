@@ -6,6 +6,7 @@ function matcher.new(func)
 
     self.matchers = {}
     self.values = {}
+    self.default_data = {}
     self.func = func
     self.pos = 0
 
@@ -14,6 +15,10 @@ end
 
 function matcher:add_match(func)
     table.insert(self.matchers, func)
+end
+
+function matcher:set_default_data(data)
+    self.default_data = data
 end
 
 function matcher:match(val)

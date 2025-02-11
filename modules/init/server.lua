@@ -16,12 +16,19 @@ end
 
 --Загружаем конфиг
 do
-    if CONFIG.no_init == true then
-        CONFIG = table.freeze(json.parse(file.read(CONFIG_PATH)))
-    end
+    CONFIG = table.freeze(json.parse(file.read(CONFIG_PATH)))
 end
 
 logger.log("config initialized")
+
+--Загружаем константы песочницы
+
+do
+    SANDBOX.codes = json.parse(file.read(SANDBOX.codes_path))
+    SANDBOX = table.freeze(SANDBOX)
+end
+
+logger.log("sandbox const initialized")
 
 --Загружаем настройки
 do

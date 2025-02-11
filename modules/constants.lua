@@ -2,7 +2,13 @@ PACK_ID = "server"
 
 --Конфиг
 CONFIG_PATH = "config:server_config.json"
-CONFIG = {no_init = true} --Инициализируется в std
+CONFIG = {} --Инициализируется в std
+
+--Песочница
+SANDBOX = {
+    codes_path = "server:default_data/sandbox_codes.json",
+    codes = {}
+}
 
 --Сервер
 IS_RUNNING = false
