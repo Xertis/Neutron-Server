@@ -1,0 +1,14 @@
+{
+    "players": {
+        "ReviveSuccess" : 101,
+        "DataLoss": 102,
+        "WithoutChanges": 103
+    },
+
+    "clients": {
+        "ReviveSuccess" : 201,
+        "DataLoss": 202,
+        "WrongPassword": 203,
+        "WithoutChanges": 204
+    }
+}

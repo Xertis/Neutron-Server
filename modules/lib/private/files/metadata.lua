@@ -1,22 +1,36 @@
-local module = {
-    players = {}
-}
+local protect = require "lib/private/protect"
+if protect.protect_require() then return end
 
-local PLAYERS_META = {}
+local module = {
+    players = {},
+    clients = {}
+}
 
 local PATHS = {
-    players = "config:player_data.bjson"
+    players = "world:players_data.bjson",
+    server = "config:server.dat"
 }
+
+local SERVER_META_PATTERN = { "clients" }
+
+local PLAYERS_META = {}
+local SERVER_META = { clients = {} }
 
 function module.load()
     if file.exists(PATHS.players) then
         local bytes = file.read_bytes(PATHS.players)
         PLAYERS_META = bjson.frombytes(bytes)
     end
+
+    if file.exists(PATHS.server) then
+        local bytes = file.read_bytes(PATHS.server)
+        SERVER_META = table.to_dict(bjson.archive_frombytes(bytes), SERVER_META_PATTERN)
+    end
 end
 
 function module.save()
     file.write_bytes(PATHS.players, bjson.tobytes(PLAYERS_META, true))
+    file.write_bytes(PATHS.server, bjson.archive_tobytes(table.to_arr(SERVER_META, SERVER_META_PATTERN), true))
 end
 
 function module.players.set(name, values)
@@ -25,6 +39,14 @@ end
 
 function module.players.get(name)
     return PLAYERS_META[name]
+end
+
+function module.clients.set(name, values)
+    SERVER_META.clients[name] = values
+end
+
+function module.clients.get(name)
+    return SERVER_META.clients[name]
 end
 
 return module

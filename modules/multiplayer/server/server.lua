@@ -48,16 +48,7 @@ function server:tick()
         else
             if client.active then
                 client.active = false
-                local msg = client.username.." вышел из игры."
-                console.log("| "..msg)
-                logger.log("Player leave")
-                for _, cl in ipairs(self.clients) do
-                    if cl.active then
-                        local buffer = protocol.create_databuffer()
-                        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.ChatMessage, 0, msg, 0))
-                        list.pushright(cl.response_queue, buffer.bytes)
-                    end
-                end
+
             end
             table.remove_value(self.clients, client)
         end

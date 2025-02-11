@@ -2,7 +2,7 @@ local protocol = require "lib/public/protocol"
 local matcher = require "lib/public/common/matcher"
 local protect = require "lib/private/protect"
 local sandbox = require "lib/private/sandbox/sandbox"
-local sand_player = require "lib/private/sandbox/classes/player"
+local client_manager = require "lib/private/clients/client_manager"
 
 local matches = {}
 
@@ -59,13 +59,17 @@ matches.logging = matcher.new(
     function (values)
         local client = matches.status_request.default_data
         local packet = values[2]
-        logger.log(string.format('Player "%s" is logged in', packet.username))
         local buffer = protocol.create_databuffer()
 
-        local client_player = sand_player.new(packet.username)
-        sandbox.join_player(client_player)
+        local client_data = client_manager.login(packet.username)
 
-        local rules = CONFIG.roles[client_player.role]
+        if not client_data then
+            return
+        end
+
+        local client_player = sandbox.join_player(client_data)
+
+        local rules = CONFIG.roles[client_data.role]
 
         local DATA = {
             client_player.pid,

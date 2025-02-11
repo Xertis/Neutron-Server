@@ -5,9 +5,8 @@ CONFIG_PATH = "config:server_config.json"
 CONFIG = {} --Инициализируется в std
 
 --Песочница
-SANDBOX = {
-    codes_path = "server:default_data/sandbox_codes.json",
-    codes = {}
+CODES = {
+    codes_path = "server:default_data/codes.json"
 }
 
 --Сервер

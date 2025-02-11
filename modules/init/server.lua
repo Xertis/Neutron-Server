@@ -24,8 +24,8 @@ logger.log("config initialized")
 --Загружаем константы песочницы
 
 do
-    SANDBOX.codes = json.parse(file.read(SANDBOX.codes_path))
-    SANDBOX = table.freeze(SANDBOX)
+    CODES = json.parse(file.read(CODES.codes_path))
+    CODES = table.freeze(CODES)
 end
 
 logger.log("sandbox const initialized")

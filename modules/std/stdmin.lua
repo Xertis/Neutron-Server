@@ -1,3 +1,4 @@
+local data_buffer = require "lib/public/data_buffer"
 
 --- STRING
 
@@ -159,6 +160,26 @@ function table.freeze_unpack(arr)
     return res
 end
 
+function table.to_arr(tbl, pattern)
+    local res = {}
+
+    for i, val in ipairs(pattern) do
+        res[i] = tbl[val]
+    end
+
+    return res
+end
+
+function table.to_dict(tbl, pattern)
+    local res = {}
+
+    for i, val in ipairs(pattern) do
+        res[val] = tbl[i]
+    end
+
+    return res
+end
+
 --- MATH
 
 function math.sum(...)
@@ -189,4 +210,32 @@ function functions.watch_dog(func) -- Считает и выводит коли�
         logger.log(string.format("%s calling from %s", calls, debug.getinfo(2).source), "T")
         return func(...)
     end
+end
+
+-- BJSON
+
+function bjson.archive_tobytes(tbls, gzip)
+    local db = data_buffer:new()
+    db:put_uint16(#tbls)
+
+    for _, tbl in ipairs(tbls) do
+        local db2 = data_buffer:new(bjson.tobytes(tbl, gzip))
+        db:put_int64(db2:size())
+        db:put_bytes(db2.bytes)
+    end
+
+    return db.bytes
+end
+
+function bjson.archive_frombytes(bytes)
+    local db = data_buffer:new(bytes)
+    local len = db:get_uint16()
+    local res = {}
+
+    for _=1, len do
+        local size = db:get_int64()
+        table.insert(res, bjson.frombytes(db:get_bytes(size)))
+    end
+
+    return res
 end

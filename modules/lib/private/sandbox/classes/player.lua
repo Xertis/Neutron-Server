@@ -3,20 +3,17 @@ local protect = require "lib/private/protect"
 if protect.protect_require() then return end
 
 local metadata = require "lib/private/files/metadata"
-local lib = require "lib/private/min"
 local Player = {}
 Player.__index = Player
 
-function Player.new(username, password)
+function Player.new(username)
     local self = setmetatable({}, Player)
-    password = password or "000000"
 
-    self.active = false
     self.username = username
-    self.password = lib.hash.sha256(password)
+    self.active = false
     self.entity_id = nil
     self.pid = nil
-    self.role = nil
+    self.world = nil
 
     return self
 end
@@ -27,38 +24,47 @@ end
 
 function Player:abort()
     self.active = false
-    metadata.players.set(self.username, Player:to_save())
+    metadata.players.set(self.username, self:to_save())
+end
+
+function Player:save()
+    metadata.players.set(self.username, self:to_save())
 end
 
 function Player:revive()
+
+    if self.active == true then
+        return CODES.players.WithoutChanges
+    end
+
     local data = metadata.players.get(self.username)
     if not data then
-        return SANDBOX.codes.players.DataLoss
+        return CODES.players.DataLoss
     end
 
-    if self.password == data.password or not CONFIG.server.password_auth then
-        self.active = true
-        Player:to_load(data)
-        return SANDBOX.codes.players.ReviveSuccess
-    end
+    self.active = true
+    Player:to_load(data)
+    return CODES.players.ReviveSuccess
+end
 
-    return SANDBOX.codes.players.WrongPassword
+function Player:set(key, val)
+    self[key] = val
 end
 
 function Player:to_save()
     return {
         username = self.username,
-        password = self.password,
         entity_id = self.entity_id,
-        role = self.role
+        world = self.world,
+        pid = self.pid
     }
 end
 
 function Player:to_load(data)
     self.username = data.username
-    self.password = data.password
     self.entity_id = data.entity_id
-    self.role = data.role
+    self.world = data.world
+    self.pid = data.pid
 end
 
 return Player
