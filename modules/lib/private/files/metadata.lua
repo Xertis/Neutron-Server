@@ -3,7 +3,7 @@ if protect.protect_require() then return end
 
 local module = {
     players = {},
-    clients = {}
+    accounts = {}
 }
 
 local PATHS = {
@@ -11,10 +11,10 @@ local PATHS = {
     server = "config:server.dat"
 }
 
-local SERVER_META_PATTERN = { "clients" }
+local SERVER_META_PATTERN = { "accounts" }
 
 local PLAYERS_META = {}
-local SERVER_META = { clients = {} }
+local SERVER_META = { accounts = {} }
 
 function module.load()
     if file.exists(PATHS.players) then
@@ -41,12 +41,12 @@ function module.players.get(name)
     return PLAYERS_META[name]
 end
 
-function module.clients.set(name, values)
-    SERVER_META.clients[name] = values
+function module.accounts.set(name, values)
+    SERVER_META.accounts[name] = values
 end
 
-function module.clients.get(name)
-    return SERVER_META.clients[name]
+function module.accounts.get(name)
+    return SERVER_META.accounts[name]
 end
 
 return module

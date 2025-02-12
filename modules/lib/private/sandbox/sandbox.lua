@@ -3,29 +3,38 @@ local container = require "lib/private/common/container"
 local Player = require "lib/private/sandbox/classes/player"
 local module = {}
 
-function module.join_player(client)
-    local client_player = container.get_all(client.username)[1] or Player.new(client.username)
+function module.join_player(account)
+    local account_player = container.get_all(account.username)[1] or Player.new(account.username)
 
-    local status = client_player:revive()
+    local status = account_player:revive()
 
     if status == CODES.players.ReviveSuccess or status == CODES.players.WithoutChanges then
         -- Ну мы его разбудили правильно, ничего делать не надо, мы молодцы
     elseif status == CODES.players.DataLoss then
-        client_player:set("pid", player.create(client_player.username))
-        client_player:set("entity_id", player.get_entity(client_player.pid))
-        
-        client:set("world", CONFIG.game.main_world)
-        client_player:set("active", true)
+        account_player:set("pid", player.create(account_player.username))
+        account_player:set("entity_id", player.get_entity(account_player.pid))
+
+        account:set("world", CONFIG.game.main_world)
+        account_player:set("active", true)
     end
 
-    if client_player:is_active() then
-        container.put(client_player.username, client_player, 1)
+    if account_player:is_active() then
+        container.put(account_player.username, account_player, 1)
     end
 
-    logger.log(string.format('Player "%s" is join.', client_player.username))
-    client_player:save()
+    logger.log(string.format('Player "%s" is join.', account_player.username))
+    account_player:save()
 
-    return client_player
+    return account_player
+end
+
+function module.get_chunk(pos)
+    return world.get_chunk_data(pos.x, pos.z)
+end
+
+function module.place_block(_block, pid)
+    block.place(_block.x, _block.y, _block.z, _block.id, _block.states, pid)
+    print(_block.x, _block.y, _block.z, _block.id, _block.states)
 end
 
 return protect.protect_return(module)

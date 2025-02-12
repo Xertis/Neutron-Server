@@ -5,7 +5,7 @@
         "WithoutChanges": 103
     },
 
-    "clients": {
+    "accounts": {
         "ReviveSuccess" : 201,
         "DataLoss": 202,
         "WrongPassword": 203,

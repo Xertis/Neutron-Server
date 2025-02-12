@@ -2,7 +2,7 @@ local protocol = require "lib/public/protocol"
 local matcher = require "lib/public/common/matcher"
 local protect = require "lib/private/protect"
 local sandbox = require "lib/private/sandbox/sandbox"
-local client_manager = require "lib/private/clients/client_manager"
+local account_manager = require "lib/private/accounts/account_manager"
 
 local matches = {}
 
@@ -61,18 +61,18 @@ matches.logging = matcher.new(
         local packet = values[2]
         local buffer = protocol.create_databuffer()
 
-        local client_data = client_manager.login(packet.username)
+        local account = account_manager.login(packet.username)
 
-        if not client_data then
+        if not account then
             return
         end
 
-        local client_player = sandbox.join_player(client_data)
+        local account_player = sandbox.join_player(account)
 
-        local rules = CONFIG.roles[client_data.role]
+        local rules = CONFIG.roles[account.role]
 
         local DATA = {
-            client_player.pid,
+            account_player.pid,
             world.get_day_time(),
             rules.cheat_commands,
             rules.content_access,
@@ -89,13 +89,14 @@ matches.logging = matcher.new(
         client.network:send(buffer.bytes)
         logger.log("JoinSuccess has been sended")
 
-        local x, y, z = player.get_pos(client_player.pid)
+        local x, y, z = player.get_pos(account_player.pid)
         local yaw, pitch = 0, 0
         DATA = {x, y, z, yaw, pitch}
 
         buffer = protocol.create_databuffer()
         buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.SynchronizePlayerPosition, unpack(DATA)))
         client.network:send(buffer.bytes)
+        client:set_active(true)
     end
 )
 
@@ -109,6 +110,67 @@ matches.logging:add_match(
 matches.logging:add_match(
     function (val)
         if val.packet_type == protocol.ClientMsg.JoinGame then
+            return true
+        end
+    end
+)
+
+---------
+
+matches.block_update = matcher.new(
+    function (values)
+        print("SET BLOCK")
+        local packet = values[1]
+
+        local block = {
+            x = packet.x,
+            y = packet.y,
+            z = packet.z,
+            states = packet.block_state,
+            id = packet.block_id
+        }
+
+        sandbox.place_block(block)
+    end
+)
+
+matches.block_update:add_match(
+    function (val)
+        if val.packet_type == protocol.ClientMsg.BlockUpdate then
+            return true
+        end
+    end
+)
+
+---------
+
+matches.request_chunk = matcher.new(
+    function (values)
+        print("RETURN CHUNK")
+        local packet = values[1]
+        local client = matches.request_chunk.default_data
+        local chunk = sandbox.get_chunk({x = packet.x, z = packet.z})
+
+        if not chunk then
+            return
+        end
+
+        local buffer = protocol.create_databuffer()
+
+        local DATA = {
+            packet.x,
+            packet.z,
+            chunk
+        }
+
+        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.ChunkData, unpack(DATA)))
+        client.network:send(buffer.bytes)
+    end
+)
+
+matches.request_chunk:add_match(
+    function (val)
+        if val.packet_type == protocol.ClientMsg.RequestChunk then
             return true
         end
     end

@@ -3,69 +3,72 @@ if protect.protect_require() then return end
 
 local metadata = require "lib/private/files/metadata"
 local lib = require "lib/private/min"
-local Client = {}
-Client.__index = Client
+local account = {}
+account.__index = account
 
-function Client.new(username, password)
-    local self = setmetatable({}, Client)
+function account.new(username, password, ip)
+    local self = setmetatable({}, account)
     password = password or ""
 
     self.username = username
     self.password = lib.hash.sha256(password)
     self.active = false
+    self.ip = ip
     self.role = nil
 
     return self
 end
 
-function Client:is_active()
+function account:is_active()
     return self.active
 end
 
-function Client:abort()
+function account:abort()
     self.active = false
-    metadata.clients.set(self.username, self:to_save())
+    metadata.accounts.set(self.username, self:to_save())
 end
 
-function Client:save()
-    metadata.clients.set(self.username, self:to_save())
+function account:save()
+    metadata.accounts.set(self.username, self:to_save())
 end
 
-function Client:revive()
+function account:revive()
     if self.active == true then
-        return CODES.clients.WithoutChanges
+        return CODES.accounts.WithoutChanges
     end
 
-    local data = metadata.clients.get(self.username)
+    local data = metadata.accounts.get(self.username)
     if not data then
-        return CODES.clients.DataLoss
+        return CODES.accounts.DataLoss
     end
 
     if self.password == data.password or not CONFIG.server.password_auth then
         self.active = true
-        Client:to_load(data)
-        return CODES.clients.ReviveSuccess
+        account:to_load(data)
+        return CODES.accounts.ReviveSuccess
     end
 
-    return CODES.clients.WrongPassword
+    return CODES.accounts.WrongPassword
 end
 
-function Client:set(key, val)
+function account:set(key, val)
     self[key] = val
 end
 
-function Client:to_save()
+function account:to_save()
     return {
         username = self.username,
         password = self.password,
-        role = self.role
+        role = self.role,
+        ip = self.ip
     }
 end
 
-function Client:to_load(data)
+function account:to_load(data)
     self.username = data.username
     self.password = data.password
     self.role = data.role
+    self.ip = data.ip
 end
 
-return Client
+return account
