@@ -4,6 +4,7 @@ local Player = require "multiplayer/server/classes/player"
 local Network = require "lib/public/network"
 local protocol = require "lib/public/protocol"
 local server_pipe = require "multiplayer/server/server_pipe"
+local server_echo = require "multiplayer/server/server_echo"
 local list = require "lib/public/common/list"
 
 local server = {}
@@ -53,6 +54,8 @@ function server:tick()
             table.remove_value(self.clients, client)
         end
     end
+
+    server_echo.proccess(self.clients)
 end
 
 return protect.protect_return(server)

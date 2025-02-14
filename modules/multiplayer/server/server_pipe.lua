@@ -35,7 +35,6 @@ ServerPipe:add_middleware(function(client)
 
     matches.status_request:set_default_data(client)
     matches.logging:set_default_data(client)
-    matches.request_chunk:set_default_data(client)
 
     while not List.is_empty(client.received_packets) do
         local packet = List.popleft(client.received_packets)
@@ -44,8 +43,7 @@ ServerPipe:add_middleware(function(client)
             matches.status_request:match(packet)
             matches.logging:match(packet)
         elseif client.active == true then
-            matches.block_update:match(packet)
-            matches.request_chunk:match(packet)
+            matches.client_online_handler:switch(packet.packet_type, packet, client)
         end
     end
     return client

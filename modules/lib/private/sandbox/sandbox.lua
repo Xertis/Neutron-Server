@@ -28,6 +28,10 @@ function module.join_player(account)
     return account_player
 end
 
+function module.get_player(account)
+    return container.get_all(account.username)[1]
+end
+
 function module.get_chunk(pos)
     return world.get_chunk_data(pos.x, pos.z)
 end
@@ -35,6 +39,19 @@ end
 function module.place_block(_block, pid)
     block.place(_block.x, _block.y, _block.z, _block.id, _block.states, pid)
     print(_block.x, _block.y, _block.z, _block.id, _block.states)
+end
+
+function module.set_player_state(account_player, state)
+    player.set_pos(account_player.pid, state.x, state.y, state.z)
+end
+
+function module.get_player_state(account_player)
+    local x, y, z = player.get_pos(account_player.pid)
+    return {
+        x = x,
+        y = y,
+        z = z
+    }
 end
 
 return protect.protect_return(module)

@@ -1,10 +1,17 @@
 local protocol = require "lib/public/protocol"
 local matcher = require "lib/public/common/matcher"
+local switcher = require "lib/public/common/switcher"
 local protect = require "lib/private/protect"
 local sandbox = require "lib/private/sandbox/sandbox"
 local account_manager = require "lib/private/accounts/account_manager"
+local server_echo = require "multiplayer/server/server_echo"
 
-local matches = {}
+local matches = {
+    client_online_handler = switcher.new(function (...)
+        local values = {...}
+        print(json.tostring(values[1]))
+    end)
+}
 
 matches.status_request = matcher.new(
     function ()
@@ -68,6 +75,7 @@ matches.logging = matcher.new(
         end
 
         local account_player = sandbox.join_player(account)
+        client:set_account(account_player)
 
         local rules = CONFIG.roles[account.role]
 
@@ -89,9 +97,9 @@ matches.logging = matcher.new(
         client.network:send(buffer.bytes)
         logger.log("JoinSuccess has been sended")
 
-        local x, y, z = player.get_pos(account_player.pid)
+        local state = sandbox.get_player_state(account_player)
         local yaw, pitch = 0, 0
-        DATA = {x, y, z, yaw, pitch}
+        DATA = {state.x, state.y, state.z, yaw, pitch}
 
         buffer = protocol.create_databuffer()
         buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.SynchronizePlayerPosition, unpack(DATA)))
@@ -117,9 +125,9 @@ matches.logging:add_match(
 
 ---------
 
-matches.block_update = matcher.new(
-    function (values)
-        print("SET BLOCK")
+matches.client_online_handler:add_case(protocol.ClientMsg.BlockUpdate, (
+    function (...)
+        local values = {...}
         local packet = values[1]
 
         local block = {
@@ -131,24 +139,27 @@ matches.block_update = matcher.new(
         }
 
         sandbox.place_block(block)
-    end
-)
+        local pseudo_packet = {
+            type_packet = "protocol.ClientMsg.RequestChunk",
+            x = math.floor(packet.x / 16),
+            z = math.floor(packet.z / 16)
+        }
 
-matches.block_update:add_match(
-    function (val)
-        if val.packet_type == protocol.ClientMsg.BlockUpdate then
-            return true
-        end
+        server_echo.put_event(
+            function (client)
+                matches.client_online_handler:switch(protocol.ClientMsg.RequestChunk, pseudo_packet, client)
+            end
+        )
     end
-)
+))
 
 ---------
 
-matches.request_chunk = matcher.new(
-    function (values)
-        print("RETURN CHUNK")
+matches.client_online_handler:add_case(protocol.ClientMsg.RequestChunk, (
+    function (...)
+        local values = {...}
         local packet = values[1]
-        local client = matches.request_chunk.default_data
+        local client = values[2]
         local chunk = sandbox.get_chunk({x = packet.x, z = packet.z})
 
         if not chunk then
@@ -166,14 +177,47 @@ matches.request_chunk = matcher.new(
         buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.ChunkData, unpack(DATA)))
         client.network:send(buffer.bytes)
     end
-)
+))
 
-matches.request_chunk:add_match(
-    function (val)
-        if val.packet_type == protocol.ClientMsg.RequestChunk then
-            return true
+---------
+
+matches.client_online_handler:add_case(protocol.ClientMsg.PlayerPosition, (
+    function (...)
+        local values = {...}
+        local packet = values[1]
+        local client = values[2]
+
+        if not client.account then
+            return
         end
+
+        sandbox.set_player_state(client.account, {x = packet.x, y = packet.y, z = packet.z})
     end
-)
+))
+
+---------
+
+matches.client_online_handler:add_case(protocol.ClientMsg.ChatMessage, (
+    function (...)
+        local values = {...}
+        local packet = values[1]
+        local client = values[2]
+
+        if not client.account then
+            return
+        end
+
+        local player = sandbox.get_player(client.account)
+        local message = string.format("[%s] %s", player.username, packet.message)
+        logger.log(string.format('[%s]: "%s"', player.username, packet.message))
+
+        server_echo.put_event(function (client)
+            local buffer = protocol.create_databuffer()
+
+            buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.ChatMessage, message))
+            client.network:send(buffer.bytes)
+        end)
+    end
+))
 
 return protect.protect_return(matches)

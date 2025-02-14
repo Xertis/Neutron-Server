@@ -10,6 +10,7 @@ function Player.new(active, network, username)
     self.network = network
     self.username = username
     self.client_id = -1
+    self.account = nil
 
     self.response_queue = List.new()
     self.received_packets = List.new()
@@ -19,6 +20,10 @@ end
 
 function Player:is_active()
     return self.active
+end
+
+function Player:set_account(account)
+    self.account = account
 end
 
 function Player:set_active(new_value)
