@@ -80,6 +80,16 @@ function table.merge(t1, t2)
     return t1
 end
 
+function table.keys(t)
+    local keys = {}
+
+    for key, _ in pairs(t) do
+        table.insert(keys, key)
+    end
+
+    return keys
+end
+
 function table.map(t, func)
     for i, v in pairs(t) do
         t[i] = func(i, v)

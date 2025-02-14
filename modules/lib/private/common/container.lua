@@ -11,6 +11,10 @@ function module.put(key, val, indx)
     DATA[key][indx] = val
 end
 
+function module.clear(key)
+    DATA[key] = {}
+end
+
 function module.get_all(key)
     return table.set_default(DATA, key, {})
 end

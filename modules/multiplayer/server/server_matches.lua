@@ -26,7 +26,7 @@ matches.status_request = matcher.new(
             icon = file.read_bytes(DEFAULT_ICON_PATH)
         end
 
-        local players = {}
+        local players = table.keys(sandbox.get_players())
 
         local STATUS = {
             CONFIG.server.name,
@@ -105,6 +105,13 @@ matches.logging = matcher.new(
         buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.SynchronizePlayerPosition, unpack(DATA)))
         client.network:send(buffer.bytes)
         client:set_active(true)
+
+        server_echo.put_event(function (client)
+            local buffer = protocol.create_databuffer()
+            local message = string.format("[%s] %s", account_player.username, "join the game")
+            buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.ChatMessage, message))
+            client.network:send(buffer.bytes)
+        end)
     end
 )
 
@@ -216,6 +223,32 @@ matches.client_online_handler:add_case(protocol.ClientMsg.ChatMessage, (
 
             buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.ChatMessage, message))
             client.network:send(buffer.bytes)
+        end)
+    end
+))
+
+---------
+
+matches.client_online_handler:add_case(protocol.ClientMsg.Disconnect, (
+    function (...)
+        local values = {...}
+        local packet = values[1]
+        local client = values[2]
+
+        if not client.account then
+            return
+        end
+
+        local account = client.account
+        local message = string.format("[%s] %s", account.username, "leave the game")
+        account_manager.leave(account)
+
+        server_echo.put_event(function (client)
+            local buffer = protocol.create_databuffer()
+
+            buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.ChatMessage, message))
+            client.network:send(buffer.bytes)
+            client.set_active(false)
         end)
     end
 ))

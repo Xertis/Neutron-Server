@@ -3,6 +3,8 @@ local container = require "lib/private/common/container"
 local Player = require "lib/private/sandbox/classes/player"
 local module = {}
 
+container.put("players_online", nil, 0)
+
 function module.join_player(account)
     local account_player = container.get_all(account.username)[1] or Player.new(account.username)
 
@@ -25,7 +27,34 @@ function module.join_player(account)
     logger.log(string.format('Player "%s" is join.', account_player.username))
     account_player:save()
 
+    container.put("players_online", account_player)
     return account_player
+end
+
+function module.leave_player(account_player)
+    account_player:abort()
+
+    logger.log(string.format('Player "%s" is leave.', account_player.username))
+
+    for indx, player in ipairs(container.get_all("players_online")) do
+        local name = player.username
+
+        if name == account_player.username then
+            container.put("players_online", nil, indx)
+        end
+    end
+    return account_player
+end
+
+function module.get_players()
+    local players_data = container.get_all("players_online")
+    local players = {}
+
+    for _, player in ipairs(players_data) do
+        players[player.username] = player
+    end
+
+    return players
 end
 
 function module.get_player(account)

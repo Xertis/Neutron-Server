@@ -2,6 +2,7 @@ local protect = require "lib/private/protect"
 if protect.protect_require() then return end
 
 local Account = require "lib/private/accounts/account"
+local sandbox = require "lib/private/sandbox/sandbox"
 local container = require "lib/private/common/container"
 local module = {}
 
@@ -26,6 +27,18 @@ function module.login(username, password)
     end
 
     account:save()
+
+    return account
+end
+
+function module.leave(account)
+    logger.log(string.format('account "%s" is leaving...', account.username))
+    account:abort()
+
+    local player = container.get_all(account.username)[1]
+
+    sandbox.leave_player(player)
+    container.clear(account.username)
 
     return account
 end

@@ -5,6 +5,7 @@ local Network = require "lib/public/network"
 local protocol = require "lib/public/protocol"
 local server_pipe = require "multiplayer/server/server_pipe"
 local server_echo = require "multiplayer/server/server_echo"
+local account_manager = require "lib/private/accounts/account_manager"
 local list = require "lib/public/common/list"
 
 local server = {}
@@ -49,9 +50,23 @@ function server:tick()
         else
             if client.active then
                 client.active = false
-
             end
             table.remove_value(self.clients, client)
+
+            if not client.account then
+                return
+            end
+
+            local account = client.account
+            local message = string.format("[%s] %s", account.username, "leave the game")
+            account_manager.leave(account)
+
+            server_echo.put_event(function (client)
+                local buffer = protocol.create_databuffer()
+
+                buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.ChatMessage, message))
+                client.network:send(buffer.bytes)
+            end)
         end
     end
 
