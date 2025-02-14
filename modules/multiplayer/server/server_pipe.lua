@@ -1,7 +1,7 @@
 local Pipeline = require "lib/public/pipeline"
 local protocol = require "lib/public/protocol"
 local protect = require "lib/private/protect"
-local matches = require "multiplayer/server/server_pipe_matches"
+local matches = require "multiplayer/server/server_matches"
 
 local List = require "lib/public/common/list"
 

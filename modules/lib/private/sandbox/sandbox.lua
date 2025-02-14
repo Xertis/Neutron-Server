@@ -38,7 +38,6 @@ end
 
 function module.place_block(_block, pid)
     block.place(_block.x, _block.y, _block.z, _block.id, _block.states, pid)
-    print(_block.x, _block.y, _block.z, _block.id, _block.states)
 end
 
 function module.set_player_state(account_player, state)

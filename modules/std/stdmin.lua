@@ -30,12 +30,11 @@ logger = {}
 
 function logger.log(text, type)
     type = type or 'I'
-    local emitter = "SERVER"
 
     text = string.first_up(text)
 
     local source = file.name(debug.getinfo(2).source)
-    local out = string.format('[%s: ', emitter) .. string.left_padding(source, 12) .. '] ' .. text
+    local out = '[' .. string.left_padding(source, 20) .. '] ' .. text
 
     local uptime = time.uptime()
     local deltatime = tostring(math.round(time.delta(), 8))
