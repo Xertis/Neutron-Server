@@ -6,7 +6,7 @@ local protocol = require "lib/public/protocol"
 local server_pipe = require "multiplayer/server/server_pipe"
 local server_echo = require "multiplayer/server/server_echo"
 local account_manager = require "lib/private/accounts/account_manager"
-local list = require "lib/public/common/list"
+local chat = require "multiplayer/server/chat"
 
 local server = {}
 server.__index = server
@@ -61,12 +61,7 @@ function server:tick()
             local message = string.format("[%s] %s", account.username, "leave the game")
             account_manager.leave(account)
 
-            server_echo.put_event(function (client)
-                local buffer = protocol.create_databuffer()
-
-                buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.ChatMessage, message))
-                client.network:send(buffer.bytes)
-            end)
+            chat.echo(message)
         end
     end
 

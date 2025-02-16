@@ -2,6 +2,7 @@ local Pipeline = require "lib/public/pipeline"
 local protocol = require "lib/public/protocol"
 local protect = require "lib/private/protect"
 local matches = require "multiplayer/server/server_matches"
+local ClientPipe = require "multiplayer/server/client_pipe"
 
 local List = require "lib/public/common/list"
 
@@ -44,6 +45,7 @@ ServerPipe:add_middleware(function(client)
             matches.logging:match(packet)
         elseif client.active == true then
             matches.client_online_handler:switch(packet.packet_type, packet, client)
+            ClientPipe:process(client)
         end
     end
     return client

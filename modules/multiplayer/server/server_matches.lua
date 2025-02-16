@@ -5,6 +5,7 @@ local protect = require "lib/private/protect"
 local sandbox = require "lib/private/sandbox/sandbox"
 local account_manager = require "lib/private/accounts/account_manager"
 local server_echo = require "multiplayer/server/server_echo"
+local chat = require "multiplayer/server/chat"
 
 local matches = {
     client_online_handler = switcher.new(function (...)
@@ -106,12 +107,8 @@ matches.logging = matcher.new(
         client.network:send(buffer.bytes)
         client:set_active(true)
 
-        server_echo.put_event(function (client)
-            local buffer = protocol.create_databuffer()
-            local message = string.format("[%s] %s", account_player.username, "join the game")
-            buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.ChatMessage, message))
-            client.network:send(buffer.bytes)
-        end)
+        local message = string.format("[%s] %s", account_player.username, "join the game")
+        chat.echo(message)
     end
 )
 
@@ -218,12 +215,11 @@ matches.client_online_handler:add_case(protocol.ClientMsg.ChatMessage, (
         local message = string.format("[%s] %s", player.username, packet.message)
         logger.log(string.format('[%s]: "%s"', player.username, packet.message))
 
-        server_echo.put_event(function (client)
-            local buffer = protocol.create_databuffer()
-
-            buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.ChatMessage, message))
-            client.network:send(buffer.bytes)
-        end)
+        if packet.message[1] == '.' then
+            chat.command(packet.message, client)
+        else
+            chat.echo(message)
+        end
     end
 ))
 
@@ -243,13 +239,7 @@ matches.client_online_handler:add_case(protocol.ClientMsg.Disconnect, (
         local message = string.format("[%s] %s", account.username, "leave the game")
         account_manager.leave(account)
 
-        server_echo.put_event(function (client)
-            local buffer = protocol.create_databuffer()
-
-            buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.ChatMessage, message))
-            client.network:send(buffer.bytes)
-            client.set_active(false)
-        end)
+        chat.echo(message)
     end
 ))
 
