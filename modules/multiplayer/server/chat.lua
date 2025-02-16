@@ -48,6 +48,7 @@ commands:add_case("help", function ( ... )
 end)
 
 function module.echo(message)
+    logger.log(message)
     server_echo.put_event(function (client)
         local buffer = protocol.create_databuffer()
         buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.ChatMessage, message))

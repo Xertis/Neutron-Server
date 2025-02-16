@@ -71,7 +71,7 @@ matches.logging = matcher.new(
 
         local account = account_manager.login(packet.username)
 
-        if not account then
+        if not account or #table.keys(sandbox.get_players()) >= CONFIG.server.max_players then
             return
         end
 
@@ -213,7 +213,6 @@ matches.client_online_handler:add_case(protocol.ClientMsg.ChatMessage, (
 
         local player = sandbox.get_player(client.account)
         local message = string.format("[%s] %s", player.username, packet.message)
-        logger.log(string.format('[%s]: "%s"', player.username, packet.message))
 
         if packet.message[1] == '.' then
             chat.command(packet.message, client)
