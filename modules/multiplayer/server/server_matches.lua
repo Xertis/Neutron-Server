@@ -98,8 +98,9 @@ matches.logging = matcher.new(
         logger.log("JoinSuccess has been sended")
 
         local state = sandbox.get_player_state(account_player)
-        local yaw, pitch = 0, 0
+        local yaw, pitch = player.get_rot(account_player.pid, true)
         DATA = {state.x, state.y, state.z, yaw, pitch}
+        print(table.tostring(DATA))
 
         buffer = protocol.create_databuffer()
         buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.SynchronizePlayerPosition, unpack(DATA)))
