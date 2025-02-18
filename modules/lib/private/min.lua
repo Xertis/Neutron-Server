@@ -14,7 +14,6 @@ local lib = {
 function lib.world.preparation_main()
     --Загружаем мир
     app.reconfig_packs(table.freeze_unpack(CONFIG.game.content_packs), {})
-
     if not file.exists("user:worlds/" .. CONFIG.game.main_world .. "/world.json") then
         logger.log("Creating a main world...")
         local name = CONFIG.game.main_world

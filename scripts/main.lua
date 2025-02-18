@@ -5,13 +5,15 @@ local protect = require "server:lib/private/protect"
 if protect.protect_require() then return end
 
 local lib = require "server:lib/private/min"
-local server = require "server:multiplayer/server/server"
 local metadata = require "server:lib/private/files/metadata"
 
 require "server:constants"
 require "server:init/server"
 
+local server = require "server:multiplayer/server/server"
 local world = lib.world
+
+_G["/$p"] = table.copy(package.loaded)
 
 world.open_main()
 logger.log("world loop is started")
@@ -28,6 +30,7 @@ server:start()
 logger.log("server is started")
 
 while IS_RUNNING do
+
     app.tick()
     server:tick()
 

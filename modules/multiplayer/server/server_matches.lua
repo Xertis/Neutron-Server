@@ -4,7 +4,6 @@ local switcher = require "lib/public/common/switcher"
 local protect = require "lib/private/protect"
 local sandbox = require "lib/private/sandbox/sandbox"
 local account_manager = require "lib/private/accounts/account_manager"
-local server_echo = require "multiplayer/server/server_echo"
 local chat = require "multiplayer/server/chat"
 
 local matches = {
@@ -143,17 +142,6 @@ matches.client_online_handler:add_case(protocol.ClientMsg.BlockUpdate, (
         }
 
         sandbox.place_block(block)
-        local pseudo_packet = {
-            type_packet = "protocol.ClientMsg.RequestChunk",
-            x = math.floor(packet.x / 16),
-            z = math.floor(packet.z / 16)
-        }
-
-        server_echo.put_event(
-            function (client)
-                matches.client_online_handler:switch(protocol.ClientMsg.RequestChunk, pseudo_packet, client)
-            end
-        )
     end
 ))
 

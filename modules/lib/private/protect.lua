@@ -4,7 +4,7 @@ local LOG_ACCESS_DENIES = "Unauthorized Access attempt from "
 local ACCESS_DENIES = "Access denied"
 
 local function parse_path(path)
-    if path == "main.lua" then
+    if path == "main.lua" or path == "=[C]" then
         return "server"
     end
 
