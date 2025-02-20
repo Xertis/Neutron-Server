@@ -71,14 +71,18 @@ end
 
 function module.set_player_state(account_player, state)
     player.set_pos(account_player.pid, state.x, state.y, state.z)
+    player.set_rot(account_player.pid, state.yaw, state.pitch, 0)
 end
 
 function module.get_player_state(account_player)
     local x, y, z = player.get_pos(account_player.pid)
+    local yaw, pitch = player.get_rot(account_player.pid, true)
     return {
         x = x,
         y = y,
-        z = z
+        z = z,
+        yaw = yaw,
+        pitch = pitch
     }
 end
 

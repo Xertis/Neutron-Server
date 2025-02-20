@@ -9,14 +9,11 @@ local module = {}
 function module.login(username, password)
     logger.log(string.format('account "%s" is logging...', username))
 
-    local account = Account.new(username, password) or container.get_all(username).account
+    local account = Account.new(username) or container.get_all(username).account
     local status = account:revive()
 
     if status == CODES.accounts.ReviveSuccess or status == CODES.accounts.WithoutChanges then
         -- Ну мы его разбудили правильно, ничего делать не надо, мы молодцы
-    elseif status == CODES.accounts.WrongPassword then
-        logger.log(string.format('account "%s" entered an incorrect password.', account.username))
-        return
     elseif status == CODES.accounts.DataLoss then
         account:set("role", CONFIG.roles.default_role)
         account:set("active", true)

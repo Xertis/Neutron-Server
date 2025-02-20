@@ -9,6 +9,8 @@
         "ReviveSuccess" : 201,
         "DataLoss": 202,
         "WrongPassword": 203,
-        "WithoutChanges": 204
+        "CorrectPassword": 204,
+        "WithoutChanges": 205,
+        "PasswordUnvalidated": 206
     }
 }

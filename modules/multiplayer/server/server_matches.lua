@@ -70,12 +70,14 @@ matches.logging = matcher.new(
 
         local account = account_manager.login(packet.username)
 
-        if not account or #table.keys(sandbox.get_players()) >= CONFIG.server.max_players then
+        if not account or #table.keys(sandbox.get_players()) >= CONFIG.server.max_players or sandbox.get_players()[packet.username] ~= nil then
+            logger.log("JoinSuccess has been aborted")
             return
         end
 
         local account_player = sandbox.join_player(account)
-        client:set_account(account_player)
+        client:set_account(account)
+        client:set_player(account_player)
 
         local rules = CONFIG.roles[account.role]
 
@@ -98,8 +100,7 @@ matches.logging = matcher.new(
         logger.log("JoinSuccess has been sended")
 
         local state = sandbox.get_player_state(account_player)
-        local yaw, pitch = player.get_rot(account_player.pid, true)
-        DATA = {state.x, state.y, state.z, yaw, pitch}
+        DATA = {state.x, state.y, state.z, state.yaw, state.pitch}
 
         buffer = protocol.create_databuffer()
         buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.SynchronizePlayerPosition, unpack(DATA)))
@@ -108,6 +109,16 @@ matches.logging = matcher.new(
 
         local message = string.format("[%s] %s", account_player.username, "join the game")
         chat.echo(message)
+
+        if not CONFIG.server.password_auth then
+            return
+        end
+
+        if account.password == nil then
+            chat.tell("Please register using the command .register <password> <confirm password> to secure your account.", client)
+        elseif not account.is_logged then
+            chat.tell("Please log in using the command .login <password> to access your account.", client)
+        end
     end
 )
 
@@ -183,7 +194,15 @@ matches.client_online_handler:add_case(protocol.ClientMsg.PlayerPosition, (
             return
         end
 
-        sandbox.set_player_state(client.account, {x = packet.x, y = packet.y, z = packet.z})
+        if client.account.is_logged then
+            sandbox.set_player_state(client.player, {
+                x = packet.x,
+                y = packet.y,
+                z = packet.z,
+                yaw = packet.yaw,
+                pitch = packet.pitch
+            })
+        end
     end
 ))
 
@@ -195,11 +214,11 @@ matches.client_online_handler:add_case(protocol.ClientMsg.ChatMessage, (
         local packet = values[1]
         local client = values[2]
 
-        if not client.account then
+        if not client.player then
             return
         end
 
-        local player = sandbox.get_player(client.account)
+        local player = sandbox.get_player(client.player)
         local message = string.format("[%s] %s", player.username, packet.message)
 
         if packet.message[1] == '.' then

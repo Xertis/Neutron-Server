@@ -7,6 +7,7 @@ local module = {}
 
 local colors = {
     red = "[#ff0000]",
+    yellow = "[#ffff00]",
     white = ""
 }
 
@@ -45,6 +46,59 @@ commands:add_case("help", function ( ... )
 
     module.tell(string.format("%s %s", colors.white, message), client)
 
+end)
+
+commands:add_case("register", function ( ... )
+    local values = {...}
+    local client = values[3]
+    local account = client.account
+    local passwords = values[2]
+
+    if account.is_logged then
+        module.tell(string.format("%s You are already logged in.", colors.yellow), client)
+        return
+    elseif account.password ~= nil then
+        module.tell(string.format("%s Please log in using the command .login <password> to access your account.", colors.yellow), client)
+        return
+    end
+
+    if passwords[1] ~= passwords[2] then
+        module.tell(string.format("%s The passwords you entered do not match. Please try again using the command .register", colors.red), client)
+        return
+    end
+
+    local status = account:set_password(passwords[1])
+
+    if status == CODES.accounts.PasswordUnvalidated then
+        module.tell(string.format("%s Your password does not meet the requirements, create a new one.", colors.red), client)
+        return
+    end
+
+    account.is_logged = true
+    module.tell(string.format("%s You have successfully registered!", colors.yellow), client)
+end)
+
+commands:add_case("login", function ( ... )
+    local values = {...}
+    local client = values[3]
+    local account = client.account
+    local password = values[2][1]
+
+    if account.is_logged then
+        module.tell(string.format("%s You are already logged in.", colors.yellow), client)
+        return
+    elseif account.password == nil then
+        module.tell(string.format("%s Please register using the command .register <password> <confirm password> to secure your account.", colors.yellow), client)
+        return
+    end
+
+    local status = account:check_password(password)
+    if status == CODES.accounts.WrongPassword then
+        module.tell(string.format("%s Incorrect password. Please try again using the command .login <password>.", colors.red), client)
+        return
+    end
+
+    module.tell(string.format("%s You have successfully logged in!", colors.yellow), client)
 end)
 
 function module.echo(message)
