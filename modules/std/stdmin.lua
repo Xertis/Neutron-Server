@@ -189,6 +189,15 @@ function table.to_dict(tbl, pattern)
     return res
 end
 
+function table.has(t, x)
+    for i,v in pairs(t) do
+        if v == x then
+            return true
+        end
+    end
+    return false
+end
+
 --- MATH
 
 function math.sum(...)

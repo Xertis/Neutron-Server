@@ -19,7 +19,9 @@
     "show_players": true,
     "chunks_loading_distance": 4,
     "chunks_loading_speed": 4,
-    "password_auth": false
+    "password_auth": false,
+    "whitelist": [],
+    "blacklist": []
   },
   "roles": {
     "default_role": "member",

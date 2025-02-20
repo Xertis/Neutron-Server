@@ -6,6 +6,16 @@ local sandbox = require "lib/private/sandbox/sandbox"
 local account_manager = require "lib/private/accounts/account_manager"
 local chat = require "multiplayer/server/chat"
 
+local function has_true(tbl)
+    for _, e in pairs(tbl) do
+        if e then
+            return true
+        end
+    end
+
+    return false
+end
+
 local matches = {
     client_online_handler = switcher.new(function (...)
         local values = {...}
@@ -70,7 +80,15 @@ matches.logging = matcher.new(
 
         local account = account_manager.login(packet.username)
 
-        if not account or #table.keys(sandbox.get_players()) >= CONFIG.server.max_players or sandbox.get_players()[packet.username] ~= nil then
+        if has_true(
+            {
+                not account,
+                #table.keys(sandbox.get_players()) >= CONFIG.server.max_players,
+                sandbox.get_players()[packet.username] ~= nil,
+                (not table.has(table.freeze_unpack(CONFIG.server.whitelist), packet.username) and #table.freeze_unpack(CONFIG.server.whitelist) > 0),
+                table.has(table.freeze_unpack(CONFIG.server.blacklist), packet.username)
+            }
+        ) then
             logger.log("JoinSuccess has been aborted")
             return
         end
@@ -143,6 +161,11 @@ matches.client_online_handler:add_case(protocol.ClientMsg.BlockUpdate, (
     function (...)
         local values = {...}
         local packet = values[1]
+        local client = values[2]
+
+        if not client.account or not client.account.is_logged then
+            return
+        end
 
         local block = {
             x = packet.x,
@@ -190,19 +213,17 @@ matches.client_online_handler:add_case(protocol.ClientMsg.PlayerPosition, (
         local packet = values[1]
         local client = values[2]
 
-        if not client.account then
+        if not client.account or not client.account.is_logged then
             return
         end
 
-        if client.account.is_logged then
-            sandbox.set_player_state(client.player, {
-                x = packet.x,
-                y = packet.y,
-                z = packet.z,
-                yaw = packet.yaw,
-                pitch = packet.pitch
-            })
-        end
+        sandbox.set_player_state(client.player, {
+            x = packet.x,
+            y = packet.y,
+            z = packet.z,
+            yaw = packet.yaw,
+            pitch = packet.pitch
+        })
     end
 ))
 
