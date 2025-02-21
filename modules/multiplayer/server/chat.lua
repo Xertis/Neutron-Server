@@ -39,7 +39,8 @@ commands:add_case("help", function ( ... )
     local messages= {
         "----- Help (.help) -----",
         ".help - Shows a list of available commands.",
-        ".list - Shows a list of online players."
+        ".list - Shows a list of online players.",
+        ".kick <nickname> [reason] - Kicks the user"
     }
 
     for _, m in ipairs(messages) do
@@ -135,6 +136,7 @@ commands:add_case("kick", function ( ... )
     kick_client.network:send(buffer.bytes)
 
     module.echo(string.format("%s [Server] Player %s has been kicked with reason: %s", colors.red, kick_username, reason))
+    kick_client.active = false
 end)
 
 function module.echo(message)
