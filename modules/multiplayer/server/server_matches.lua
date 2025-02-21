@@ -97,7 +97,7 @@ matches.logging = matcher.new(
         client:set_account(account)
         client:set_player(account_player)
 
-        local rules = CONFIG.roles[account.role]
+        local rules = account_manager.get_rules(account)
 
         local DATA = {
             account_player.pid,

@@ -3,6 +3,8 @@ local protocol = require "lib/public/protocol"
 local server_echo = require "multiplayer/server/server_echo"
 local sandbox = require "lib/private/sandbox/sandbox"
 local switcher = require "lib/public/common/switcher"
+local account_manager = require "lib/private/accounts/account_manager"
+local lib = require "lib/private/min"
 local module = {}
 
 local colors = {
@@ -99,6 +101,40 @@ commands:add_case("login", function ( ... )
     end
 
     module.tell(string.format("%s You have successfully logged in!", colors.yellow), client)
+end)
+
+commands:add_case("kick", function ( ... )
+    local values = {...}
+    local client = values[3]
+    local account = client.account
+    local kick_username = values[2][1] or ''
+    local reason = values[2][2] or "No reason"
+    local kick_account = account_manager.by_username.get_account(kick_username)
+
+    local client_role = account_manager.get_role(account)
+    local kick_role = account_manager.get_role(kick_account)
+
+    if not kick_role or not sandbox.by_username.is_online(kick_username) then
+        module.tell(string.format("%s The player %s is currently offline!", colors.red, kick_username), client)
+        return
+    elseif kick_username == client.player.username then
+        module.tell(string.format("%s You cannot kick yourself!", colors.red), client)
+        return
+    elseif not client_role.server_rules.kick then
+        module.tell(string.format("%s You do not have sufficient permissions to perform this action!", colors.red), client)
+        return
+    elseif not lib.roles.is_higher(client_role, kick_role) then
+        module.tell(string.format("%s You cannot interact with this player because their role has a higher or equal priority!", colors.red), client)
+        return
+    end
+
+    local kick_client = account_manager.get_client(kick_account)
+
+    local buffer = protocol.create_databuffer()
+    buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.Disconnect, reason))
+    kick_client.network:send(buffer.bytes)
+
+    module.echo(string.format("%s [Server] Player %s has been kicked with reason: %s", colors.red, kick_username, reason))
 end)
 
 function module.echo(message)

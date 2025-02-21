@@ -26,15 +26,25 @@
   "roles": {
     "default_role": "member",
     "member": {
-      "cheat_commands": true,
-      "content_access": true,
-      "flight": true,
-      "noclip": true,
-      "attack": true,
-      "destroy": true,
-      "cheat_movement": true,
-      "debug_cheats": true,
-      "fast_interaction": true
+      "priority": 1,
+      "game_rules": {
+        "cheat_commands": true,
+        "content_access": true,
+        "flight": true,
+        "noclip": true,
+        "attack": true,
+        "destroy": true,
+        "cheat_movement": true,
+        "debug_cheats": true,
+        "fast_interaction": true
+      },
+
+      "server_rules": {
+        "kick": true,
+        "ban": true,
+        "unban": true,
+        "role_management": true
+      }
     }
   }
 }

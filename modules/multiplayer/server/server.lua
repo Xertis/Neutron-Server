@@ -2,7 +2,7 @@ local protect = require "lib/private/protect"
 local socketlib = require "lib/public/socketlib"
 local Player = require "multiplayer/server/classes/player"
 local Network = require "lib/public/network"
-local protocol = require "lib/public/protocol"
+local container = require "lib/private/common/container"
 local server_pipe = require "multiplayer/server/server_pipe"
 local server_echo = require "multiplayer/server/server_echo"
 local account_manager = require "lib/private/accounts/account_manager"
@@ -18,6 +18,7 @@ function server.new(port)
 
     self.clients = {}
     self.server_socket = nil
+    container.set("all_clients", self.clients)
 
     return self
 end

@@ -1,7 +1,9 @@
 local protect = require "lib/private/protect"
 local container = require "lib/private/common/container"
 local Player = require "lib/private/sandbox/classes/player"
-local module = {}
+local module = {
+    by_username = {}
+}
 
 container.put("players_online", nil, 0)
 
@@ -88,6 +90,14 @@ function module.get_player_state(account_player)
         yaw = yaw,
         pitch = pitch
     }
+end
+
+function module.by_username.is_online(name)
+    if module.get_players()[name] then
+        return true
+    end
+
+    return false
 end
 
 return protect.protect_return(module)

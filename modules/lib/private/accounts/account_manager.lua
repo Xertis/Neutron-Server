@@ -4,9 +4,11 @@ if protect.protect_require() then return end
 local Account = require "lib/private/accounts/account"
 local sandbox = require "lib/private/sandbox/sandbox"
 local container = require "lib/private/common/container"
-local module = {}
+local module = {
+    by_username = {}
+}
 
-function module.login(username, password)
+function module.login(username)
     logger.log(string.format('account "%s" is logging...', username))
 
     local account = Account.new(username) or container.get_all(username).account
@@ -28,6 +30,10 @@ function module.login(username, password)
     return account
 end
 
+function module.by_username.get_account(name)
+    return container.get_all(name).account
+end
+
 function module.leave(account)
     logger.log(string.format('account "%s" is leaving...', account.username))
     account:abort()
@@ -38,6 +44,32 @@ function module.leave(account)
     container.clear(account.username)
 
     return account
+end
+
+function module.get_role(account)
+    if not account then
+        return nil
+    end
+
+    return CONFIG.roles[account.role]
+end
+
+function module.get_client(account)
+    for _, client in pairs(container.get_all("all_clients")) do
+        if client.account == account then
+            return client
+        end
+    end
+end
+
+function module.get_rules(account, root)
+    if not root then
+        root = "game_rules"
+    elseif root == true then
+        root = "server_rules"
+    end
+
+    return CONFIG.roles[account.role][root]
 end
 
 return module

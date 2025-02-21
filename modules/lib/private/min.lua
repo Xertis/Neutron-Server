@@ -6,6 +6,7 @@ local hash = require "lib/private/hash"
 local lib = {
     server = {},
     world = {},
+    roles = {},
     hash = hash
 }
 
@@ -45,6 +46,14 @@ end
 function lib.world.open_main()
     logger.log("Discovery of the main world")
     app.open_world(CONFIG.game.main_world)
+end
+
+function lib.roles.is_higher(role1, role2)
+    if role1.priority > role2.priority then
+        return true
+    end
+
+    return false
 end
 
 return protect.protect_return(lib)

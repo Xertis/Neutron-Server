@@ -11,6 +11,10 @@ function module.put(key, val, indx)
     DATA[key][indx] = val
 end
 
+function module.set(key, tbl)
+    DATA[key] = tbl
+end
+
 function module.clear(key)
     DATA[key] = {}
 end
