@@ -10,7 +10,7 @@
         ["PlayerPosition", "x:float", "y:float", "z:float", "yaw:float", "pitch:float"],
         ["RequestChunk", "x:int32", "z:int32"],
         ["ChatMessage", "message:string"],
-        ["BlockUpdate", "x:int32", "y:int32", "z:int32", "block_state:uint16", "block_id:uint8"],
+        ["BlockUpdate", "x:int32", "y:int32", "z:int32", "block_state:uint16", "block_id:string"],
         ["Disconnect"]
     ],
     "server": [
@@ -41,12 +41,12 @@
         ["PlayerListRemove", "username:string", "entity_id:uint32"],
         ["ChunkData", "x:int32", "z:int32", "data:byteArray"],
         ["ChatMessage", "message:string"],
-        ["BlockUpdate", "x:int32", "y:int32", "z:int32", "block_state:uint16", "block_id:uint8"],
+        ["BlockUpdate", "x:int32", "y:int32", "z:int32", "block_state:uint16", "block_id:string"],
         ["Disconnect", "reason:string"]
     ],
     "states": ["Status", "Login", "Active"],
     "structures": [
-        ["Block", "x:int32", "y:int32", "z:int32", "block_state:uint16", "block_id:uint8"],
+        ["Block", "x:int32", "y:int32", "z:int32", "block_state:uint16", "block_id:string"],
         ["Player", "entity_id:uint32", "username:string"]
     ]
 }

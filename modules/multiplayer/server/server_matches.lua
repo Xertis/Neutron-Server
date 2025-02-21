@@ -129,6 +129,7 @@ matches.logging = matcher.new(
         chat.echo(message)
 
         if not CONFIG.server.password_auth then
+            client.account.is_logged = true
             return
         end
 

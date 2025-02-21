@@ -65,8 +65,12 @@ function module.get_chunk(pos)
     return world.get_chunk_data(pos.x, pos.z)
 end
 
-function module.place_block(_block, pid)
-    block.place(_block.x, _block.y, _block.z, _block.id, _block.states, pid)
+function module.place_block(block_state, pid)
+    if type(block_state.id)[1] == 's' then
+        block_state.id = block.index(block_state.id)
+    end
+
+    block.place(block_state.x, block_state.y, block_state.z, block_state.id, block_state.states, pid)
 end
 
 function module.set_player_state(account_player, state)
