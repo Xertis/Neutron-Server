@@ -9,6 +9,11 @@ CODES = {
     codes_path = "server:default_data/codes.json"
 }
 
+--Аккаунты
+RESERVED_USERNAMES = {
+    "server"
+}
+
 --Сервер
 IS_RUNNING = false
 

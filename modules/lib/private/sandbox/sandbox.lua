@@ -92,6 +92,20 @@ function module.get_player_state(account_player)
     }
 end
 
+function module.set_day_time(time)
+    if time == "day" then
+        time = 0.5
+    elseif time == "night" then
+        time = 0
+    elseif type(time)[1] ~= 'n' and not tonumber(time) then
+        return false
+    end
+
+    time = math.normalize(tonumber(time))
+    world.set_day_time(time)
+    return true
+end
+
 function module.by_username.is_online(name)
     if module.get_players()[name] then
         return true

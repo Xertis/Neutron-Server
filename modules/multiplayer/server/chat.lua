@@ -40,7 +40,9 @@ commands:add_case("help", function ( ... )
         "----- Help (.help) -----",
         ".help - Shows a list of available commands.",
         ".list - Shows a list of online players.",
-        ".kick <nickname> [reason] - Kicks the user"
+        ".kick <nickname> [reason] - Kicks the user",
+        ".role [nickname] - Returns the role of the user",
+        ".time <time> - Sets the game time"
     }
 
     for _, m in ipairs(messages) do
@@ -48,7 +50,6 @@ commands:add_case("help", function ( ... )
     end
 
     module.tell(string.format("%s %s", colors.white, message), client)
-
 end)
 
 commands:add_case("register", function ( ... )
@@ -116,7 +117,7 @@ commands:add_case("kick", function ( ... )
     local kick_role = account_manager.get_role(kick_account)
 
     if not kick_role or not sandbox.by_username.is_online(kick_username) then
-        module.tell(string.format("%s The player %s is currently offline!", colors.red, kick_username), client)
+        module.tell(string.format('%s The player "%s" is currently offline!', colors.red, kick_username), client)
         return
     elseif kick_username == client.player.username then
         module.tell(string.format("%s You cannot kick yourself!", colors.red), client)
@@ -135,8 +136,45 @@ commands:add_case("kick", function ( ... )
     buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.Disconnect, reason))
     kick_client.network:send(buffer.bytes)
 
-    module.echo(string.format("%s [Server] Player %s has been kicked with reason: %s", colors.red, kick_username, reason))
+    module.echo(string.format("%s [%s] Player **%s** has been kicked with reason: %s", colors.red, account.username, kick_username, reason))
     kick_client.active = false
+end)
+
+commands:add_case("role", function ( ... )
+    local values = {...}
+    local client = values[3]
+    local username = values[2][1] or client.account.username
+    local account = account_manager.by_username.get_account(username)
+
+    if not account or not sandbox.by_username.is_online(username) then
+        module.tell(string.format('%s The player "%s" is currently offline!', colors.red, username), client)
+        return
+    end
+
+    module.tell(string.format('%s The role of the player "%s" is: %s', colors.yellow, username, account.role), client)
+end)
+
+commands:add_case("time_set", function ( ... )
+    local values = {...}
+    local client = values[3]
+    local time = values[2][1]
+    local account = client.account
+
+    local role = account_manager.get_role(account)
+    if not role.server_rules.time_management then
+        module.tell(string.format("%s You do not have sufficient permissions to perform this action!", colors.red), client)
+        return
+    elseif not time then
+        module.tell(string.format('%s Incorrect time entered! Please enter a number between 0 and 1', colors.red), client)
+        return
+    end
+
+    local status = sandbox.set_day_time(time)
+    if status then
+        module.echo(string.format('%s [%s] Time has been changed to: %s', colors.yellow, account.username, time))
+    else
+        module.tell(string.format("%s Incorrect time entered! Please enter a number between 0 and 1", colors.red), client)
+    end
 end)
 
 function module.echo(message)

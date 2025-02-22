@@ -42,6 +42,11 @@ do
     end
 end
 
+--Другое
+do
+    RESERVED_USERNAMES = table.freeze(RESERVED_USERNAMES)
+end
+
 logger.log("settings initialized")
 
 world.preparation_main()

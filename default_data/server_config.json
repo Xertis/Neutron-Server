@@ -42,7 +42,8 @@
       "server_rules": {
         "kick": true,
         "ban": true,
-        "role_management": true
+        "role_management": true,
+        "time_management": true
       }
     }
   }

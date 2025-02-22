@@ -11,6 +11,11 @@ local module = {
 function module.login(username)
     logger.log(string.format('account "%s" is logging...', username))
 
+    if table.has(table.freeze_unpack(RESERVED_USERNAMES), username:lower()) then
+        logger.log(string.format('The username "%s" is reserved for the system and cannot be used by a client.', username))
+        return
+    end
+
     local account = Account.new(username) or container.get_all(username).account
     local status = account:revive()
 
