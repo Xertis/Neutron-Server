@@ -24,6 +24,24 @@ function string.first_up(str)
     return (str:gsub("^%l", string.upper))
 end
 
+-- TIME
+
+function time.formatted_time()
+    local time_table = os.date("*t")
+
+    local date = string.format("%04d/%02d/%02d", time_table.year, time_table.month, time_table.day)
+    local time = string.format("%02d:%02d:%02d", time_table.hour, time_table.min, time_table.sec)
+
+    local milliseconds = string.format("%03d", math.floor((os.clock() % 1) * 1000))
+
+    local utc_offset = os.date("%z")
+    if not utc_offset then
+        utc_offset = "+0000"
+    end
+
+    return string.format("%s %s.%s%s", date, time, milliseconds, utc_offset)
+end
+
 --- LOGGER
 
 logger = {}
@@ -36,13 +54,9 @@ function logger.log(text, type)
     local source = file.name(debug.getinfo(2).source)
     local out = '[' .. string.left_padding(source, 20) .. '] ' .. text
 
-    local uptime = time.uptime()
-    local deltatime = tostring(math.round(time.delta(), 8))
+    local uptime = time.formatted_time()
 
-    uptime = string.formatted_time(uptime)
-    uptime = string.format("%s:%s:%s", uptime.h, uptime.m, uptime.s)
-
-    local timestamp = string.format("[%s] %s | %s", type, uptime, deltatime)
+    local timestamp = string.format("[%s] %s", type, uptime)
 
     print(timestamp .. string.left_padding(out, #out+33-#timestamp))
 end
@@ -101,7 +115,7 @@ end
 function table.filter(t, func)
     for i, v in pairs(t) do
         if not func(i, v) then
-            t[i] = nil
+            table.remove(t, i)
         end
     end
 
@@ -198,6 +212,21 @@ function table.has(t, x)
     return false
 end
 
+function table.easy_concat(tbl)
+    local output = ""
+    for i, value in pairs(tbl) do
+        output = output .. tostring(value)
+        if i ~= #tbl then
+            output = output .. ", "
+        end
+    end
+    return output
+end
+
+function table.equals(tbl1, tbl2)
+    return table.easy_concat(tbl1) == table.easy_concat(tbl2)
+end
+
 --- MATH
 
 function math.sum(...)
@@ -260,4 +289,110 @@ function bjson.archive_frombytes(bytes)
     end
 
     return res
+end
+
+-- FILE
+
+local function iter(table, idx)
+    idx = idx + 1
+    local v = table[idx]
+    if v then
+        return idx, v
+    end
+end
+
+local function start_at(table, idx)
+    return iter, table, idx-1
+end
+
+function file.recursive_list(path)
+    local paths = {}
+    for _, unit in ipairs(file.list(path)) do
+        unit = unit:gsub(":/+", ":")
+
+        if file.isfile(unit) then
+            table.insert(paths, unit)
+        else
+            table.merge(paths, file.recursive_list(unit))
+        end
+    end
+
+    return paths
+end
+
+function file.join(...)
+    local parts = nil
+    local path = nil
+
+    if type(...) == "table" then
+        parts = ...
+    else
+        parts = {...}
+    end
+
+    if #parts > 0 and type(parts[1]) == "string" and parts[1]:sub(-1) == ":" then
+        path = parts[1]
+
+        for i = 2, #parts do
+            path = path .. parts[i] .. '/'
+        end
+    else
+        path = table.concat(parts, "/")
+        path = path:gsub("/+", "/")
+    end
+
+    if path:sub(-1) == "/" then
+        path = path:sub(1, -2)
+    end
+
+    return path
+end
+
+function file.split(path)
+    local parts = {}
+
+    for part in string.gmatch(path, "[^/:]+") do
+        table.insert(parts, part)
+    end
+
+    return parts
+end
+
+function file.mktree(path, value)
+    path = file.split(path)
+    path[1] = path[1] .. ':'
+    local split_path = table.sub(path, 1, #path-1)
+
+    print(file.join(split_path))
+    print(file.join(path))
+
+    file.mkdirs(file.join(split_path))
+    file.write_bytes(file.join(path), value)
+end
+-- OTHER
+
+function cached_require(path)
+    if not string.find(path, ':') then
+        local prefix, _ = parse_path(debug.getinfo(2).source)
+        return cached_require(prefix..':'..path)
+    end
+    local prefix, file = parse_path(path)
+    return package.loaded[prefix..":modules/"..file..".lua"]
+end
+
+function start_require(path)
+    if not string.find(path, ':') then
+        local prefix, _ = parse_path(debug.getinfo(2).source)
+        return start_require(prefix..':'..path)
+    end
+
+    local old_path = path
+    local prefix, file = parse_path(path)
+    path = prefix..":modules/"..file..".lua"
+
+    if not _G["/$p"] then
+        return require(old_path)
+    end
+
+    return _G["/$p"][path]
 end

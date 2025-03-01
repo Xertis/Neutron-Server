@@ -1,7 +1,7 @@
 local protect = require "lib/private/protect"
 if protect.protect_require() then return end
 
-local metadata = require "lib/private/files/metadata"
+local metadata = start_require "lib/private/files/metadata"
 local lib = require "lib/private/min"
 local account = {}
 account.__index = account

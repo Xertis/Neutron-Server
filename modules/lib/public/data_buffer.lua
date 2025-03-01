@@ -182,6 +182,10 @@ function data_buffer:set_position(pos)
 	self.pos = pos
 end
 
+function data_buffer:move_position(step)
+	self.pos = self.pos + step
+end
+
 function data_buffer:set_bytes(bytes)
 	for i = 1, #bytes do
 		local byte = bytes[i]

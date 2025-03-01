@@ -6,7 +6,7 @@ local container = require "lib/private/common/container"
 local server_pipe = require "multiplayer/server/server_pipe"
 local server_echo = require "multiplayer/server/server_echo"
 local account_manager = require "lib/private/accounts/account_manager"
-local chat = require "multiplayer/server/chat"
+local chat = require "multiplayer/server/chat/chat"
 
 local server = {}
 server.__index = server

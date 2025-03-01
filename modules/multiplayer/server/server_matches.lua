@@ -4,17 +4,9 @@ local switcher = require "lib/public/common/switcher"
 local protect = require "lib/private/protect"
 local sandbox = require "lib/private/sandbox/sandbox"
 local account_manager = require "lib/private/accounts/account_manager"
-local chat = require "multiplayer/server/chat"
+local chat = require "multiplayer/server/chat/chat"
+local timeout_executor = require "server:lib/private/common/timeout_executor"
 
-local function has_true(tbl)
-    for _, e in pairs(tbl) do
-        if e then
-            return true
-        end
-    end
-
-    return false
-end
 
 local matches = {
     client_online_handler = switcher.new(function (...)
@@ -22,6 +14,14 @@ local matches = {
         print(json.tostring(values[1]))
     end)
 }
+
+matches.actions = {}
+
+function matches.actions.Disconnect(client, reason)
+    local buffer = protocol.create_databuffer()
+    buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.Disconnect, reason))
+    client.network:send(buffer.bytes)
+end
 
 matches.status_request = matcher.new(
     function ()
@@ -76,20 +76,30 @@ matches.logging = matcher.new(
     function (values)
         local client = matches.status_request.default_data
         local packet = values[2]
+        local hashes = values[3]
         local buffer = protocol.create_databuffer()
 
         local account = account_manager.login(packet.username)
 
-        if has_true(
-            {
-                not account,
-                #table.keys(sandbox.get_players()) >= CONFIG.server.max_players,
-                sandbox.get_players()[packet.username] ~= nil,
-                (not table.has(table.freeze_unpack(CONFIG.server.whitelist), packet.username) and #table.freeze_unpack(CONFIG.server.whitelist) > 0),
-                table.has(table.freeze_unpack(CONFIG.server.blacklist), packet.username)
-            }
-        ) then
+        if not account then
             logger.log("JoinSuccess has been aborted")
+            matches.actions.Disconnect(client, "Not found or unable to create an account")
+            return
+        elseif #table.keys(sandbox.get_players()) >= CONFIG.server.max_players then
+            logger.log("JoinSuccess has been aborted")
+            matches.actions.Disconnect(client, "The server is full")
+            return
+        elseif (not table.has(table.freeze_unpack(CONFIG.server.whitelist), packet.username) and #table.freeze_unpack(CONFIG.server.whitelist) > 0) then
+            logger.log("JoinSuccess has been aborted")
+            matches.actions.Disconnect(client, "You are not on the whitelist")
+            return
+        elseif table.has(table.freeze_unpack(CONFIG.server.blacklist), packet.username) then
+            logger.log("JoinSuccess has been aborted")
+            matches.actions.Disconnect(client, "You're on the blacklist")
+            return
+        elseif sandbox.get_players()[packet.username] ~= nil then
+            logger.log("JoinSuccess has been aborted")
+            matches.actions.Disconnect(client, "A player with that name is already online")
             return
         end
 
@@ -155,6 +165,52 @@ matches.logging:add_match(
         end
     end
 )
+matches.logging:add_match(
+    function (val)
+        if val.packet_type == protocol.ClientMsg.PacksHashes then
+            return true
+        end
+    end
+)
+
+---------
+
+matches.packs = matcher.new(
+    function ()
+        local client = matches.status_request.default_data
+        local buffer = protocol.create_databuffer()
+
+        local packs = pack.get_installed()
+
+        table.filter(packs, function (_, p)
+            if p == "server" then
+                return false
+            end
+
+            return true
+        end)
+
+        local DATA = packs
+
+        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.PacksList, DATA))
+        client.network:send(buffer.bytes)
+    end
+)
+
+matches.packs:add_match(
+    function (val)
+        if val.packet_type == protocol.ClientMsg.HandShake and val.next_state == protocol.States.Login then
+            return true
+        end
+    end
+)
+matches.packs:add_match(
+    function (val)
+        if val.packet_type == protocol.ClientMsg.JoinGame then
+            return true
+        end
+    end
+)
 
 ---------
 
@@ -181,30 +237,43 @@ matches.client_online_handler:add_case(protocol.ClientMsg.BlockUpdate, (
 ))
 
 ---------
+---
+local function chunk_responce(...)
+    local values = {...}
+    local packet = values[1]
+    local client = values[2]
+    local is_timeout = values[3]
 
-matches.client_online_handler:add_case(protocol.ClientMsg.RequestChunk, (
-    function (...)
-        local values = {...}
-        local packet = values[1]
-        local client = values[2]
-        local chunk = sandbox.get_chunk({x = packet.x, z = packet.z})
+    local chunk = sandbox.get_chunk({x = packet.x, z = packet.z})
 
-        if not chunk then
-            return
+    if not chunk then
+        if not is_timeout then
+            timeout_executor.push(
+                chunk_responce,
+                {packet, client, true},
+                10
+            )
         end
 
-        local buffer = protocol.create_databuffer()
-
-        local DATA = {
-            packet.x,
-            packet.z,
-            chunk
-        }
-
-        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.ChunkData, unpack(DATA)))
-        client.network:send(buffer.bytes)
+        return
     end
-))
+
+    local buffer = protocol.create_databuffer()
+
+    local DATA = {
+        packet.x,
+        packet.z,
+        chunk
+    }
+
+    buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.ChunkData, unpack(DATA)))
+    client.network:send(buffer.bytes)
+
+    return true
+end
+
+
+matches.client_online_handler:add_case(protocol.ClientMsg.RequestChunk, chunk_responce)
 
 ---------
 

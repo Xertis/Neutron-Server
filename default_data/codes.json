@@ -12,5 +12,9 @@
         "CorrectPassword": 204,
         "WithoutChanges": 205,
         "PasswordUnvalidated": 206
+    },
+    "vops": {
+        "InvalidMark": 301,
+        "InvalidVersion": 302
     }
 }

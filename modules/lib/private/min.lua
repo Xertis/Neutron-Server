@@ -14,7 +14,12 @@ local lib = {
 
 function lib.world.preparation_main()
     --Загружаем мир
-    app.reconfig_packs(table.freeze_unpack(CONFIG.game.content_packs), {})
+    local packs = table.freeze_unpack(CONFIG.game.content_packs)
+    table.insert(packs, "server")
+
+    app.config_packs(packs)
+    app.load_content()
+
     if not file.exists("user:worlds/" .. CONFIG.game.main_world .. "/world.json") then
         logger.log("Creating a main world...")
         local name = CONFIG.game.main_world
@@ -54,6 +59,10 @@ function lib.roles.is_higher(role1, role2)
     end
 
     return false
+end
+
+function lib.roles.exists(role)
+    return CONFIG.roles[role] and true or false
 end
 
 return protect.protect_return(lib)

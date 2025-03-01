@@ -107,6 +107,49 @@ function module.sha256(input)
     return hash
 end
 
+function module.lite(str, seed)
+    local hash = seed or 5381
+    local len = #str
+
+    for i = 1, len do
+        local char = string.byte(str, i)
+        hash = bit.bxor(bit.lshift(hash, 5) + hash, char)
+    end
+
+    local hex_hash = string.format("%08x", bit.band(hash, 0xFFFFFFFF))
+    return hex_hash
+end
+
+function module.hash_mods(packs)
+    packs = packs or pack.get_installed()
+
+    local hash_data = "00000000"
+
+    for _, pack_path in ipairs(packs) do
+        local files = file.recursive_list(pack_path)
+
+        table.filter(files, function (_, path)
+            if string.ends_with(path, "png") or string.starts_with(path, '.') then
+                return false
+            end
+            return true
+        end)
+
+        for _, abs_file_path in ipairs(files) do
+            local file_data = file.read_bytes(abs_file_path)
+            local str_data = ""
+
+            for _, byte in ipairs(file_data) do
+                str_data = str_data .. string.char(byte)
+            end
+
+            hash_data = module.lite(str_data, tonumber(hash_data, 16))
+        end
+    end
+
+    return hash_data
+end
+
 function module.equals(str, hash)
     if module.sha256(str) == hash then
         return true

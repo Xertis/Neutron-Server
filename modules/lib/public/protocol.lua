@@ -197,6 +197,7 @@ recursive_parse = function(data_struct, buffer, result)
         if key ~= 1 then
             local type_descr = string.explode("|", value)[1]
             local struct_descr = string.explode("|", value)[2]
+
             result[string.explode(":", type_descr)[1]] = DATA_DECODE[string.explode(":", type_descr)[2]](buffer, struct_descr)
         end
     end

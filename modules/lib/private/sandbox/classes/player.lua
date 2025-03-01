@@ -2,7 +2,7 @@ local protect = require "lib/private/protect"
 
 if protect.protect_require() then return end
 
-local metadata = require "lib/private/files/metadata"
+local metadata = start_require "lib/private/files/metadata"
 local Player = {}
 Player.__index = Player
 
