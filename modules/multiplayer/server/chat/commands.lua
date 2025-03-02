@@ -214,4 +214,36 @@ commands:add_case("time_set", function ( ... )
     end
 end)
 
+-- commands:add_case("png", function ( ... )
+--     local img = require "libpng:image"
+--     img = img:new(2000, 2000)
+
+--     local n1 = math.floor(-1000 / 16)
+--     local n2 = math.floor(1000 / 16)
+
+--     local x1, z1 = n1, n1
+--     local x2, z2 = n2, n2
+
+--     for x=x1, x2 do
+--         for z=z1, z2 do
+--             local v = world.get_chunk_data(x, z)
+--             if v then
+--                 img:set(x+62, z+62, 255, 255, 255, 255)
+--             else
+--                 img:set(x+62, z+62, 0, 0, 0, 255)
+--             end
+--         end
+--     end
+
+--     local x, y, z = player.get_pos(1)
+--     x, z = math.floor(x / 16) + 62, math.floor(z / 16) + 62
+--     img:set(x, z, 255, 0, 0, 255)
+
+--     x, y, z = player.get_pos(0)
+--     x, z = math.floor(x / 16) + 62, math.floor(z / 16) + 62
+--     img:set(x, z, 255, 0, 0, 255)
+
+--     img:to_png("export:rferg.png")
+-- end)
+
 return protect.protect_return(commands)

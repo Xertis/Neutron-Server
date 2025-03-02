@@ -237,7 +237,7 @@ matches.client_online_handler:add_case(protocol.ClientMsg.BlockUpdate, (
 ))
 
 ---------
----
+
 local function chunk_responce(...)
     local values = {...}
     local packet = values[1]
@@ -251,7 +251,7 @@ local function chunk_responce(...)
             timeout_executor.push(
                 chunk_responce,
                 {packet, client, true},
-                10
+                30
             )
         end
 
@@ -339,5 +339,22 @@ matches.client_online_handler:add_case(protocol.ClientMsg.Disconnect, (
         chat.echo(message)
     end
 ))
+
+--------
+
+local function chunks_responce(...)
+    local values = {...}
+    local chunks_packet = values[1].chunks
+    local client = values[2]
+    local is_timeout = values[3]
+
+    for indx=1, #chunks_packet, 2 do
+        local packet = {x = chunks_packet[indx], z = chunks_packet[indx+1]}
+        chunk_responce(packet, client)
+    end
+end
+
+
+matches.client_online_handler:add_case(protocol.ClientMsg.RequestChunks, chunks_responce)
 
 return protect.protect_return(matches)

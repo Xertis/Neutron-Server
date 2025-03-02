@@ -9,6 +9,7 @@
         ["KeepAlive", "challenge:uint32"],
         ["PlayerPosition", "x:float", "y:float", "z:float", "yaw:float", "pitch:float"],
         ["RequestChunk", "x:int32", "z:int32"],
+        ["RequestChunks", "chunks:array|int16"],
         ["ChatMessage", "message:string"],
         ["BlockUpdate", "x:int32", "y:int32", "z:int32", "block_state:uint16", "block_id:string"],
         ["PacksHashes", "packs:array|string"],

@@ -1,5 +1,7 @@
 local data_buffer = require "lib/public/data_buffer"
 
+_G['$VoxelOnline'] = true
+
 --- STRING
 
 function string.padding(str, size, char)

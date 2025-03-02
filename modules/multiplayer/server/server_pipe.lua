@@ -39,6 +39,7 @@ ServerPipe:add_middleware(function(client)
 
     while not List.is_empty(client.received_packets) do
         local packet = List.popleft(client.received_packets)
+
         if client.active == false then
             matches.status_request:match(packet)
             matches.logging:match(packet)

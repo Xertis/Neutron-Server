@@ -32,7 +32,6 @@ server:start()
 logger.log("server is started")
 
 while IS_RUNNING do
-
     app.tick()
     timeout_executor.process()
     server:tick()
