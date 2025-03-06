@@ -6,8 +6,10 @@ local sandbox = require "lib/private/sandbox/sandbox"
 local account_manager = require "lib/private/accounts/account_manager"
 local chat = require "multiplayer/server/chat/chat"
 local timeout_executor = require "lib/private/common/timeout_executor"
+local echo = require "multiplayer/server/server_echo"
 local lib = require "lib/private/min"
 
+local hashed_packs = nil
 
 local matches = {
     client_online_handler = switcher.new(function (...)
@@ -25,17 +27,18 @@ local function check_mods(client_hashes)
         if p == "server" then
             return false
         end
-
         return true
     end)
 
-    local server_hashes = {}
-    for i, pack in ipairs(packs) do
-        table.insert(server_hashes, pack)
-        table.insert(server_hashes, lib.hash.hash_mods({pack}))
+    if not hashed_packs then
+        hashed_packs = {}
+        for i, pack in ipairs(packs) do
+            table.insert(hashed_packs, pack)
+            table.insert(hashed_packs, lib.hash.hash_mods({pack}))
+        end
     end
 
-    return table.equals(server_hashes, client_hashes)
+    return table.equals(hashed_packs, client_hashes)
 end
 
 
@@ -153,6 +156,8 @@ matches.logging = matcher.new(
         client.network:send(buffer.bytes)
         logger.log("JoinSuccess has been sended")
 
+        ---
+
         local state = sandbox.get_player_state(account_player)
         DATA = {state.x, state.y, state.z, state.yaw, state.pitch}
 
@@ -160,6 +165,8 @@ matches.logging = matcher.new(
         buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.SynchronizePlayerPosition, unpack(DATA)))
         client.network:send(buffer.bytes)
         client:set_active(true)
+
+        ---
 
         local message = string.format("[%s] %s", account_player.username, "join the game")
         chat.echo(message)
@@ -174,6 +181,18 @@ matches.logging = matcher.new(
         elseif not account.is_logged then
             chat.tell("Please log in using the command .login <password> to access your account.", client)
         end
+
+        ---
+
+        DATA = {account_player.pid, account_player.username, state.x, state.y, state.z}
+
+        echo.put_event(
+            function (c)
+                buffer = protocol.create_databuffer()
+                buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.PlayerJoined, unpack(DATA)))
+                c.network:send(buffer.bytes)  
+            end,
+        client)
     end
 )
 

@@ -137,7 +137,12 @@ function module.hash_mods(packs)
         local files = file.recursive_list(pack_path)
 
         files = table.filter(files, function (_, path)
-            if string.ends_with(path, "png") or string.starts_with(path, '.') or string.ends_with(path, "vec3") or string.ends_with(path, "ogg") then
+            if string.ends_with(path, "png") or
+            string.starts_with(path, '.') or
+            string.ends_with(path, "vec3") or
+            string.ends_with(path, "ogg") or
+            string.find(path, ".git")
+            then
                 return false
             end
             return true
