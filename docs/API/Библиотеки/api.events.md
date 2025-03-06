@@ -11,7 +11,7 @@ api.events.tell(
 Отправляет моду **pack** клиента **client** ивент типа **event**, внутри которого лежит массив байт **bytes**
 
 ```lua
-api.events.echo(
+server_api.events.echo(
 	pack: string, 
 	event: string, 
 	bytes: table<bytes>

@@ -1,6 +1,6 @@
 local protocol = require "lib/public/protocol"
 local events = require "api/events"
-local bson = require "lib/private/bson"
+local bson = require "lib/private/files/bson"
 
 local module = {}
 

@@ -5,7 +5,7 @@ local ACCESS_DENIES = "Access denied"
 
 local function parse_path(path)
     if path == "main.lua" or path == "=[C]" then
-        return "server"
+        return "server", ""
     end
 
     local index = string.find(path, ':')

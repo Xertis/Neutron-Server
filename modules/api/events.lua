@@ -1,5 +1,13 @@
+local function get(path)
+    if not _G["/$p"] then
+        return
+    end
+
+    return _G["/$p"][path]
+end
+
 local protocol = require "lib/public/protocol"
-local server_echo = require "multiplayer/server/server_echo"
+local server_echo = get("server:modules/multiplayer/server/server_echo.lua")
 
 local module = {}
 local handlers = {}
@@ -20,13 +28,16 @@ end
 
 function module.on(pack, event, func)
     local pack_handlers = table.set_default(handlers, pack, {})
-    local pack_handler_events = table.set_default(pack_handlers[event], {})
+    local pack_handler_events = table.set_default(pack_handlers, event {})
 
     table.insert(pack_handler_events, func)
 end
 
 function module.__emit__(pack, event, bytes)
-    for i, func in ipairs(handlers[pack][event]) do
+    table.set_default(handlers, pack, {})
+    table.set_default(handlers[pack], event, {})
+
+    for _, func in ipairs(handlers[pack][event]) do
         func(bytes)
     end
 end
