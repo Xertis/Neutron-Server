@@ -7,6 +7,7 @@ local account_manager = require "lib/private/accounts/account_manager"
 local chat = require "multiplayer/server/chat/chat"
 local timeout_executor = require "lib/private/common/timeout_executor"
 local echo = require "multiplayer/server/server_echo"
+local api_events = require "api/events"
 local lib = require "lib/private/min"
 
 local hashed_packs = nil
@@ -414,6 +415,17 @@ matches.client_online_handler:add_case(protocol.ClientMsg.BlockInteract, (
         local block_name = block.name(block.get(x, y, z))
         events.emit(block_name .. ".interact", x, y, z, 1)
         events.emit("server:block_interact", block.get(x, y, z), x, y, z, 1)
+    end
+))
+
+--------
+
+matches.client_online_handler:add_case(protocol.ClientMsg.PackEvent, (
+    function (...)
+        local values = {...}
+        local packet = values[1]
+
+        api_events.__emit__(packet.pack, packet.event, packet.bytes)
     end
 ))
 

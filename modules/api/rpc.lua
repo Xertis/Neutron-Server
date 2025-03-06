@@ -4,11 +4,11 @@ local bson = require "lib/private/bson"
 
 local module = {}
 
-function module.create_rpc(pack, event_name)
+function module.create(pack, event)
     return function (client, ...)
         local buffer = protocol.create_databuffer()
         local args = bson.encode(buffer, {...})
-        events.tell(pack, event_name, client, args.bytes)
+        events.tell(pack, event, client, args.bytes)
     end
 end
 
