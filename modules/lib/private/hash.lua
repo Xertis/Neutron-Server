@@ -108,15 +108,22 @@ function module.sha256(input)
 end
 
 function module.lite(str, seed)
-    local hash = seed or 5381
-    local len = #str
+    local hash_high = seed
+    local hash_low = seed
 
-    for i = 1, len do
+    for i = 1, #str do
         local char = string.byte(str, i)
-        hash = bit.bxor(bit.lshift(hash, 5) + hash, char)
+        hash_high = bit.bxor(hash_high, bit.rol(hash_low + char, 7))
+        hash_low = bit.bxor(hash_low, bit.rol(hash_high + char, 13))
     end
 
-    local hex_hash = string.format("%08x", bit.band(hash, 0xFFFFFFFF))
+    local hex_hash = string.format("%08x%08x%08x%08x",
+        bit.band(bit.rshift(hash_high, 32), 0xFFFFFFFF),
+        bit.band(hash_high, 0xFFFFFFFF),
+        bit.band(bit.rshift(hash_low, 32), 0xFFFFFFFF),
+        bit.band(hash_low, 0xFFFFFFFF)
+    )
+
     return hex_hash
 end
 
@@ -126,10 +133,11 @@ function module.hash_mods(packs)
     local hash_data = "00000000"
 
     for _, pack_path in ipairs(packs) do
+        pack_path = pack_path .. ':'
         local files = file.recursive_list(pack_path)
 
-        table.filter(files, function (_, path)
-            if string.ends_with(path, "png") or string.starts_with(path, '.') then
+        files = table.filter(files, function (_, path)
+            if string.ends_with(path, "png") or string.starts_with(path, '.') or string.ends_with(path, "vec3") or string.ends_with(path, "ogg") then
                 return false
             end
             return true

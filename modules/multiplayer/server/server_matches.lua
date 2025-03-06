@@ -5,7 +5,8 @@ local protect = require "lib/private/protect"
 local sandbox = require "lib/private/sandbox/sandbox"
 local account_manager = require "lib/private/accounts/account_manager"
 local chat = require "multiplayer/server/chat/chat"
-local timeout_executor = require "server:lib/private/common/timeout_executor"
+local timeout_executor = require "lib/private/common/timeout_executor"
+local lib = require "lib/private/min"
 
 
 local matches = {
@@ -16,6 +17,27 @@ local matches = {
 }
 
 matches.actions = {}
+
+local function check_mods(client_hashes)
+    local packs = pack.get_installed()
+
+    table.filter(packs, function (_, p)
+        if p == "server" then
+            return false
+        end
+
+        return true
+    end)
+
+    local server_hashes = {}
+    for i, pack in ipairs(packs) do
+        table.insert(server_hashes, pack)
+        table.insert(server_hashes, lib.hash.hash_mods({pack}))
+    end
+
+    return table.equals(server_hashes, client_hashes)
+end
+
 
 function matches.actions.Disconnect(client, reason)
     local buffer = protocol.create_databuffer()
@@ -76,12 +98,16 @@ matches.logging = matcher.new(
     function (values)
         local client = matches.status_request.default_data
         local packet = values[2]
-        local hashes = values[3]
+        local hashes = values[3].packs
         local buffer = protocol.create_databuffer()
 
         local account = account_manager.login(packet.username)
 
-        if not account then
+        if not check_mods(hashes) then
+            logger.log("JoinSuccess has been aborted")
+            matches.actions.Disconnect(client, "Inconsistencies in mods found")
+            return
+        elseif not account then
             logger.log("JoinSuccess has been aborted")
             matches.actions.Disconnect(client, "Not found or unable to create an account")
             return

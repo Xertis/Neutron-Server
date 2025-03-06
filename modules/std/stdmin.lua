@@ -65,6 +65,21 @@ end
 
 --- TABLE
 
+function table.easy_concat(tbl)
+    local output = ""
+    for i, value in pairs(tbl) do
+        output = output .. tostring(value)
+        if i ~= #tbl then
+            output = output .. ", "
+        end
+    end
+    return output
+end
+
+function table.equals(tbl1, tbl2)
+    return table.easy_concat(tbl1) == table.easy_concat(tbl2)
+end
+
 function table.freeze(original)
     if type(original) ~= "table" then
         return original
@@ -115,9 +130,27 @@ function table.map(t, func)
 end
 
 function table.filter(t, func)
-    for i, v in pairs(t) do
-        if not func(i, v) then
+
+    for i = #t, 1, -1 do
+        if not func(i, t[i]) then
             table.remove(t, i)
+        end
+    end
+
+    local size = #t
+
+    for i, v in pairs(t) do
+        local i_type = type(i)
+        if i_type == "number" then
+            if i < 1 or i > size then
+                if not func(i, v) then
+                    t[i] = nil
+                end
+            end
+        else
+            if not func(i, v) then
+                t[i] = nil
+            end
         end
     end
 
