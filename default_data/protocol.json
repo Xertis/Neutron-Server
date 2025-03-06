@@ -14,6 +14,7 @@
         ["BlockUpdate", "x:int32", "y:int32", "z:int32", "block_state:uint16", "block_id:string"],
         ["BlockInteract", "x:int32", "y:int32", "z:int32"],
         ["PacksHashes", "packs:array|string"],
+        ["PackEvent", "pack:string", "event:string", "bytes:array|byte"],
         ["Disconnect"]
     ],
     "server": [
@@ -46,6 +47,7 @@
         ["ChatMessage", "message:string"],
         ["BlockUpdate", "x:int32", "y:int32", "z:int32", "block_state:uint16", "block_id:string"],
         ["PacksList", "packs:stringArray"],
+        ["PackEvent", "pack:string", "event:string", "bytes:byteArray"],
         ["Disconnect", "reason:string"]
     ],
     "states": ["Status", "Login", "Active"],

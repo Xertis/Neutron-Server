@@ -413,7 +413,7 @@ matches.client_online_handler:add_case(protocol.ClientMsg.BlockInteract, (
 
         local block_name = block.name(block.get(x, y, z))
         events.emit(block_name .. ".interact", x, y, z, 1)
-        events.emit("server:block_interact", x, y, z, 1)
+        events.emit("server:block_interact", block.get(x, y, z), x, y, z, 1)
     end
 ))
 

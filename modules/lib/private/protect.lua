@@ -43,7 +43,11 @@ function module.protect_return(val)
     for call=1, get_traceback_length() do
         local source = debug.getinfo(call).source
 
-        local prefix = parse_path(source)
+        local prefix, path = parse_path(source)
+        if prefix == "server" and path:find("api") then
+            break
+        end
+
         if prefix ~= "server" and prefix ~= "core" then
             logger.log(LOG_ACCESS_DENIES .. source, "W")
             return ACCESS_DENIES
@@ -57,7 +61,11 @@ function module.protect_require()
     for call=1, get_traceback_length() do
         local source = debug.getinfo(call).source
 
-        local prefix = parse_path(source)
+        local prefix, path = parse_path(source)
+        if prefix == "server" and path:find("api") then
+            break
+        end
+
         if prefix ~= "server" and prefix ~= "core" then
             logger.log(LOG_ACCESS_DENIES .. source, "W")
             return ACCESS_DENIES
