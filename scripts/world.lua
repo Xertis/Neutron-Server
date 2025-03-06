@@ -26,6 +26,9 @@ local function upd(blockid, x, y, z, playerid)
 
     server_echo.put_event(
         function (client)
+            if client.active ~= true then
+                return
+            end
             matches.client_online_handler:switch(protocol.ClientMsg.RequestChunk, pseudo_packet, client)
         end
     )
@@ -39,3 +42,16 @@ end
 function on_block_broken( ... )
     upd(...)
 end
+
+function on_block_replaced( ... )
+    upd(...)
+end
+
+function on_block_interact( ... )
+    upd(...)
+end
+
+events.on("server:block_interact", function (...)
+    upd(...)
+end)
+

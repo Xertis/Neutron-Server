@@ -402,4 +402,19 @@ end
 
 matches.client_online_handler:add_case(protocol.ClientMsg.RequestChunks, chunks_responce)
 
+--------
+
+matches.client_online_handler:add_case(protocol.ClientMsg.BlockInteract, (
+    function (...)
+        local values = {...}
+        local packet = values[1]
+
+        local x, y, z = packet.x, packet.y, packet.z
+
+        local block_name = block.name(block.get(x, y, z))
+        events.emit(block_name .. ".interact", x, y, z, 1)
+        events.emit("server:block_interact", x, y, z, 1)
+    end
+))
+
 return protect.protect_return(matches)

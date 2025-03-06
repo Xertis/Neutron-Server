@@ -1,6 +1,6 @@
 local data_buffer = require "lib/public/data_buffer"
 
-_G['$VoxelOnline'] = true
+_G['$VoxelOnline'] = "server"
 
 --- STRING
 
