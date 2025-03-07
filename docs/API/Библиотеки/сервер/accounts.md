@@ -8,6 +8,6 @@ api.events.get_account_by_name(username: string) -> Account
 
 2. **Получение клиента аккаунта:**
 ```lua
-api.events.get_client(account) -> Client
+api.events.get_client(account: Account) -> Client
 ```
    - Возвращает класс типа **Client** игрока с аккаунтом **account**.
