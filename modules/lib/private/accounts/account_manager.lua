@@ -61,7 +61,7 @@ end
 
 function module.get_client(account)
     for _, client in pairs(container.get_all("all_clients")) do
-        if client.account == account then
+        if client.account.username == account.username then
             return client
         end
     end

@@ -6,12 +6,12 @@ local lib = require "lib/private/min"
 local account = {}
 account.__index = account
 
-function account.new(username, ip)
+function account.new(username)
     local self = setmetatable({}, account)
 
     self.username = username
     self.active = false
-    self.ip = ip
+    self.ip = nil
     self.is_logged = false
     self.role = nil
     self.password = nil
