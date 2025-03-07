@@ -28,7 +28,7 @@ end
 
 function module.on(pack, event, func)
     local pack_handlers = table.set_default(handlers, pack, {})
-    local pack_handler_events = table.set_default(pack_handlers, event {})
+    local pack_handler_events = table.set_default(pack_handlers, event, {})
 
     table.insert(pack_handler_events, func)
 end
