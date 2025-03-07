@@ -4,7 +4,7 @@
 ```lua
 api.events.tell(pack: string, event: string, client: Client, bytes: table<bytes>)
 ```
-   - Отправляет событие **event** с данными **bytes** моду **pack** на стороне указанного клиента **client**.
+   - Отправляет событие **event** с данными **bytes** моду **pack** на сторону указанного клиента **client**.
 
 2. **Отправка события всем клиентам:**
 ```lua
