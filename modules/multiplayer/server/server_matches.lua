@@ -172,6 +172,33 @@ matches.logging = matcher.new(
         local message = string.format("[%s] %s", account_player.username, "join the game")
         chat.echo(message)
 
+        ---
+
+        DATA = {account_player.username, account_player.pid}
+        echo.put_event(
+            function (c)
+                buffer = protocol.create_databuffer()
+                buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.PlayerListAdd, unpack(DATA)))
+                c.network:send(buffer.bytes)
+            end,
+        client)
+
+        local player_online = sandbox.get_players()
+        local player_keys = table.keys(player_online)
+
+        table.map(player_keys, function (i, v)
+            return {
+                player_online[v].pid,
+                player_online[v].username
+            }
+        end)
+
+        buffer = protocol.create_databuffer()
+        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.PlayerList, player_keys))
+        client.network:send(buffer.bytes)
+
+        ---
+
         if not CONFIG.server.password_auth then
             client.account.is_logged = true
             return
@@ -182,18 +209,6 @@ matches.logging = matcher.new(
         elseif not account.is_logged then
             chat.tell("Please log in using the command .login <password> to access your account.", client)
         end
-
-        ---
-
-        DATA = {account_player.pid, account_player.username, state.x, state.y, state.z}
-
-        echo.put_event(
-            function (c)
-                buffer = protocol.create_databuffer()
-                buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.PlayerJoined, unpack(DATA)))
-                c.network:send(buffer.bytes)  
-            end,
-        client)
     end
 )
 

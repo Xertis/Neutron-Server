@@ -46,7 +46,7 @@
         ["ChunkData", "x:int32", "z:int32", "data:byteArray"],
         ["ChatMessage", "message:string"],
         ["BlockUpdate", "x:int32", "y:int32", "z:int32", "block_state:uint16", "block_id:string"],
-        ["PacksList", "packs:stringArray"],
+        ["PacksList", "packs:array|string"],
         ["PackEvent", "pack:string", "event:string", "bytes:byteArray"],
         ["Disconnect", "reason:string"]
     ],

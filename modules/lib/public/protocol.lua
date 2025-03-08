@@ -33,6 +33,7 @@ end
 
 -- чтобы функции были доступны из DATA_DECODE
 local recursive_parse = function (data_struct, buffer, result) end
+local recursive_encode = function (data_struct, buffer, result) end
 local data_decode = function (data_type, buffer) end
 local data_encode = function (data_type, buffer) end
 
@@ -96,6 +97,23 @@ local DATA_ENCODE = {
             buffer:pack_string(value[i])
         end
     end,
+    ["array"] = function (buffer, value, data_type)
+        buffer:put_bytes(bincode.encode_varint(#value))
+        for i = 1, #value, 1 do
+            data_encode(data_type, buffer, value[i])
+        end
+    end,
+    ["structure"] = function (buffer, value, struct_name)
+        local struct_index = 0
+
+        for index, structure in ipairs(protocol.Structures) do
+            if structure[1] == struct_name then struct_index = index break end end
+
+        buffer:put_bytes(bincode.encode_varint(#value))
+        for i = 1, #value, 1 do
+            recursive_encode(protocol.Structures[struct_index], value[i], buffer)
+        end
+    end
 }
 
 local DATA_DECODE = {
@@ -183,8 +201,8 @@ data_decode = function (data_type, buffer)
     return DATA_DECODE[data_type](buffer)
 end
 
-data_encode = function (data_type, buffer)
-    DATA_ENCODE[data_type](buffer)
+data_encode = function (data_type, buffer, value)
+    DATA_ENCODE[data_type](buffer, value)
 end
 
 ---Помощник парсера пакетов. Используется в DATA_ENCODE
@@ -199,6 +217,20 @@ recursive_parse = function(data_struct, buffer, result)
             local struct_descr = string.explode("|", value)[2]
 
             result[string.explode(":", type_descr)[1]] = DATA_DECODE[string.explode(":", type_descr)[2]](buffer, struct_descr)
+        end
+    end
+end
+
+recursive_encode = function(data_struct, data, buffer)
+    for key, value in pairs(data_struct) do
+        if key ~= 1 then
+            local type_descr = string.explode("|", value)[1]
+            local struct_descr = string.explode("|", value)[2]
+
+            local data_type = string.explode(":", type_descr)[2]
+            local data_value = data[key-1]
+
+            DATA_ENCODE[data_type](buffer, data_value, struct_descr)
         end
     end
 end
@@ -268,15 +300,13 @@ end
 ---@param ... any Дополнительные параметры пакета
 ---@return table bytes Пакет
 function protocol.build_packet(client_or_server, packet_type, ...)
-    local args = {...}
+    local data = {...}
     local buffer = protocol.create_databuffer()
     buffer:put_byte(packet_type - 1)
-    -- TODO: поддержка structure и array
-    for key, value in pairs(protocol.data[client_or_server][packet_type]) do
-        if key > 1 then
-            DATA_ENCODE[string.explode(":", value)[2]](buffer, args[key - 1])
-        end
-    end
+
+    local data_struct = protocol.data[client_or_server][packet_type]
+    recursive_encode(data_struct, data, buffer)
+
     return buffer.bytes
 end
 
