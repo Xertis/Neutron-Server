@@ -67,7 +67,7 @@ matches.status_request = matcher.new(
         local STATUS = {
             CONFIG.server.name,
             icon,
-            CONFIG.game.version,
+            CONFIG.server.version,
             protocol.data.version,
             players,
             CONFIG.game.worlds[CONFIG.game.main_world].seed,
@@ -418,7 +418,7 @@ matches.client_online_handler:add_case(protocol.ClientMsg.Disconnect, (
 
 --------
 
-local function chunks_responce(...)
+local function chunks_responce_optimizate(...)
     local values = {...}
     local chunks_packet = values[1].chunks
     local client = values[2]
@@ -448,8 +448,7 @@ local function chunks_responce(...)
     return true
 end
 
-
-matches.client_online_handler:add_case(protocol.ClientMsg.RequestChunks, chunks_responce)
+matches.client_online_handler:add_case(protocol.ClientMsg.RequestChunks, chunks_responce_optimizate)
 
 --------
 

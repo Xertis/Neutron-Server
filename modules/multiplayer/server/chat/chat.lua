@@ -4,6 +4,8 @@ local server_echo = require "multiplayer/server/server_echo"
 local commands = require "multiplayer/server/chat/commands"
 local module = {}
 
+local no_logged_commands = {"register", "login"}
+
 commands.chat = module
 function module.echo(message)
     logger.log(message)
@@ -29,6 +31,10 @@ function module.command(message, client)
     local args = string.split(message, " ")
     local executable = args[1]
     table.remove(args, 1)
+
+    if not client.account.is_logged and not table.has(no_logged_commands, executable) then
+        return
+    end
 
     commands:switch(executable, executable, args, client)
 end
