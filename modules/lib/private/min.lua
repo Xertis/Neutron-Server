@@ -7,6 +7,7 @@ local lib = {
     server = {},
     world = {},
     roles = {},
+    validate = {},
     hash = hash
 }
 
@@ -63,6 +64,38 @@ end
 
 function lib.roles.exists(role)
     return CONFIG.roles[role] and true or false
+end
+
+function lib.validate.username(name)
+    name = name:lower()
+    local alphabet = {
+        'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
+        'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+
+        'а', 'б', 'в', 'г', 'д', 'е', 'ё', 'ж', 'з', 'и', 'й', 'к', 'л', 'м',
+        'н', 'о', 'п', 'р', 'с', 'т', 'у', 'ф', 'х', 'ц', 'ч', 'ш', 'щ',
+        'ъ', 'ы', 'ь', 'э', 'ю', 'я'
+    }
+
+    local numbers = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'}
+
+    if #name > 16 then
+        return false
+    end
+
+    if not table.has(alphabet, name[1]) and name[1] ~= '_' then
+        return false
+    end
+
+    for i=2, #name do
+        local char = name[i]
+
+        if not table.has(alphabet, char) and not table.has(numbers, char) then
+            return false
+        end
+    end
+
+    return true
 end
 
 return protect.protect_return(lib)

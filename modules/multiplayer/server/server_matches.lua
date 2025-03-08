@@ -111,6 +111,10 @@ matches.logging = matcher.new(
             logger.log("JoinSuccess has been aborted")
             matches.actions.Disconnect(client, "Inconsistencies in mods found")
             return
+        elseif not lib.validate.username(packet.username) then
+            logger.log("JoinSuccess has been aborted")
+            matches.actions.Disconnect(client, "Incorrect user name")
+            return
         elseif not account then
             logger.log("JoinSuccess has been aborted")
             matches.actions.Disconnect(client, "Not found or unable to create an account")
@@ -418,12 +422,30 @@ local function chunks_responce(...)
     local values = {...}
     local chunks_packet = values[1].chunks
     local client = values[2]
-    local is_timeout = values[3]
+    local chunks_list = {}
 
     for indx=1, #chunks_packet, 2 do
-        local packet = {x = chunks_packet[indx], z = chunks_packet[indx+1]}
-        chunk_responce(packet, client)
+        local x, z = chunks_packet[indx], chunks_packet[indx+1]
+
+        local chunk = sandbox.get_chunk({x = x, z = z})
+        if chunk then
+            table.insert(chunks_list, {x, z, chunk})
+        else
+            local pseudo_packet = {
+                x = x,
+                z = z,
+            }
+
+            chunk_responce(pseudo_packet, client)
+        end
     end
+
+    local buffer = protocol.create_databuffer()
+
+    buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.ChunksData, chunks_list))
+    client.network:send(buffer.bytes)
+
+    return true
 end
 
 
