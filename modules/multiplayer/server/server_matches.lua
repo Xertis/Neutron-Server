@@ -386,7 +386,6 @@ matches.client_online_handler:add_case(protocol.ClientMsg.ChatMessage, (
 matches.client_online_handler:add_case(protocol.ClientMsg.Disconnect, (
     function (...)
         local values = {...}
-        local packet = values[1]
         local client = values[2]
 
         if not client.account then
@@ -398,6 +397,18 @@ matches.client_online_handler:add_case(protocol.ClientMsg.Disconnect, (
         account_manager.leave(account)
 
         chat.echo(message)
+
+        local pid = client.player.pid
+        local username = client.player.username
+
+        local buffer = protocol.create_databuffer()
+        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.PlayerListRemove, username, pid))
+
+        echo.put_event(
+            function (c)
+                c.network:send(buffer.bytes)
+            end, client
+        )
     end
 ))
 

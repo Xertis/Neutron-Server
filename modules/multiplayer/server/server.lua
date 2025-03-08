@@ -6,7 +6,8 @@ local container = require "lib/private/common/container"
 local server_pipe = require "multiplayer/server/server_pipe"
 local server_echo = require "multiplayer/server/server_echo"
 local account_manager = require "lib/private/accounts/account_manager"
-local chat = require "multiplayer/server/chat/chat"
+local server_matches = require "multiplayer/server/server_matches"
+local protocol = require "lib/public/protocol"
 
 local server = {}
 server.__index = server
@@ -54,15 +55,7 @@ function server:tick()
             end
             table.remove_value(self.clients, client)
 
-            if not client.account then
-                return
-            end
-
-            local account = client.account
-            local message = string.format("[%s] %s", account.username, "leave the game")
-            account_manager.leave(account)
-
-            chat.echo(message)
+            server_matches.client_online_handler:switch(protocol.ClientMsg.Disconnect, {}, client)
         end
     end
 
