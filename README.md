@@ -1,5 +1,5 @@
 
-# ![untitled (1) (2)](https://github.com/user-attachments/assets/65478d58-13cf-4708-8180-fdd8adf663a3)  **VoxelOnline** *Lua Edition*
+# ![full_server_icon](https://github.com/user-attachments/assets/15b29c1b-83d3-45a9-9bad-670e69562af1)  **VoxelOnline** *Lua Edition*
 
 
-Является Lua сервером для [VoxelCore](https://github.com/MihailRis/VoxelEngine-Cpp), предоставляет API для поддержки модов
+Является Lua сервером для [VoxelCore](https://github.com/MihailRis/VoxelEngine-Cpp), предоставляет API для поддержки модами
