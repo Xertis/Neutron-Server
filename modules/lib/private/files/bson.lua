@@ -1,32 +1,23 @@
 local MAX_UINT16 = 65535
+local MIN_UINT16 = 0
 local MAX_UINT32 = 4294967295
+local MIN_UINT32 = 0
+local MAX_UINT64 = 18446744073709551615
+local MIN_UINT64 = 0
 
 local MAX_BYTE = 255
 
+local MAX_INT16 = 32767
 local MIN_INT16 = -32768
+local MAX_INT32 = 2147483647
 local MIN_INT32 = -2147483648
-local MIN_INT64 = -9223372036854775808
 local MAX_INT64 = 9223372036854775807
+local MIN_INT64 = -9223372036854775808
 
 local bson = {}
 local module = {}
 
-TYPES_ARRAY = {
-    "byte",
-    "uint16",
-    "uint32",
-    "int16",
-    "int32",
-    "int64",
-    "float32",
-    "float64",
-    "bool",
-    "string",
-    "hashmap",
-    "array",
-    "table"
-}
-
+TYPES_ARRAY = {"byte", "uint16", "uint32", "int16", "int32", "int64", "float32", "float64", "bool", "string", "hashmap", "array", "table"}
 TYPES_STRUCTURE = {
     byte = 1,
     uint16 = 2,
@@ -49,7 +40,7 @@ function module.return_type_number(num)
             return TYPES_STRUCTURE.int16
         elseif num >= MIN_INT32 then
             return TYPES_STRUCTURE.int32
-        elseif num >= MIN_INT64 then
+        elseif num >= MAX_INT64 then
             return TYPES_STRUCTURE.int64
         end
     else

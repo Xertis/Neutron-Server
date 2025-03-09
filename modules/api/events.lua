@@ -15,6 +15,7 @@ local handlers = {}
 function module.tell(pack, event, client, bytes)
     local buffer = protocol.create_databuffer()
     buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.PackEvent, pack, event, bytes))
+
     client.network:send(buffer.bytes)
 end
 

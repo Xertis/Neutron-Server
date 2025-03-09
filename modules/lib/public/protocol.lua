@@ -185,6 +185,7 @@ local DATA_DECODE = {
     ["array"] = function (buffer, data_type)
         local result = {}
         local array_length = bincode.decode_varint(buffer)
+
         for i = 1, array_length, 1 do
             result[#result+1] = data_decode(data_type, buffer)
         end
@@ -324,7 +325,6 @@ function protocol.parse_packet(client_or_server, data)
     local data_struct = protocol.data[client_or_server][packet_type] or {}
     -- TODO: улучшить парсинг для возможности парсинга структур (сделано) и массивов (сделано)
     recursive_parse(data_struct, buffer, result)
-
     return result
 end
 
