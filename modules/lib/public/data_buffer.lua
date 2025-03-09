@@ -96,6 +96,10 @@ function data_buffer:put_float64(float)
 	self:put_bytes(bit_converter.float64_to_bytes(float, self.order))
 end
 
+function data_buffer:put_string(str)
+	self:put_bytes(bit_converter.string_to_bytes(str))
+end
+
 function data_buffer:put_bool(bool)
 	self:pack("?", bool)
 end
@@ -134,6 +138,22 @@ end
 
 function data_buffer:get_float64()
 	return bit_converter.bytes_to_float64(self:get_bytes(8), self.order)
+end
+
+function data_buffer:get_string()
+	local len = self:get_bytes(2)
+	local str = self:get_bytes(byteutil.unpack("<H", {len[1], len[2]}))
+	local bytes = { }
+
+	for i = 1, #len do
+		bytes[i] = len[i]
+	end
+
+	for i = 1, #str do
+		bytes[#bytes + 1] = str[i]
+	end
+
+	return bit_converter.bytes_to_string(bytes)
 end
 
 function data_buffer:get_bool()

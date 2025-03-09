@@ -1,4 +1,4 @@
-local account_manager = require "lib/private/accounts/account_manager"
+local account_manager = start_require("server:lib/private/accounts/account_manager")
 local module = {}
 
 function module.get_account_by_name(username)

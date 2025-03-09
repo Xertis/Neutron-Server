@@ -1,14 +1,25 @@
-local protocol = require "lib/public/protocol"
-local events = require "api/events"
+local events = start_require("server:api/events")
 local bson = require "lib/private/files/bson"
+local db = require "lib/public/data_buffer"
 
-local module = {}
+local module = {
+    emitter = {},
+    handler = {}
+}
 
-function module.create(pack, event)
+function module.emitter.create_tell(pack, event)
     return function (client, ...)
-        local buffer = protocol.create_databuffer()
-        local args = bson.encode(buffer, {...})
-        events.tell(pack, event, client, args.bytes)
+        local buffer = db:new()
+        bson.encode(buffer, {...})
+        events.tell(pack, event, client, buffer.bytes)
+    end
+end
+
+function module.emitter.create_echo(pack, event)
+    return function (...)
+        local buffer = db:new()
+        bson.encode(buffer, {...})
+        events.echo(pack, event, buffer.bytes)
     end
 end
 

@@ -12,7 +12,7 @@ api.events.echo(pack: string, event: string, bytes: table<bytes>)
 ```
    - Отправляет событие **event** с данными **bytes** моду **pack** всем подключённым клиентам.
 
-4. **Регистрация обработчика события:**
+3. **Регистрация обработчика события:**
 ```lua
 api.events.on(pack: string, event: string, func: function(table<bytes>))
 ```
