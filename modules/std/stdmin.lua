@@ -404,6 +404,15 @@ function file.mktree(path, value)
     file.mkdirs(file.join(split_path))
     file.write_bytes(file.join(path), value)
 end
+
+-- AUDIO
+
+audio.play_stream = function () end
+audio.play_stream_2d = function () end
+audio.play_sound = function () end
+audio.play_sound_2d = function () end
+
+
 -- OTHER
 
 function cached_require(path)
