@@ -14,6 +14,6 @@ api.events.echo(pack: string, event: string, bytes: table<bytes>)
 
 3. **Регистрация обработчика события:**
 ```lua
-api.events.on(pack: string, event: string, func: function(table<bytes>))
+api.events.on(pack: string, event: string, func: function(Client, table<bytes>))
 ```
-   - Регистрирует функцию **func**, которая будет вызвана при получении события **event** от мода **pack**. В функцию передаются данные **bytes**.
+   - Регистрирует функцию **func**, которая будет вызвана при получении события **event** от мода **pack**. В функцию передаются данные **bytes** и **Client**, с которого пришло сообщение
