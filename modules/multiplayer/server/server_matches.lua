@@ -471,8 +471,9 @@ matches.client_online_handler:add_case(protocol.ClientMsg.PackEvent, (
     function (...)
         local values = {...}
         local packet = values[1]
+        local client = values[2]
 
-        api_events.__emit__(packet.pack, packet.event, packet.bytes)
+        api_events.__emit__(packet.pack, packet.event, packet.bytes, client)
     end
 ))
 

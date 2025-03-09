@@ -33,12 +33,12 @@ function module.on(pack, event, func)
     table.insert(pack_handler_events, func)
 end
 
-function module.__emit__(pack, event, bytes)
+function module.__emit__(pack, event, bytes, client)
     table.set_default(handlers, pack, {})
     table.set_default(handlers[pack], event, {})
 
     for _, func in ipairs(handlers[pack][event]) do
-        func(bytes)
+        func(client, bytes)
     end
 end
 
