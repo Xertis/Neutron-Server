@@ -141,19 +141,8 @@ function data_buffer:get_float64()
 end
 
 function data_buffer:get_string()
-	local len = self:get_bytes(2)
-	local str = self:get_bytes(byteutil.unpack("<H", {len[1], len[2]}))
-	local bytes = { }
-
-	for i = 1, #len do
-		bytes[i] = len[i]
-	end
-
-	for i = 1, #str do
-		bytes[#bytes + 1] = str[i]
-	end
-
-	return bit_converter.bytes_to_string(bytes)
+	local str = bit_converter.bytes_to_string(self.bytes, self.pos)
+	self.pos = self.pos + 2 + #str
 end
 
 function data_buffer:get_bool()

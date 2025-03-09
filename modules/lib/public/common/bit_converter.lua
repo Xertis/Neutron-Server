@@ -126,13 +126,13 @@ function bit_converter.bytes_to_float64(bytes, order)
     return bytesToFloatOrDouble(toLE(bytes, order), 'd')
 end
 
-function bit_converter.bytes_to_string(bytes)
-  local len = byteutil.unpack("<H", {bytes[1], bytes[2]})
+function bit_converter.bytes_to_string(bytes, pos)
+	local len = byteutil.unpack("<H",{ bytes[pos], bytes[pos+1] })
 
 	local str = ""
 
-	for i = 1, len do
-		str = str..string.char(bytes[i + 2])
+	for i = pos+2, len+pos+1 do
+		str = str..string.char(bytes[i])
 	end
 
 	return str
