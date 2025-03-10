@@ -11,7 +11,7 @@
         ["RequestChunk", "x:int32", "z:int32"],
         ["RequestChunks", "chunks:array|int32"],
         ["ChatMessage", "message:string"],
-        ["BlockUpdate", "x:int32", "y:int32", "z:int32", "block_state:uint16", "block_id:string"],
+        ["BlockUpdate", "x:int32", "y:int32", "z:int32", "block_state:uint16", "block_id:uint16"],
         ["BlockInteract", "x:int32", "y:int32", "z:int32"],
         ["PacksHashes", "packs:array|string"],
         ["PackEvent", "pack:string", "event:string", "bytes:array|uint8"],
