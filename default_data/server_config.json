@@ -16,7 +16,6 @@
     "name": "MasterServer",
     "port": 25565,
     "auto_save_interval": 5,
-    "show_players": true,
     "chunks_loading_distance": 4,
     "chunks_loading_speed": 4,
     "password_auth": false,
