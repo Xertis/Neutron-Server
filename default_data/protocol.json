@@ -39,7 +39,7 @@
         ["PongResponse", "payload:uint32"],
         ["KeepAlive", "challenge:uint32"],
         ["PlayerJoined", "entity_id:uint32", "username:string", "x:f32", "y:f32", "z:f32"],
-        ["PlayerMoved", "entity_id:uint8", "x:f32", "y:f32", "z:f32", "yaw:f32", "pitch:f32"],
+        ["PlayerMoved", "entity_id:uint32", "x:f32", "y:f32", "z:f32", "yaw:f32", "pitch:f32"],
         ["PlayerList", "list:structure|Player"],
         ["PlayerListAdd", "username:string", "entity_id:uint32"],
         ["PlayerListRemove", "username:string", "entity_id:uint32"],
