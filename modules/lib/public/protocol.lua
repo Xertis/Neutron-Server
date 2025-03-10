@@ -43,47 +43,36 @@ local DATA_ENCODE = {
     ["boolean"] = function(buffer, value)
         buffer:put_bool(value)
     end,
-    ["byte"] = function(buffer, value)
+    ["var"] = function (buffer, value)
         buffer:put_bytes(bincode.encode_varint(value))
     end,
     ["int8"] = function(buffer, value)
-        buffer:put_byte(value < 0 and value + 256 or value)
+        buffer:put_byte(value + 127)
     end,
     ["uint8"] = function(buffer, value)
-        buffer:put_bytes(bincode.encode_varint(value))
+        buffer:put_byte(value)
     end,
     ["int16"] = function(buffer, value)
         buffer:put_sint16(value)
     end,
     ["uint16"] = function(buffer, value)
-        buffer:put_bytes(bincode.encode_varint(value))
+        buffer:put_uint16(value)
     end,
     ["int32"] = function(buffer, value)
-        local result = bincode.zigzag_encode(value)
-        buffer:put_bytes(bincode.encode_varint(result))
+        buffer:put_sint32(value)
     end,
     ["uint32"] = function(buffer, value)
-        buffer:put_bytes(bincode.encode_varint(value))
+        buffer:put_uint32(value)
     end,
     ["int64"] = function(buffer, value)
-        local result = bincode.zigzag_encode(value)
-        buffer:put_bytes(bincode.encode_varint(result))
-    end, -- TODO: сделать как на строке ниже
-    ["uint64"] = function(buffer, value)
-        buffer:put_bytes(bincode.encode_varint(value))
-    end, -- TODO: зависимость от текущего порядка байтов в буфере
-    ["float"] = function(buffer, value)
-        buffer:put_float32(value)
+        buffer:put_int64(value)
     end,
     ["f32"] = function(buffer, value)
         buffer:put_float32(value)
-    end, -- алиас для float
-    ["double"] = function(buffer, value)
-        buffer:put_float64(value)
     end,
     ["f64"] = function(buffer, value)
         buffer:put_float64(value)
-    end, -- алиас для double
+    end,
     ["string"] = function(buffer, value)
         buffer:put_bytes(pack_string(value))
     end,
@@ -120,44 +109,33 @@ local DATA_DECODE = {
     ["boolean"] = function(buffer)
         return buffer:get_bool()
     end,
-    ["byte"] = function (buffer)
-        return buffer:get_byte()
+    ["var"] = function (buffer)
+        return bincode.decode_varint(buffer)
     end,
     ["int8"] = function(buffer)
-        return buffer:get_byte()
+        return buffer:get_byte() - 127
     end,
     ["uint8"] = function(buffer)
-        return bincode.decode_varint(buffer)
+        return buffer:get_byte()
     end,
     ["int16"] = function(buffer)
         return buffer:get_sint16()
     end,
     ["uint16"] = function(buffer)
-        return bincode.decode_varint(buffer)
+        return buffer:get_uint16()
     end,
     ["int32"] = function(buffer)
-        local result = bincode.decode_varint(buffer)
-        return bincode.zigzag_decode(result)
+        return buffer:get_sint32()
     end,
     ["uint32"] = function(buffer)
-        return bincode.decode_varint(buffer)
+        return buffer:get_uint32()
     end,
     ["int64"] = function(buffer)
-        local result = bincode.decode_varint(buffer)
-        return bincode.zigzag_decode(result)
-    end,
-    ["uint64"] = function(buffer)
-        return bincode.decode_varint(buffer)
-    end,
-    ["float"] = function(buffer)
-        return buffer:get_float32()
+        return buffer:get_int64()
     end,
     ["f32"] = function(buffer)
         return buffer:get_float32()
     end, -- алиас для float
-    ["double"] = function(buffer)
-        return buffer:get_float64()
-    end,
     ["f64"] = function(buffer)
         return buffer:get_float64()
     end, -- алиас для double
