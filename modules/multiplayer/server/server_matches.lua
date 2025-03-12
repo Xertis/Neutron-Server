@@ -294,10 +294,11 @@ matches.client_online_handler:add_case(protocol.ClientMsg.BlockUpdate, (
             y = packet.y,
             z = packet.z,
             states = packet.block_state,
+            rotation = packet.block_rotation,
             id = packet.block_id
         }
 
-        sandbox.place_block(block)
+        sandbox.place_block(block, client.player.pid)
     end
 ))
 
@@ -456,12 +457,14 @@ matches.client_online_handler:add_case(protocol.ClientMsg.BlockInteract, (
     function (...)
         local values = {...}
         local packet = values[1]
+        local client = values[2]
 
         local x, y, z = packet.x, packet.y, packet.z
 
-        local block_name = block.name(block.get(x, y, z))
-        events.emit(block_name .. ".interact", x, y, z, 1)
-        events.emit("server:block_interact", block.get(x, y, z), x, y, z, 1)
+        local block_id = block.get(x, y, z)
+        local block_name = block.name(block_id)
+        events.emit(block_name .. ".interact", x, y, z, client.player.pid)
+        events.emit("server:block_interact", block_id, x, y, z, client.player.pid)
     end
 ))
 

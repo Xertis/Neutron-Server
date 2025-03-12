@@ -73,6 +73,7 @@ function module.place_block(block_state, pid)
     end
 
     block.place(block_state.x, block_state.y, block_state.z, block_state.id, block_state.states, pid)
+    block.set_rotation(block_state.x, block_state.y, block_state.z, block_state.rotation)
 end
 
 function module.set_player_state(account_player, state)
