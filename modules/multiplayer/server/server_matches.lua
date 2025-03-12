@@ -302,6 +302,20 @@ matches.client_online_handler:add_case(protocol.ClientMsg.BlockUpdate, (
     end
 ))
 
+matches.client_online_handler:add_case(protocol.ClientMsg.BlockDestroy, (
+    function (...)
+        local values = {...}
+        local packet = values[1]
+        local client = values[2]
+
+        if not client.account or not client.account.is_logged then
+            return
+        end
+
+        sandbox.destroy_block({x = packet.x, y = packet.y, z = packet.z}, client.player.pid)
+    end
+))
+
 ---------
 
 local function chunk_responce(...)

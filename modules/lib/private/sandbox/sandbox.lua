@@ -76,6 +76,10 @@ function module.place_block(block_state, pid)
     block.set_rotation(block_state.x, block_state.y, block_state.z, block_state.rotation)
 end
 
+function module.destroy_block(pos, pid)
+    block.destruct(pos.x, pos.y, pos.z, pid)
+end
+
 function module.set_player_state(account_player, state)
     player.set_pos(account_player.pid, state.x, state.y, state.z)
     player.set_rot(account_player.pid, state.yaw, state.pitch, 0)
