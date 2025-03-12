@@ -1,12 +1,13 @@
 local protect = require "lib/private/protect"
 local protocol = require "lib/public/protocol"
 local server_echo = require "multiplayer/server/server_echo"
-local commands = require "multiplayer/server/chat/commands"
+local imports = require "multiplayer/server/chat/commands"
 local module = {}
 
 local no_logged_commands = {"register", "login"}
 
-commands.chat = module
+local commands = imports[1]
+imports[2].chat = module
 function module.echo(message)
     logger.log(message)
     server_echo.put_event(function (client)
