@@ -1,6 +1,6 @@
 {
     "id": "server",
-    "title": "Server",
+    "title": "VoxelOnline-Lua",
     "version": "0.1.0",
-    "description": "server"
+    "description": "Server"
 }
