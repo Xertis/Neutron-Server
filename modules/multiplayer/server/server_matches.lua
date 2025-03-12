@@ -31,15 +31,30 @@ local function check_mods(client_hashes)
         return true
     end)
 
+    local temp = {}
+    for i=1, #client_hashes, 2 do
+        temp[client_hashes[i]] = client_hashes[i+1]
+    end
+    client_hashes = temp
+
     if not hashed_packs then
         hashed_packs = {}
-        for i, pack in ipairs(packs) do
-            table.insert(hashed_packs, pack)
-            table.insert(hashed_packs, lib.hash.hash_mods({pack}))
+        for _, pack in ipairs(packs) do
+            hashed_packs[pack] = lib.hash.hash_mods({pack})
         end
     end
 
-    return table.equals(hashed_packs, client_hashes)
+    local incorrect = ''
+    local i = 1
+
+    for pack, hash in pairs(hashed_packs) do
+        if hash ~= client_hashes[pack] then
+            incorrect = incorrect .. string.format("\n%s: %s", i, pack)
+            i = i + 1
+        end
+    end
+
+    return incorrect == '', incorrect
 end
 
 
@@ -106,10 +121,11 @@ matches.logging = matcher.new(
         local buffer = protocol.create_databuffer()
 
         local account = account_manager.login(packet.username)
+        local hash_status, hash_reason = check_mods(hashes)
 
-        if not check_mods(hashes) then
+        if not hash_status then
             logger.log("JoinSuccess has been aborted")
-            matches.actions.Disconnect(client, "Inconsistencies in mods found")
+            matches.actions.Disconnect(client, "Inconsistencies in mods:" .. hash_reason)
             return
         elseif not lib.validate.username(packet.username) then
             logger.log("JoinSuccess has been aborted")
