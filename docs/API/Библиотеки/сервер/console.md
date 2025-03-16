@@ -43,7 +43,7 @@ block_set: x=<number>, y=<number>, z=<number>, id=[number] -> Set Block
 Полный lua код создания команды:
 
 ```lua
-console.set_command("time_set: time=<any> -> Changes day time", {"time_management"}, function (args, client)
+api.console.set_command("time_set: time=<any> -> Changes day time", {"time_management"}, function (args, client)
     local time = args.time
     local account = client.account
 
@@ -79,7 +79,7 @@ api.console.echo(message: string)
    - Отправляет в чат всем клиентам сообщение **message**
 3. **Цвета**
 ```lua
-console.colors = {
+api.console.colors = {
     red = "[#ff0000]",
     yellow = "[#ffff00]",
     blue = "[#0000FF]",
