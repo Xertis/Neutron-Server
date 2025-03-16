@@ -50,6 +50,10 @@ end
 
 local function __parse_arg_name(arg)
     local key, value = arg:match("^(.-)=(.*)$")
+    if arg[1] == '"' or arg[1] == "'" then
+        key = nil
+    end
+
     if key == nil then
         key = ""
         value = arg
@@ -142,5 +146,69 @@ function module.set_command(command, permitions, handler)
         handler(temp_args, client)
     end)
 end
+
+
+module.set_command("help: command=[string] -> Shows a list of available commands.", {}, function (args, client)
+    local command = args.command
+    local handlers = chat.get_handlers()
+    local message = string.format("\n%s----- Help (.help) -----\n", module.colors.yellow)
+
+    local function concat(schem)
+        local main_part = schem[1]
+
+        local action = schem[#schem]
+
+        local _args = {}
+        for i = 2, #schem - 1 do
+            table.insert(_args, schem[i])
+        end
+
+        local args_part = table.concat(_args, ", ")
+
+        local scheme = main_part .. ": " .. args_part .. " -> " .. action
+        return scheme
+    end
+
+    if not command then
+        for _, com in pairs(handlers) do
+            local schem = concat(com.schem)
+            message = message .. module.colors.yellow .. schem .. '\n'
+        end
+    else
+        command = handlers[command]
+        if not command then
+            module.tell(string.format("%s %s", module.colors.red, "Unknow command"), client)
+            return
+        end
+
+        command = command.schem
+
+        local tbl_message = {
+            module.colors.yellow .. "Command name: " .. command[1],
+            module.colors.yellow .. "Description: " .. command[#command],
+            module.colors.yellow .. "Args:"
+        }
+
+        for i=2, #command-1 do
+            local arg = command[i]
+            local parse_arg = __parse_arg(arg)
+            table.insert(tbl_message, string.format(
+                "%s[%s]    %s=%s",
+                module.colors.yellow,
+                parse_arg[3],
+                parse_arg[1],
+                parse_arg[2]
+            ))
+        end
+
+        if #tbl_message == 3 then
+            table.insert(tbl_message, module.colors.yellow .. "    No args")
+        end
+
+        message = message .. table.concat(tbl_message, "\n")
+    end
+
+    module.tell(string.format("%s %s", module.colors.yellow, message), client)
+end)
 
 return module

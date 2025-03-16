@@ -42,8 +42,12 @@ function module.command(message, client)
     end
 end
 
-function module.add_command(scheme, handler)
-    handlers[scheme[1]] = {handler = handler, scheme = scheme}
+function module.add_command(schem, handler)
+    handlers[schem[1]] = {handler = handler, schem = schem}
+end
+
+function module.get_handlers()
+    return handlers
 end
 
 return protect.protect_return(module)

@@ -13,14 +13,6 @@ console.set_command("list: -> Shows a list of online players", {}, function (arg
 
 end)
 
-console.set_command("help: -> Shows a list of available commands.", {}, function (args, client)
-
-    local message = "----- Help (.help) -----"
-    console.tell(string.format("%s %s", console.colors.yellow, message), client)
-
-end)
-
-
 console.set_command("register: password=<string>, rpassword=<string> -> Registration", {}, function (args, client)
     local account = client.account
     local passwords = {args.password, args.rpassword}
@@ -158,10 +150,4 @@ console.set_command("time_set: time=<any> -> Changes day time", {"time_managemen
     else
         console.tell(string.format("%s Incorrect time entered! Please enter a number between 0 and 1", console.colors.red), client)
     end
-end)
-
-console.set_command("block_set: x=<number>, y=<number>, z=<number>, id=[number] -> Set Block", {}, function (args, client)
-    local x, y, z, id = args.x, args.y, args.z, args.id or 0
-    block.set(x, y, z, id)
-    console.tell(string.format("Блок %s поставлен на: %s %s %s", id, x, y, z), client)
 end)
