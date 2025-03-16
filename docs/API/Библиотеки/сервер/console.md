@@ -77,11 +77,13 @@ api.console.tell(message: string, client: Client)
 api.console.echo(message: string)
 ```
    - Отправляет в чат всем клиентам сообщение **message**
+
 3. **Выполнение команд:**
 ```lua
 api.console.execute(message: string, client: Client)
 ```
    - Выполняет команду из **message**, как будто бы его отправил в консоль **client**
+
 4. **Цвета**
 ```lua
 api.console.colors = {
