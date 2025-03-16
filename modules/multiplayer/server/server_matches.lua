@@ -179,31 +179,31 @@ matches.fsm:add_state("joining", {
         if not hash_status then
             logger.log("JoinSuccess has been aborted")
             matches.actions.Disconnect(client, "Inconsistencies in mods:" .. hash_reason)
-            return
+            return "idle"
         elseif not lib.validate.username(packet.username) then
             logger.log("JoinSuccess has been aborted")
             matches.actions.Disconnect(client, "Incorrect user name")
-            return
+            return "idle"
         elseif not account then
             logger.log("JoinSuccess has been aborted")
             matches.actions.Disconnect(client, "Not found or unable to create an account")
-            return
+            return "idle"
         elseif #table.keys(sandbox.get_players()) >= CONFIG.server.max_players then
             logger.log("JoinSuccess has been aborted")
             matches.actions.Disconnect(client, "The server is full")
-            return
+            return "idle"
         elseif (not table.has(table.freeze_unpack(CONFIG.server.whitelist), packet.username) and #table.freeze_unpack(CONFIG.server.whitelist) > 0) then
             logger.log("JoinSuccess has been aborted")
             matches.actions.Disconnect(client, "You are not on the whitelist")
-            return
+            return "idle"
         elseif table.has(table.freeze_unpack(CONFIG.server.blacklist), packet.username) then
             logger.log("JoinSuccess has been aborted")
             matches.actions.Disconnect(client, "You're on the blacklist")
-            return
+            return "idle"
         elseif sandbox.get_players()[packet.username] ~= nil then
             logger.log("JoinSuccess has been aborted")
             matches.actions.Disconnect(client, "A player with that name is already online")
-            return
+            return "idle"
         end
 
         local account_player = sandbox.join_player(account)
@@ -271,7 +271,7 @@ matches.fsm:add_state("joining", {
 
         if not CONFIG.server.password_auth then
             client.account.is_logged = true
-            return
+            return "idle"
         end
 
         if account.password == nil then
@@ -279,6 +279,8 @@ matches.fsm:add_state("joining", {
         elseif not account.is_logged then
             chat.tell("Please log in using the command .login <password> to access your account.", client)
         end
+
+        return "idle"
     end
 })
 
