@@ -107,24 +107,12 @@ function module.sha256(input)
     return hash
 end
 
-function module.lite(str, seed)
-    local hash_high = seed
-    local hash_low = seed
+function module.lite(data, seed)
+    table.map(data, function (i, x)
+        return math.round(x^0.8)
+    end)
 
-    for i = 1, #str do
-        local char = string.byte(str, i)
-        hash_high = bit.bxor(hash_high, bit.rol(hash_low + char, 7))
-        hash_low = bit.bxor(hash_low, bit.rol(hash_high + char, 13))
-    end
-
-    local hex_hash = string.format("%08x%08x%08x%08x",
-        bit.band(bit.rshift(hash_high, 32), 0xFFFFFFFF),
-        bit.band(hash_high, 0xFFFFFFFF),
-        bit.band(bit.rshift(hash_low, 32), 0xFFFFFFFF),
-        bit.band(hash_low, 0xFFFFFFFF)
-    )
-
-    return hex_hash
+    return string.format("%x", seed+math.sum(data))
 end
 
 function module.hash_mods(packs)
@@ -150,13 +138,8 @@ function module.hash_mods(packs)
 
         for _, abs_file_path in ipairs(files) do
             local file_data = file.read_bytes(abs_file_path)
-            local str_data = ""
 
-            for _, byte in ipairs(file_data) do
-                str_data = str_data .. string.char(byte)
-            end
-
-            hash_data = module.lite(str_data, tonumber(hash_data, 16))
+            hash_data = module.lite(file_data, tonumber(hash_data, 16))
         end
     end
 
