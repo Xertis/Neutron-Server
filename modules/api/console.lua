@@ -84,7 +84,7 @@ function module.set_command(command, permitions, handler)
         end
     end
 
-    chat.add_command(scheme, function (args, client)
+    return chat.add_command(scheme, function (args, client)
         local parsed_args = {}
         local unnamed_args = {}
         local named_args = {}

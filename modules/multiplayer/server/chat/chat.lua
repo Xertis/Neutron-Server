@@ -43,7 +43,12 @@ function module.command(message, client)
 end
 
 function module.add_command(schem, handler)
+    if handlers[schem[1]] then
+        return false
+    end
+
     handlers[schem[1]] = {handler = handler, schem = schem}
+    return true
 end
 
 function module.get_handlers()

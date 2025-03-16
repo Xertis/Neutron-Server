@@ -3,12 +3,14 @@ local List = require "lib/public/common/list"
 local Player = {}
 Player.__index = Player
 
-function Player.new(active, network, username)
+function Player.new(active, network, address, port, username)
     local self = setmetatable({}, Player)
 
     self.active = false or active
     self.network = network
     self.username = username
+    self.address = address
+    self.port = port
     self.client_id = -1
     self.account = nil
     self.player = nil

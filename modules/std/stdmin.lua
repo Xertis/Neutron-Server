@@ -439,6 +439,36 @@ audio.play_sound = function () end
 audio.play_sound_2d = function () end
 
 
+-- INVENTORY
+
+function inventory.inv_to_tbl(invid)
+    local size = inventory.size(invid)
+    local tbl = {}
+
+    for i=1, size do
+        local item_id, item_count = inventory.get(invid, i)
+        local item_data = inventory.get_all_data(invid, i)
+
+        table.insert(tbl, {
+            id = item_id,
+            count = item_count,
+            data = item_data
+        })
+    end
+
+    return tbl
+end
+
+function inventory.tbl_to_inv(tbl, invid)
+    for i, item in ipairs(tbl) do
+        inventory.set(invid, i, item.id, item.count)
+
+        for key, value in pairs(item.data) do
+            inventory.set_data(invid, i, key, value)
+        end
+    end
+end
+
 -- OTHER
 
 function cached_require(path)

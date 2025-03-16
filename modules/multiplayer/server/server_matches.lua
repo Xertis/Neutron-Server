@@ -9,10 +9,12 @@ local timeout_executor = require "lib/private/common/timeout_executor"
 local echo = require "multiplayer/server/server_echo"
 local api_events = require "api/events"
 local lib = require "lib/private/min"
+local mfsm = require "lib/public/common/multifsm"
 
 local hashed_packs = nil
 
 local matches = {
+    fsm = mfsm.new(),
     client_online_handler = switcher.new(function (...)
         local values = {...}
         print(json.tostring(values[1]))
@@ -64,9 +66,52 @@ function matches.actions.Disconnect(client, reason)
     client.network:send(buffer.bytes)
 end
 
-matches.status_request = matcher.new(
-    function ()
-        local client = matches.status_request.default_data
+--- FSM
+
+matches.fsm:add_state("idle", {
+    on_event = function(client, event)
+        if event.packet_type ~= protocol.ClientMsg.HandShake then
+            return
+        end
+
+        if event.next_state == protocol.States.Status then
+            return "awaiting_status_request"
+        elseif event.next_state == protocol.States.Login then
+            return "awaiting_join_game"
+        end
+    end
+})
+
+matches.fsm:add_state("awaiting_status_request", {
+    on_event = function(client, event)
+        if event.packet_type == protocol.ClientMsg.StatusRequest then
+            return "sending_status"
+        end
+    end
+})
+
+matches.fsm:add_state("awaiting_join_game", {
+    on_event = function(client, event)
+        if event.packet_type == protocol.ClientMsg.JoinGame then
+            matches.fsm.client_data[client] = matches.fsm.client_data[client] or {}
+            matches.fsm.client_data[client].join_game = event
+            return "sending_packs_list"
+        end
+    end
+})
+
+matches.fsm:add_state("awaiting_packs_hashes", {
+    on_event = function(client, event)
+        if event.packet_type == protocol.ClientMsg.PacksHashes then
+            matches.fsm.client_data[client] = matches.fsm.client_data[client] or {}
+            matches.fsm.client_data[client].packs_hashes = event
+            return "joining"
+        end
+    end
+})
+
+matches.fsm:add_state("sending_status", {
+    on_enter = function(client)
         logger.log("The expected package has been received, sending the status...")
         local buffer = protocol.create_databuffer()
         local icon = nil
@@ -92,32 +137,40 @@ matches.status_request = matcher.new(
 
         buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.StatusResponse, unpack(STATUS)))
         client.network:send(buffer.bytes)
-        logger.log("Status has been sended")
-    end
-)
+        logger.log("Status has been sent")
 
-matches.status_request:add_match(
-    function (val)
-        if val.packet_type == protocol.ClientMsg.HandShake and val.next_state == protocol.States.Status then
+        return "idle"
+    end
+})
+
+matches.fsm:add_state("sending_packs_list", {
+    on_enter = function(client)
+        local buffer = protocol.create_databuffer()
+
+        local packs = pack.get_installed()
+
+        table.filter(packs, function (_, p)
+            if p == "server" then
+                return false
+            end
+
             return true
-        end
-    end
-)
-matches.status_request:add_match(
-    function (val)
-        if val.packet_type == protocol.ClientMsg.StatusRequest then
-            return true
-        end
-    end
-)
+        end)
 
----------
+        local DATA = packs
 
-matches.logging = matcher.new(
-    function (values)
-        local client = matches.status_request.default_data
-        local packet = values[2]
-        local hashes = values[3].packs
+        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.PacksList, DATA))
+        client.network:send(buffer.bytes)
+
+        return "awaiting_packs_hashes"
+    end
+})
+
+matches.fsm:add_state("joining", {
+    on_enter = function (client)
+        local values = matches.fsm.client_data[client]
+        local packet = values.join_game
+        local hashes = values.packs_hashes.packs
         local buffer = protocol.create_databuffer()
 
         local account = account_manager.login(packet.username)
@@ -227,70 +280,11 @@ matches.logging = matcher.new(
             chat.tell("Please log in using the command .login <password> to access your account.", client)
         end
     end
-)
+})
 
-matches.logging:add_match(
-    function (val)
-        if val.packet_type == protocol.ClientMsg.HandShake and val.next_state == protocol.States.Login then
-            return true
-        end
-    end
-)
-matches.logging:add_match(
-    function (val)
-        if val.packet_type == protocol.ClientMsg.JoinGame then
-            return true
-        end
-    end
-)
-matches.logging:add_match(
-    function (val)
-        if val.packet_type == protocol.ClientMsg.PacksHashes then
-            return true
-        end
-    end
-)
+matches.fsm:set_default_state("idle")
 
----------
-
-matches.packs = matcher.new(
-    function ()
-        local client = matches.status_request.default_data
-        local buffer = protocol.create_databuffer()
-
-        local packs = pack.get_installed()
-
-        table.filter(packs, function (_, p)
-            if p == "server" then
-                return false
-            end
-
-            return true
-        end)
-
-        local DATA = packs
-
-        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.PacksList, DATA))
-        client.network:send(buffer.bytes)
-    end
-)
-
-matches.packs:add_match(
-    function (val)
-        if val.packet_type == protocol.ClientMsg.HandShake and val.next_state == protocol.States.Login then
-            return true
-        end
-    end
-)
-matches.packs:add_match(
-    function (val)
-        if val.packet_type == protocol.ClientMsg.JoinGame then
-            return true
-        end
-    end
-)
-
----------
+--- CASES
 
 matches.client_online_handler:add_case(protocol.ClientMsg.BlockUpdate, (
     function (...)

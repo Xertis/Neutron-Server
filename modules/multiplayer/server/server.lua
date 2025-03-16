@@ -28,7 +28,16 @@ function server:start()
     self.server_socket = socketlib.create_server(self.port, function(client_socket)
         logger.log("Connection request received")
         local network = Network.new( client_socket )
-        local client = Player.new(false, network)
+        local address, port = client_socket:get_address()
+        local client = Player.new(false, network, address, port)
+
+        for i, mclient in ipairs(self.clients) do
+            if mclient.address == client.address then
+                self.clients[i].network = client.network
+                self.clients[i].port = client.port
+                return
+            end
+        end
 
         table.insert(self.clients, client)
     end)

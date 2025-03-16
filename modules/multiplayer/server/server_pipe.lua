@@ -34,16 +34,11 @@ end)
 
 ServerPipe:add_middleware(function(client)
 
-    matches.status_request:set_default_data(client)
-    matches.logging:set_default_data(client)
-
     while not List.is_empty(client.received_packets) do
         local packet = List.popleft(client.received_packets)
 
         if client.active == false then
-            matches.status_request:match(packet)
-            matches.logging:match(packet)
-            matches.packs:match(packet)
+            matches.fsm:handle_event(client, packet)
         elseif client.active == true then
             matches.client_online_handler:switch(packet.packet_type, packet, client)
             ClientPipe:process(client)

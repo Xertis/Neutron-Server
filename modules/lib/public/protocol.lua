@@ -1,4 +1,5 @@
 local bincode = require "lib/public/common/bincode"
+local bson = require "lib/private/files/bson"
 
 local protocol = {}
 local data_buffer = require "lib/public/data_buffer"
@@ -45,6 +46,9 @@ local DATA_ENCODE = {
     end,
     ["var"] = function (buffer, value)
         buffer:put_bytes(bincode.encode_varint(value))
+    end,
+    ["bson"] = function (buffer, value)
+        bson.encode(buffer, value)
     end,
     ["int8"] = function(buffer, value)
         buffer:put_byte(value + 127)
@@ -111,6 +115,9 @@ local DATA_DECODE = {
     end,
     ["var"] = function (buffer)
         return bincode.decode_varint(buffer)
+    end,
+    ["bson"] = function (buffer, value)
+        return bson.decode(buffer)
     end,
     ["int8"] = function(buffer)
         return buffer:get_byte() - 127
