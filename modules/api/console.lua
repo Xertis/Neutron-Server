@@ -5,7 +5,10 @@ local module = {}
 module.colors = {
     red = "[#ff0000]",
     yellow = "[#ffff00]",
-    white = ""
+    blue = "[#0000FF]",
+    black = "[#000000]",
+    green = "[#00FF00]",
+    white = "[#FFFFFF]"
 }
 
 local function __parse_scheme(scheme)
