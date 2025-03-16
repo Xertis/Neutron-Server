@@ -8,6 +8,7 @@ local lib = require "server:lib/private/min"
 
 require "server:constants"
 require "server:init/server"
+require "server:multiplayer/server/chat/commands"
 
 local timeout_executor = require "server:lib/private/common/timeout_executor"
 local server = require "server:multiplayer/server/server"

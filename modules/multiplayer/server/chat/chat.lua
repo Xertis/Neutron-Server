@@ -1,13 +1,11 @@
 local protect = require "lib/private/protect"
 local protocol = require "lib/public/protocol"
 local server_echo = require "multiplayer/server/server_echo"
-local imports = require "multiplayer/server/chat/commands"
 local module = {}
 
 local no_logged_commands = {"register", "login"}
+local handlers = {}
 
-local commands = imports[1]
-imports[2].chat = module
 function module.echo(message)
     logger.log(message)
     server_echo.put_event(function (client)
@@ -37,7 +35,15 @@ function module.command(message, client)
         return
     end
 
-    commands:switch(executable, executable, args, client)
+    if handlers[executable] then
+        handlers[executable].handler(args, client)
+    else
+        module.tell("[#ff0000] Unknow command: " .. executable, client)
+    end
+end
+
+function module.add_command(scheme, handler)
+    handlers[scheme[1]] = {handler = handler, scheme = scheme}
 end
 
 return protect.protect_return(module)

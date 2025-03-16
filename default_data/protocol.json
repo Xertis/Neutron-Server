@@ -11,6 +11,7 @@
         ["RequestChunk", "x:int32", "z:int32"],
         ["RequestChunks", "chunks:array|int32"],
         ["ChatMessage", "message:string"],
+        ["CommandMessage", "message:string"],
         ["BlockUpdate", "x:int32", "y:int32", "z:int32", "block_state:uint8", "block_rotation:uint8", "block_id:uint16"],
         ["BlockInteract", "x:int32", "y:int32", "z:int32"],
         ["BlockDestroy", "x:int32", "y:int32", "z:int32"],
@@ -19,19 +20,7 @@
         ["Disconnect"]
     ],
     "server": [
-        ["JoinSuccess",
-            "entity_id:uint32",
-            "game_time:f64",
-            "cheat_commands:boolean",
-            "content_access:boolean",
-            "flight:boolean",
-            "noclip:boolean",
-            "attack:boolean",
-            "destroy:boolean",
-            "cheat_movement:boolean",
-            "debug_cheats:boolean",
-            "fast_interaction:boolean"
-        ],
+        ["JoinSuccess", "entity_id:uint32", "game_time:f64", "rules:structure|Rule"],
         ["WorldData", "data:structure|Block", "progress:uint16", "max_progress:uint16"],
         ["SynchronizePlayerPosition", "x:f32", "y:f32", "z:f32", "yaw:f32", "pitch:f32"],
         ["SetPlayerAbilities", "flags:uint8"],
@@ -56,6 +45,7 @@
     "structures": [
         ["Block", "x:int32", "y:int32", "z:int32", "block_state:uint16", "block_id:string"],
         ["Player", "entity_id:uint32", "username:string"],
-        ["Chunk", "x:int32", "z:int32", "data:array|uint8"]
+        ["Chunk", "x:int32", "z:int32", "data:array|uint8"],
+        ["Rule", "rule:string", "value:boolean"]
     ]
 }

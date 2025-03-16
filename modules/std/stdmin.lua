@@ -26,6 +26,44 @@ function string.first_up(str)
     return (str:gsub("^%l", string.upper))
 end
 
+function string.type(str)
+    if not str then
+        return "nil", function (s)
+            if s then
+                return s
+            end
+        end
+    end
+
+    str = str:lower()
+
+    if tonumber(str) then
+        return "number", tonumber
+    elseif str == "true" or str == "false" then
+        return "boolean", function(s) return s:lower() == "true" end
+    elseif pcall(json.parse, str) then
+        return "table", json.parse
+    end
+
+    return "string", tostring
+end
+
+function string.trim_quotes(str)
+    if not str then
+        return
+    end
+
+    if str:sub(1, 1) == "'" or str:sub(1, 1) == '"' then
+        str = str:sub(2)
+    end
+
+    if str:sub(-1) == "'" or str:sub(-1) == '"' then
+        str = str:sub(1, -2)
+    end
+
+    return str
+end
+
 -- TIME
 
 function time.formatted_time()
@@ -65,19 +103,14 @@ end
 
 --- TABLE
 
-function table.easy_concat(tbl)
-    local output = ""
-    for i, value in pairs(tbl) do
-        output = output .. tostring(value)
-        if i ~= #tbl then
-            output = output .. ", "
-        end
-    end
-    return output
-end
+function table.keys(t)
+    local keys = {}
 
-function table.equals(tbl1, tbl2)
-    return table.easy_concat(tbl1) == table.easy_concat(tbl2)
+    for key, _ in pairs(t) do
+        table.insert(keys, key)
+    end
+
+    return keys
 end
 
 function table.freeze(original)
@@ -88,6 +121,9 @@ function table.freeze(original)
     local proxy = {}
     setmetatable(proxy, {
         __index = function(_, key)
+            if type(original[key]) == "table" then
+                original[key].__keys = table.keys(original[key])
+            end
             return table.freeze(original[key])
         end,
         __metatable = false,
@@ -109,16 +145,6 @@ function table.merge(t1, t2)
     end
 
     return t1
-end
-
-function table.keys(t)
-    local keys = {}
-
-    for key, _ in pairs(t) do
-        table.insert(keys, key)
-    end
-
-    return keys
 end
 
 function table.map(t, func)

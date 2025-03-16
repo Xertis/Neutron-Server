@@ -158,19 +158,16 @@ matches.logging = matcher.new(
         client:set_player(account_player)
 
         local rules = account_manager.get_rules(account)
+        local array_rules = {}
+
+        for _, rule_name in pairs(table.freeze_unpack(rules.__keys)) do
+            table.insert(array_rules, {rule_name, rules[rule_name]})
+        end
 
         local DATA = {
             account_player.pid,
             world.get_day_time(),
-            rules.cheat_commands,
-            rules.content_access,
-            rules.flight,
-            rules.noclip,
-            rules.attack,
-            rules.destroy,
-            rules.cheat_movement,
-            rules.debug_cheats,
-            rules.fast_interaction
+            array_rules
         }
 
         buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.JoinSuccess, unpack(DATA)))

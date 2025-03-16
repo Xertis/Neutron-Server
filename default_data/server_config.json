@@ -27,15 +27,15 @@
     "member": {
       "priority": 1,
       "game_rules": {
-        "cheat_commands": true,
-        "content_access": true,
-        "flight": true,
-        "noclip": true,
-        "attack": true,
-        "destroy": true,
-        "cheat_movement": true,
-        "debug_cheats": true,
-        "fast_interaction": true
+        "cheat-commands": true,
+        "allow-content-access": true,
+        "allow-flight": true,
+        "allow-noclip": true,
+        "allow-attack": true,
+        "allow-destroy": true,
+        "allow-cheat-movement": true,
+        "allow-debug-cheats": true,
+        "allow-fast-interaction": true
       },
 
       "server_rules": {
