@@ -147,6 +147,9 @@ function module.set_command(command, permitions, handler)
     end)
 end
 
+function module.execute(command, client)
+    chat.command(command, client)
+end
 
 module.set_command("help: command=[string] -> Shows a list of available commands.", {}, function (args, client)
     local command = args.command
