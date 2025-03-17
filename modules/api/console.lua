@@ -130,7 +130,10 @@ function module.set_command(command, permitions, handler)
                 required_args_count = required_args_count + 1
             end
 
-            local _, typefunc = string.type(value)
+            local _type, typefunc = string.type(value)
+            if _type == "string" then
+                value = string.trim_quotes(value)
+            end
             temp_args[key] = typefunc(value)
         end
 
