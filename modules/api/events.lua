@@ -7,7 +7,7 @@ local function get(path)
 end
 
 local protocol = require "lib/public/protocol"
-local server_echo = get("server:modules/multiplayer/server/server_echo.lua")
+local server_echo = start_require("multiplayer/server/server_echo")
 
 local module = {}
 local handlers = {}
@@ -20,7 +20,7 @@ function module.tell(pack, event, client, bytes)
 end
 
 function module.echo(pack, event, bytes)
-    server_echo.put_event(function (client)
+    server_echo.put_event(function(client)
         local buffer = protocol.create_databuffer()
         buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.PackEvent, pack, event, bytes))
         client.network:send(buffer.bytes)
