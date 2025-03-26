@@ -1,3 +1,5 @@
+local db = require "lib/public/data_buffer"
+
 local MAX_UINT16 = 65535
 local MIN_UINT16 = 0
 local MAX_UINT32 = 4294967295
@@ -17,7 +19,8 @@ local MIN_INT64 = -9223372036854775808
 local bson = {}
 local module = {}
 
-TYPES_ARRAY = {"byte", "uint16", "uint32", "int16", "int32", "int64", "float32", "float64", "bool", "string", "hashmap", "array", "table"}
+TYPES_ARRAY = { "byte", "uint16", "uint32", "int16", "int32", "int64", "float32", "float64", "bool", "string", "hashmap",
+    "array", "table" }
 TYPES_STRUCTURE = {
     byte = 1,
     uint16 = 2,
@@ -115,19 +118,16 @@ function module.get_item(buf)
         return buf:get_byte(buf)
     elseif type_item == TYPES_STRUCTURE.bool then
         return buf:get_bool(buf)
-
     elseif type_item == TYPES_STRUCTURE.int16 then
         return buf:get_sint16(buf)
     elseif type_item == TYPES_STRUCTURE.int32 then
         return buf:get_sint32(buf)
     elseif type_item == TYPES_STRUCTURE.int64 then
         return buf:get_int64(buf)
-
     elseif type_item == TYPES_STRUCTURE.uint16 then
         return buf:get_uint16(buf)
     elseif type_item == TYPES_STRUCTURE.uint32 then
         return buf:get_uint32(buf)
-
     elseif type_item == TYPES_STRUCTURE.float32 then
         return buf:get_float32(buf)
     elseif type_item == TYPES_STRUCTURE.float64 then
@@ -140,7 +140,7 @@ end
 function module.decode_array(buf)
     local len = buf:get_uint32()
     local res = {}
-    for i=1, len do
+    for i = 1, len do
         local type_item = buf:get_byte()
         if type_item == TYPES_STRUCTURE.array then
             table.insert(res, module.get_item(buf))
@@ -183,6 +183,18 @@ function bson.decode(buf)
     local is_tbl = buf:get_byte()
     local data = module.decode_array(buf)
     return data
+end
+
+function bson.serialize(array)
+    local buf = db:new()
+    bson.encode(buf, array)
+
+    return buf:get_bytes()
+end
+
+function bson.deserialize(bytes)
+    local buf = db:new(bytes)
+    return bson.decode(buf)
 end
 
 return bson

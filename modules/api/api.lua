@@ -3,13 +3,17 @@ local rpc = require "api/rpc"
 local accounts = require "api/accounts"
 local bson = require "lib/private/files/bson"
 local console = require "api/console"
+local sandbox = require "api/sandbox"
+
+-- Сделай player.suspended
 
 local api = {
     events = events,
     accounts = accounts,
     rpc = rpc,
     bson = bson,
-    console = console
+    console = console,
+    sandbox = sandbox
 }
 
 return {server = api}

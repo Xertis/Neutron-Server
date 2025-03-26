@@ -2,12 +2,12 @@
 
 1. **Сериализация:**
 ```lua
-api.bson.encode(buffer: DataBuffer, tbl: Table)
+api.bson.serialize(tbl: Table<Any>) -> Table<Bytes>
 ```
-   - Записывает в **buffer** таблицу **tbl**
+   - Возвращает **tbl** в виде байт
 
-2. Десериализация:**
+2. **Десериализация:**
 ```lua
-api.bson.decode(buffer) -> Table
+api.bson.deserialize(bytes: Table<Bytes) -> Table<Any>
 ```
-   - Читает данные из **buffer** и возвращает прочитанную таблицу **Table**
+   - Читает таблицу из массива байт

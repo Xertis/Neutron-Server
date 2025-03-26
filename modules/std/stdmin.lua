@@ -469,6 +469,56 @@ function inventory.tbl_to_inv(tbl, invid)
     end
 end
 
+-- BIT
+
+function bit.tobits(num, is_sign)
+    local is_negative = nil
+    if is_sign then
+        is_negative = num < 0
+    end
+
+    num = math.abs(num)
+
+    local t={}
+    local rest = nil
+    while num>0 do
+        rest=math.fmod(num,2)
+        t[#t+1]=rest
+        num=(num-rest)/2
+    end
+
+    if is_sign then
+        table.insert(t, is_negative and 1 or 0)
+    end
+    return t
+end
+
+function bit.tonum(bits, is_sign)
+    local num = 0
+    for i, bit in ipairs(bits) do
+        local val = bit == 1 and 2 or 0
+        local j = i
+        local degree = 0
+        if not is_sign then j = j - 1 end
+
+        degree = #bits - j
+
+        if not is_sign or i < #bits then
+            num = num + val^(degree-1)
+        end
+    end
+
+    if is_sign then
+        local is_negative = bits[#bits]
+
+        if is_negative == 1 then
+            num = -num
+        end
+    end
+
+    return num
+end
+
 -- OTHER
 
 function cached_require(path)
