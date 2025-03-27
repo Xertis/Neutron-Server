@@ -19,8 +19,7 @@ local MIN_INT64 = -9223372036854775808
 local bson = {}
 local module = {}
 
-TYPES_ARRAY = { "byte", "uint16", "uint32", "int16", "int32", "int64", "float32", "float64", "bool", "string", "hashmap",
-    "array", "table" }
+TYPES_ARRAY = { "byte", "uint16", "uint32", "int16", "int32", "int64", "float32", "float64", "bool", "string", "hashmap", "array", "table" }
 TYPES_STRUCTURE = {
     byte = 1,
     uint16 = 2,

@@ -519,6 +519,13 @@ function bit.tonum(bits, is_sign)
     return num
 end
 
+-- DISTANCE
+distance = {}
+
+function distance.euclidian(x1, y1, z1, x2, y2, z2)
+    return ((x1 - x2)^2 + (y1-y2)^2 + (z1-z2)^2)^0.5
+end
+
 -- OTHER
 
 function cached_require(path)
