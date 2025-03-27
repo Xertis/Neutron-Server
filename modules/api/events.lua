@@ -1,11 +1,3 @@
-local function get(path)
-    if not _G["/$p"] then
-        return
-    end
-
-    return _G["/$p"][path]
-end
-
 local protocol = require "lib/public/protocol"
 local server_echo = start_require("multiplayer/server/server_echo")
 
