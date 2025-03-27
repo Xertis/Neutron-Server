@@ -2,12 +2,12 @@
 
 1. **Получение аккаунта игрока:**
 ```lua
-api.events.get_account_by_name(username: string) -> Account
+api.accounts.get_account_by_name(username: string) -> Account
 ```
    - Возвращает класс типа **Account** игрока с ником **username**
 
 2. **Получение клиента аккаунта:**
 ```lua
-api.events.get_client(account: Account) -> Client
+api.accounts.get_client(account: Account) -> Client
 ```
    - Возвращает класс типа **Client** игрока с аккаунтом **account**.
