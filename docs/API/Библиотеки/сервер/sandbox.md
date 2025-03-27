@@ -8,6 +8,6 @@ api.sandbox.get_all() -> Table<Username: Player>
 
 2. **Получение игроков в определённом радиусе**
 ```lua
-api.sandbox.get_in_radius(pos: {x ,y, z}, radius: num) -> Table<Username: Player>
+api.sandbox.get_in_radius(pos: {x, y, z}, radius: num) -> Table<Username: Player>
 ```
    - Возвращает таблицу игроков в определённом радиусе
