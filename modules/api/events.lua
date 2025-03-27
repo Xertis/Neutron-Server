@@ -13,25 +13,31 @@ local module = {}
 local handlers = {}
 
 function module.tell(pack, event, client, bytes)
-    local buffer = protocol.create_databuffer()
-    buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.PackEvent, pack, event, bytes))
+    if IS_RUNNING then
+        local buffer = protocol.create_databuffer()
+        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.PackEvent, pack, event, bytes))
 
-    client.network:send(buffer.bytes)
+        client.network:send(buffer.bytes)
+    end
 end
 
 function module.echo(pack, event, bytes)
-    server_echo.put_event(function(client)
-        local buffer = protocol.create_databuffer()
-        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.PackEvent, pack, event, bytes))
-        client.network:send(buffer.bytes)
-    end)
+    if IS_RUNNING then
+        server_echo.put_event(function(client)
+            local buffer = protocol.create_databuffer()
+            buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.PackEvent, pack, event, bytes))
+            client.network:send(buffer.bytes)
+        end)
+    end
 end
 
 function module.on(pack, event, func)
-    local pack_handlers = table.set_default(handlers, pack, {})
-    local pack_handler_events = table.set_default(pack_handlers, event, {})
+    if IS_RUNNING then
+        local pack_handlers = table.set_default(handlers, pack, {})
+        local pack_handler_events = table.set_default(pack_handlers, event, {})
 
-    table.insert(pack_handler_events, func)
+        table.insert(pack_handler_events, func)
+    end
 end
 
 function module.__emit__(pack, event, bytes, client)
