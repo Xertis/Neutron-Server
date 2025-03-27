@@ -17,9 +17,9 @@ local world = lib.world
 
 _G["/$p"] = table.copy(package.loaded)
 
+IS_RUNNING = true
 world.open_main()
 logger.log("world loop is started")
-IS_RUNNING = true
 
 local save_interval = CONFIG.server.auto_save_interval * 60
 local last_time_save = 0
