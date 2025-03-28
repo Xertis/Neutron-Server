@@ -88,6 +88,14 @@ function data_buffer:put_bytes(bytes)
     end
 end
 
+function data_buffer:put_norm8(single)
+	self:put_bytes({bit_converter.norm8_to_byte(single)})
+end
+
+function data_buffer:put_norm16(single)
+	self:put_bytes(bit_converter.norm16_to_bytes(single, self.order))
+end
+
 function data_buffer:put_float32(single)
 	self:put_bytes(bit_converter.float32_to_bytes(single, self.order))
 end
@@ -130,6 +138,14 @@ function data_buffer:get_byte()
 	local byte = self.bytes[self.pos]
 	self.pos = self.pos + 1
 	return byte
+end
+
+function data_buffer:get_norm8()
+	return bit_converter.byte_to_norm8(self:get_byte())
+end
+
+function data_buffer:get_norm16()
+	return bit_converter.bytes_to_norm16(self:get_bytes(2), self.order)
 end
 
 function data_buffer:get_float32()

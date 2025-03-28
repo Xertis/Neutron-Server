@@ -1,0 +1,10 @@
+{   
+    "success": 200,
+    "db": {
+        "DatabaseExists" : 101,
+        "DatabaseNotExists": 102
+    },
+    "tables": {
+        "TableExists": 201
+    }
+}
