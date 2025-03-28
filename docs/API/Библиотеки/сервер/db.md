@@ -67,26 +67,11 @@ api.db.types = {
 ```
 
 ### Коды:
-```json
-{  
-
-    "success": 200,
-
-    "db": {
-
-        "DatabaseExists" : 101,
-
-        "DatabaseNotExists": 102,
-
-    },
-
-    "tables": {
-
-        "TableExists": 201
-
-    }
-
-}
+```lua
+"Success": 200,
+"DatabaseExists" : 101,
+"DatabaseNotExists": 102,
+"TableExists": 201
 ```
 
 
