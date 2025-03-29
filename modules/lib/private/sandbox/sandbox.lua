@@ -30,6 +30,11 @@ function module.join_player(account)
     account_player:save()
 
     container.put("players_online", account_player)
+
+    if player.is_suspended(account_player.pid) then
+        player.set_suspended(account_player.pid, false)
+    end
+
     return account_player
 end
 
@@ -45,6 +50,9 @@ function module.leave_player(account_player)
             container.put("players_online", nil, indx)
         end
     end
+
+    player.set_suspended(account_player.pid, true)
+
     return account_player
 end
 
@@ -88,6 +96,7 @@ end
 function module.get_player_state(account_player)
     local x, y, z = player.get_pos(account_player.pid)
     local yaw, pitch = player.get_rot(account_player.pid, true)
+
     return {
         x = x,
         y = y,

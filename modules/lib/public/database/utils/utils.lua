@@ -1,7 +1,7 @@
 local parser = require "lib/public/database/files/db_parser"
 
 local utils = {
-    tables_path = "export:database/",
+    tables_path = "world:databases",
     db = {},
     tables = {},
     valid = {},

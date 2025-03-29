@@ -6,8 +6,6 @@ local console = require "api/console"
 local sandbox = require "api/sandbox"
 local db = require "lib/public/database/api"
 
--- Сделай player.suspended
-
 local api = {
     events = events,
     accounts = accounts,

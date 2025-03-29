@@ -219,7 +219,7 @@ matches.fsm:add_state("joining", {
 
         local DATA = {
             account_player.pid,
-            world.get_day_time(),
+            time.day_time_to_uint16(world.get_day_time()),
             array_rules
         }
 
@@ -236,6 +236,20 @@ matches.fsm:add_state("joining", {
         buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.SynchronizePlayerPosition, unpack(DATA)))
         client.network:send(buffer.bytes)
         client:set_active(true)
+
+        timeout_executor.push(
+            function (_client, x, y, z, yaw, pitch, is_last)
+                DATA = {x, y, z, yaw, pitch}
+                local buf = protocol.create_databuffer()
+                buf:put_packet(protocol.build_packet("server", protocol.ServerMsg.SynchronizePlayerPosition, unpack(DATA)))
+                _client.network:send(buf.bytes)
+
+                if is_last then
+                    _client.player.is_teleported = true
+                end
+            end,
+            {client, state.x, state.y, state.z, state.yaw, state.pitch}, 1
+        )
 
         ---
 
@@ -372,7 +386,7 @@ matches.client_online_handler:add_case(protocol.ClientMsg.PlayerPosition, (
         local packet = values[1]
         local client = values[2]
 
-        if not client.account or not client.account.is_logged then
+        if not client.account or not client.account.is_logged or not client.player.is_teleported then
             return
         end
 

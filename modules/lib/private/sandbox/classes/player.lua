@@ -14,6 +14,7 @@ function Player.new(username)
     self.entity_id = nil
     self.pid = nil
     self.world = nil
+    self.is_teleported = false
 
     return self
 end

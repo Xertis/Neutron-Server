@@ -11,7 +11,7 @@ ClientPipe:add_middleware(function(client)
 
     local buffer = protocol.create_databuffer()
 
-    buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.TimeUpdate, world.get_day_time()))
+    buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.TimeUpdate, time.day_time_to_uint16(world.get_day_time())))
     client.network:send(buffer.bytes)
     return client
 end)

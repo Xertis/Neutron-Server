@@ -82,6 +82,12 @@ function time.formatted_time()
     return string.format("%s %s.%s%s", date, time, milliseconds, utc_offset)
 end
 
+function time.day_time_to_uint16(time)
+    local normalized = (time + 1) / 2
+
+    return math.floor(normalized * 65535 + 0.5)
+end
+
 --- LOGGER
 
 logger = {}

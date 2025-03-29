@@ -15,7 +15,10 @@ end
 
 function module.process()
     for i, responce in ipairs(delayed_responses) do
-        if time.uptime() - responce.time_create > responce.time_out then
+        local cur_time = time.uptime()
+        if cur_time - responce.time_create > responce.time_out then
+            table.insert(responce.args, true)
+            responce.responce_func(unpack(responce.args))
             table.remove(delayed_responses, i)
         else
             local state = responce.responce_func(unpack(responce.args))

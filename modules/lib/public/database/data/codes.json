@@ -1,5 +1,5 @@
 {   
-    "success": 200,
+    "Success": 200,
     "db": {
         "DatabaseExists" : 101,
         "DatabaseNotExists": 102
