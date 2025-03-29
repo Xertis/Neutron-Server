@@ -83,9 +83,8 @@ function time.formatted_time()
 end
 
 function time.day_time_to_uint16(time)
-    local normalized = (time + 1) / 2
 
-    return math.floor(normalized * 65535 + 0.5)
+    return math.floor(time * 65535 + 0.5)
 end
 
 --- LOGGER
