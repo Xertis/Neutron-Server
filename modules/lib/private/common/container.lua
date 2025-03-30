@@ -13,8 +13,6 @@ local DATA = {
 }
 
 function module.accounts.put(username, account)
-    print(debug.traceback())
-    print("PUT", username, json.tostring(account))
     DATA.accounts[username] = account
 end
 

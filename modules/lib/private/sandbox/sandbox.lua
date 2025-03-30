@@ -13,7 +13,9 @@ function module.join_player(account)
     if status == CODES.players.ReviveSuccess or status == CODES.players.WithoutChanges then
         -- Ну мы его разбудили правильно, ничего делать не надо, мы молодцы
     elseif status == CODES.players.DataLoss then
-        account_player:set("pid", player.create(account_player.username))
+        local pid = player.create(account_player.username)
+        print(pid, account.username)
+        account_player:set("pid", pid)
         account_player:set("entity_id", player.get_entity(account_player.pid))
 
         account:set("world", CONFIG.game.main_world)
@@ -28,7 +30,7 @@ function module.join_player(account)
     account_player:save()
 
     if player.is_suspended(account_player.pid) then
-        --player.set_suspended(account_player.pid, false)
+        player.set_suspended(account_player.pid, false)
     end
 
     return account_player
@@ -41,7 +43,7 @@ function module.leave_player(account_player)
 
     container.player_online.put(account_player.username, nil)
 
-    --player.set_suspended(account_player.pid, true)
+    player.set_suspended(account_player.pid, true)
 
     return account_player
 end
