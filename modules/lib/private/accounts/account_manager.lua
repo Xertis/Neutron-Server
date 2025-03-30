@@ -36,7 +36,7 @@ function module.login(username)
 end
 
 function module.by_username.get_account(name)
-    print(name, container.accounts.get())
+    print(name, json.tostring(container.accounts.get()))
     if not name then
         return nil
     end
