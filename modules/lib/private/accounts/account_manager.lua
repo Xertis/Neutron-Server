@@ -36,6 +36,7 @@ function module.login(username)
 end
 
 function module.by_username.get_account(name)
+    print(name, container.accounts.get())
     if not name then
         return nil
     end
@@ -64,6 +65,9 @@ function module.get_role(account)
 end
 
 function module.get_client(account)
+    if not account then
+        error("Invalid account")
+    end
     for _, client in pairs(container.clients_all.get()) do
         if client.account.username == account.username then
             return client
