@@ -37,12 +37,11 @@ while IS_RUNNING do
     timeout_executor.process()
     server:tick()
 
-    metadata.save()
-
     local ctime = math.round(time.uptime())
     if ctime % save_interval == 0 and ctime - last_time_save > 1 then
         logger.log("Saving world...")
         last_time_save = ctime
+        metadata.save()
         app.save_world()
     end
 end
