@@ -28,7 +28,7 @@ function module.join_player(account)
     account_player:save()
 
     if player.is_suspended(account_player.pid) then
-        player.set_suspended(account_player.pid, false)
+        --player.set_suspended(account_player.pid, false)
     end
 
     return account_player
@@ -41,7 +41,7 @@ function module.leave_player(account_player)
 
     container.player_online.put(account_player.username, nil)
 
-    player.set_suspended(account_player.pid, true)
+    --player.set_suspended(account_player.pid, true)
 
     return account_player
 end
