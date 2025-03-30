@@ -40,7 +40,6 @@ function module.by_username.get_account(name)
         return nil
     end
 
-    print(name)
     return container.accounts.get(name)
 end
 

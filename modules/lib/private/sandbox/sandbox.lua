@@ -18,6 +18,13 @@ function module.join_player(account)
         account_player:set("pid", pid)
         account_player:set("entity_id", player.get_entity(account_player.pid))
 
+        local y = 255
+        while block.get(0, y, 0) == 0 do
+            y = y - 1
+        end
+
+        player.set_pos(account_player.pid, 0, y+1, 0)
+
         account:set("world", CONFIG.game.main_world)
         account_player:set("active", true)
     end
@@ -86,7 +93,6 @@ function module.get_player_state(account_player)
     local yaw, pitch = player.get_rot(account_player.pid, true)
     local noclip = player.is_noclip(account_player.pid)
     local flight = player.is_flight(account_player.pid)
-
 
     return {
         x = x,
