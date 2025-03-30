@@ -230,7 +230,7 @@ matches.fsm:add_state("joining", {
         ---
 
         local state = sandbox.get_player_state(account_player)
-        DATA = {state.x, state.y, state.z, state.yaw, state.pitch}
+        DATA = {state.x, state.y, state.z, state.yaw, state.pitch, state.noclip, state.flight}
 
         buffer = protocol.create_databuffer()
         buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.SynchronizePlayerPosition, unpack(DATA)))
@@ -238,17 +238,17 @@ matches.fsm:add_state("joining", {
         client:set_active(true)
 
         timeout_executor.push(
-            function (_client, x, y, z, yaw, pitch, is_last)
-                DATA = {x, y, z, yaw, pitch}
+            function (_client, x, y, z, yaw, pitch, noclip, flight, is_last)
+                local _DATA = {x, y, z, yaw, pitch, noclip, flight}
                 local buf = protocol.create_databuffer()
-                buf:put_packet(protocol.build_packet("server", protocol.ServerMsg.SynchronizePlayerPosition, unpack(DATA)))
+                buf:put_packet(protocol.build_packet("server", protocol.ServerMsg.SynchronizePlayerPosition, unpack(_DATA)))
                 _client.network:send(buf.bytes)
 
                 if is_last then
                     _client.player.is_teleported = true
                 end
             end,
-            {client, state.x, state.y, state.z, state.yaw, state.pitch}, 1
+            {client, state.x, state.y, state.z, state.yaw, state.pitch, state.noclip, state.flight}, 1
         )
 
         ---
@@ -395,7 +395,9 @@ matches.client_online_handler:add_case(protocol.ClientMsg.PlayerPosition, (
             y = packet.y,
             z = packet.z,
             yaw = packet.yaw,
-            pitch = packet.pitch
+            pitch = packet.pitch,
+            noclip = packet.noclip,
+            flight = packet.flight
         })
     end
 ))
