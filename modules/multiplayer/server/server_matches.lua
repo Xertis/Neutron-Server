@@ -176,7 +176,7 @@ matches.fsm:add_state("joining", {
         local account = account_manager.login(packet.username)
         local hash_status, hash_reason = check_mods(hashes)
 
-        if not hash_status and CONFIG.server.dev_mode then
+        if not hash_status and not CONFIG.server.dev_mode then
             logger.log("JoinSuccess has been aborted")
             matches.actions.Disconnect(client, "Inconsistencies in mods:" .. hash_reason)
             return "idle"
