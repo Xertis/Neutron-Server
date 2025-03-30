@@ -258,11 +258,11 @@ matches.fsm:add_state("joining", {
 
         ---
 
-        DATA = {account_player.username, account_player.pid}
+        local p_data = {account_player.username, account_player.pid}
         echo.put_event(
             function (c)
                 buffer = protocol.create_databuffer()
-                buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.PlayerListAdd, unpack(DATA)))
+                buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.PlayerListAdd, unpack(p_data)))
                 c.network:send(buffer.bytes)
             end,
         client)
