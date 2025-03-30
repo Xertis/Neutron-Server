@@ -335,6 +335,10 @@ matches.client_online_handler:add_case(protocol.ClientMsg.BlockDestroy, (
             return
         end
 
+        if table.has({0, -1}, block.get(packet.x, packet.y, packet.z)) then
+            return
+        end
+
         sandbox.destroy_block({x = packet.x, y = packet.y, z = packet.z}, client.player.pid)
     end
 ))

@@ -68,10 +68,17 @@ function module.get_client(account)
     if not account then
         error("Invalid account")
     end
+
     for _, client in pairs(container.clients_all.get()) do
+        if not client.account then
+            logger.log("Account information lost. Client: " .. client.username, "E")
+            goto continue
+        end
         if client.account.username == account.username then
             return client
         end
+
+        ::continue::
     end
 end
 
