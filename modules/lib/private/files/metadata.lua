@@ -41,6 +41,10 @@ function module.players.get(name)
     return PLAYERS_META[name]
 end
 
+function module.players.get_all()
+    return table.deep_copy(PLAYERS_META)
+end
+
 function module.accounts.set(name, values)
     SERVER_META.accounts[name] = values
 end

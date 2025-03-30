@@ -1,6 +1,7 @@
 local protect = require "lib/private/protect"
 local container = require "lib/private/common/container"
 local Player = require "lib/private/sandbox/classes/player"
+local metadata = require "lib/private/files/metadata"
 local module = {
     by_username = {}
 }
@@ -13,7 +14,7 @@ function module.join_player(account)
     if status == CODES.players.ReviveSuccess or status == CODES.players.WithoutChanges then
         -- Ну мы его разбудили правильно, ничего делать не надо, мы молодцы
     elseif status == CODES.players.DataLoss then
-        local pid = player.create(account_player.username)
+        local pid = player.create(account_player.username, table.count_pairs(metadata.players.get_all())+1)
         logger.log(string.format('Player "%s" has been created with pid: %s', account.username, pid))
         account_player:set("pid", pid)
         account_player:set("entity_id", player.get_entity(account_player.pid))

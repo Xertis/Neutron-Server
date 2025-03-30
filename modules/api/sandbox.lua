@@ -24,7 +24,7 @@ function module.players.get_in_radius(target_pos, radius)
     for key, _player in pairs(sandbox.get_players()) do
         local x2, y2, z2 = player.get_pos(_player.pid)
 
-        if distance.euclidian(x, y, z, x2, y2, z2) <= radius then
+        if math.euclidian(x, y, z, x2, y2, z2) <= radius then
             res[key] = _player
         end
     end
