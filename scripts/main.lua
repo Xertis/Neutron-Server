@@ -32,8 +32,8 @@ server:start()
 
 logger.log("server is started")
 
----local bytes = file.read_bytes("user:players_data.bjson")
----print(json.tostring(bjson.frombytes(bytes)))
+--local bytes = file.read_bytes("user:players_data.bjson")
+--print(json.tostring(bjson.frombytes(bytes)))
 
 while IS_RUNNING do
     app.tick()
