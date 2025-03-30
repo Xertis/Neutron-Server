@@ -14,7 +14,7 @@ function module.join_player(account)
         -- Ну мы его разбудили правильно, ничего делать не надо, мы молодцы
     elseif status == CODES.players.DataLoss then
         local pid = player.create(account_player.username)
-        print(pid, account.username)
+        logger.log(string.format('Player "%s" has been created with pid: %s', account.username, pid))
         account_player:set("pid", pid)
         account_player:set("entity_id", player.get_entity(account_player.pid))
 
