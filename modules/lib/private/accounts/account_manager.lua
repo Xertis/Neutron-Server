@@ -36,7 +36,11 @@ function module.login(username)
 end
 
 function module.by_username.get_account(name)
-    return container.accounts.get(name or "")
+    if not name then
+        return nil
+    end
+
+    return container.accounts.get(name)
 end
 
 function module.leave(account)

@@ -19,6 +19,7 @@
     "chunks_loading_distance": 4,
     "chunks_loading_speed": 4,
     "password_auth": false,
+    "dev_mode": false,
     "whitelist": [],
     "blacklist": []
   },
