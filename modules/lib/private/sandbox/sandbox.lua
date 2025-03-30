@@ -5,10 +5,8 @@ local module = {
     by_username = {}
 }
 
-container.put("players_online", nil, 0)
-
 function module.join_player(account)
-    local account_player = container.get_all(account.username)[1] or Player.new(account.username)
+    local account_player = container.player_online.get(account.username) or Player.new(account.username)
 
     local status = account_player:revive()
 
@@ -23,13 +21,11 @@ function module.join_player(account)
     end
 
     if account_player:is_active() then
-        container.put(account_player.username, account_player, 1)
+        container.player_online.put(account_player.username, account_player)
     end
 
     logger.log(string.format('Player "%s" is join.', account_player.username))
     account_player:save()
-
-    container.put("players_online", account_player)
 
     if player.is_suspended(account_player.pid) then
         player.set_suspended(account_player.pid, false)
@@ -43,13 +39,7 @@ function module.leave_player(account_player)
 
     logger.log(string.format('Player "%s" is leave.', account_player.username))
 
-    for indx, player in ipairs(container.get_all("players_online")) do
-        local name = player.username
-
-        if name == account_player.username then
-            container.put("players_online", nil, indx)
-        end
-    end
+    container.player_online.put(account_player.username, nil)
 
     player.set_suspended(account_player.pid, true)
 
@@ -57,18 +47,11 @@ function module.leave_player(account_player)
 end
 
 function module.get_players()
-    local players_data = container.get_all("players_online")
-    local players = {}
-
-    for _, player in ipairs(players_data) do
-        players[player.username] = player
-    end
-
-    return players
+    return container.player_online.get()
 end
 
 function module.get_player(account)
-    return container.get_all(account.username)[1]
+    return container.player_online.get(account.username)
 end
 
 function module.get_chunk(pos)

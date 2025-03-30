@@ -1,26 +1,47 @@
 local protect = require "lib/private/protect"
 if protect.protect_require() then return end
 
-local module = {}
-local DATA = {}
+local module = {
+    player_online = {},
+    clients_all = {},
+    accounts = {},
+}
+local DATA = {
+    player_online = {},
+    clients_all = {},
+    accounts = {},
+}
 
-function module.put(key, val, indx)
-    table.set_default(DATA, key, {})
-    indx = indx or #DATA[key]+1
-
-    DATA[key][indx] = val
+function module.accounts.put(username, account)
+    DATA.accounts[username] = account
 end
 
-function module.set(key, tbl)
-    DATA[key] = tbl
+function module.player_online.put(username, player)
+    DATA.player_online[username] = player
 end
 
-function module.clear(key)
-    DATA[key] = {}
+function module.clients_all.set(clients)
+    DATA.clients_all = clients
 end
 
-function module.get_all(key)
-    return table.set_default(DATA, key, {})
+function module.accounts.get(username)
+    if username then
+        return DATA.accounts[username]
+    else
+        return DATA.accounts
+    end
+end
+
+function module.player_online.get(username)
+    if username then
+        return DATA.player_online[username]
+    else
+        return DATA.player_online
+    end
+end
+
+function module.clients_all.get()
+    return DATA.clients_all
 end
 
 return module

@@ -26,8 +26,8 @@ function module.login(username)
         account:set("active", true)
     end
 
-    if account:is_active() and container.get_all(account.username).account == nil then
-        container.put(account.username, account, "account")
+    if account:is_active() and container.accounts.get(account.username) == nil then
+        container.accounts.put(account.username, account)
     end
 
     account:save()
@@ -36,17 +36,17 @@ function module.login(username)
 end
 
 function module.by_username.get_account(name)
-    return container.get_all(name).account
+    return container.accounts.get(name or "")
 end
 
 function module.leave(account)
     logger.log(string.format('account "%s" is leaving...', account.username))
     account:abort()
 
-    local player = container.get_all(account.username)[1]
+    local player = container.player_online.get(account.username)
 
     sandbox.leave_player(player)
-    container.clear(account.username)
+    container.accounts.put(account.username, nil)
 
     return account
 end
@@ -60,7 +60,7 @@ function module.get_role(account)
 end
 
 function module.get_client(account)
-    for _, client in pairs(container.get_all("all_clients")) do
+    for _, client in pairs(container.clients_all.get()) do
         if client.account.username == account.username then
             return client
         end
