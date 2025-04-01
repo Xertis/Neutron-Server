@@ -187,6 +187,23 @@ function bit_converter.bytes_to_norm16(bytes, order)
   end
 end
 
+function bit_converter.uint24_to_bytes(val, order)
+  return fromLE({
+      bit.band(bit.rshift(val, 16), 0xFF),
+      bit.band(bit.rshift(val, 8), 0xFF),
+      bit.band(val, 0xFF)
+  }, order)
+end
+
+function bit_converter.bytes_to_uint24(bytes, order)
+    bytes = toLE(bytes, order)
+    return bit.bor(
+      bit.lshift(bytes[1], 16),
+      bit.lshift(bytes[2], 8),
+      bytes[3]
+  )
+end
+
 function bit_converter.norm8_to_byte(val)
   local uint8 = math.floor((math.clamp(val, -1, 1) + 1) * 127.5 + 0.5)
   return uint8

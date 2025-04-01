@@ -32,7 +32,7 @@ function server:start()
         local client = Player.new(false, network, address, port)
 
         for i, mclient in ipairs(self.clients) do
-            if mclient.address == client.address then
+            if mclient.address == client.address and not mclient.active then
                 self.clients[i].network = client.network
                 self.clients[i].port = client.port
                 return

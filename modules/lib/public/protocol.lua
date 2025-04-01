@@ -65,6 +65,13 @@ local DATA_ENCODE = {
     ["int32"] = function(buffer, value)
         buffer:put_sint32(value)
     end,
+    ["degree"] = function(buffer, value)
+        local deg = math.clamp(value, -180, 180)
+
+        local normalized = (deg + 180) / 360
+
+        buffer:put_uint24(math.floor(normalized * 16777215 + 0.5))
+    end,
     ["uint32"] = function(buffer, value)
         buffer:put_uint32(value)
     end,
@@ -133,6 +140,10 @@ local DATA_DECODE = {
     end,
     ["int32"] = function(buffer)
         return buffer:get_sint32()
+    end,
+    ["degree"] = function(buffer)
+        local deg = buffer:get_uint24()
+        return (deg / 16777215) * 360 - 180
     end,
     ["uint32"] = function(buffer)
         return buffer:get_uint32()

@@ -116,6 +116,10 @@ function data_buffer:put_uint16(uint16)
 	self:pack("H", uint16)
 end
 
+function data_buffer:put_uint24(uint24)
+	self:put_bytes(bit_converter.uint24_to_bytes(uint24, self.order))
+end
+
 function data_buffer:put_uint32(uint32)
 	self:pack("I", uint32)
 end
@@ -147,6 +151,11 @@ end
 function data_buffer:get_norm16()
 	return bit_converter.bytes_to_norm16(self:get_bytes(2), self.order)
 end
+
+function data_buffer:get_uint24()
+	return bit_converter.bytes_to_uint24(self:get_bytes(3), self.order)
+end
+
 
 function data_buffer:get_float32()
 	return bit_converter.bytes_to_float32(self:get_bytes(4), self.order)
