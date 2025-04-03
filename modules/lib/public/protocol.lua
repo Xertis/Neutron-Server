@@ -217,6 +217,8 @@ recursive_parse = function(data_struct, buffer, result)
             if not state then
                 print(debug.traceback())
                 print(json.tostring(data_struct))
+                print(table.tostring(buffer:get_bytes()))
+                print(table.tostring(result))
                 return
             end
             result[string.explode(":", type_descr)[1]] = res
