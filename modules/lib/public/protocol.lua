@@ -47,6 +47,10 @@ local DATA_ENCODE = {
     ["var"] = function (buffer, value)
         buffer:put_bytes(bincode.encode_varint(value))
     end,
+    ["pdata"] = function (buffer, value)
+        --value = {x, y, z, noclip, flight}
+        -- ну и добавляешь в буффер 6 байт по итогу
+    end,
     ["bson"] = function (buffer, value)
         bson.encode(buffer, value)
     end,
@@ -122,6 +126,10 @@ local DATA_DECODE = {
     end,
     ["var"] = function (buffer)
         return bincode.decode_varint(buffer)
+    end,
+    ["pdata"] = function (buffer)
+        --Читаешь из буффера свои 6 байт
+        --return возвращаешь массив из {x, y, z, noclip, flight}
     end,
     ["bson"] = function (buffer, value)
         return bson.decode(buffer)

@@ -3,6 +3,7 @@ local protocol = require "lib/public/protocol"
 local protect = require "lib/private/protect"
 local matches = require "multiplayer/server/server_matches"
 local ClientPipe = require "multiplayer/server/client_pipe"
+local asyncio = require "server:lib/public/asyncio/init"
 
 local List = require "lib/public/common/list"
 
