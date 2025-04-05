@@ -7,7 +7,7 @@
         ["PingRequest", "payload:uint32"],
         ["JoinGame", "username:string"],
         ["KeepAlive", "challenge:uint32"],
-        ["PlayerPosition", "pos:pos", "noclip:boolean", "flight:boolean"],
+        ["PlayerPosition", "pos:pos"],
         ["PlayerRotation", "pitch:f32", "yaw:f32"],
         ["PlayerCheats", "noclip:boolean", "flight:boolean"],
         ["RequestChunk", "x:int16", "z:int16"],

@@ -384,6 +384,40 @@ matches.client_online_handler:add_case(protocol.ClientMsg.RequestChunk, chunk_re
 
 ---------
 
+matches.client_online_handler:add_case(protocol.ClientMsg.PlayerCheats, (
+    function (...)
+        local values = {...}
+        local packet = values[1]
+        local client = values[2]
+
+        if not client.account or not client.account.is_logged or not client.player.is_teleported then
+            return
+        end
+
+        sandbox.set_player_state(client.player, {
+            noclip = packet.noclip,
+            flight = packet.flight
+        })
+    end
+))
+
+matches.client_online_handler:add_case(protocol.ClientMsg.PlayerRotation, (
+    function (...)
+        local values = {...}
+        local packet = values[1]
+        local client = values[2]
+
+        if not client.account or not client.account.is_logged or not client.player.is_teleported then
+            return
+        end
+
+        sandbox.set_player_state(client.player, {
+            yaw = packet.yaw,
+            pitch = packet.pitch
+        })
+    end
+))
+
 matches.client_online_handler:add_case(protocol.ClientMsg.PlayerPosition, (
     function (...)
         local values = {...}
@@ -400,16 +434,10 @@ matches.client_online_handler:add_case(protocol.ClientMsg.PlayerPosition, (
         x = x + ((indx % 2) * 16) + client.player.region_pos.x * 32
         z = z + ((math.floor(indx / 2)) * 16) + client.player.region_pos.z * 32
 
-        print("POS", x, packet.pos.y, z)
-
         sandbox.set_player_state(client.player, {
             x = x,
             y = packet.pos.y,
-            z = z,
-            yaw = packet.yaw,
-            pitch = packet.pitch,
-            noclip = packet.noclip,
-            flight = packet.flight
+            z = z
         })
     end
 ))
@@ -424,7 +452,6 @@ matches.client_online_handler:add_case(protocol.ClientMsg.PlayerRegion, (
             return
         end
 
-        print("REGION", packet.x, packet.z)
         client.player.region_pos = {x = packet.x, z = packet.z}
     end
 ))
