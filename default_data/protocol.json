@@ -48,7 +48,7 @@
     "structures": [
         ["Block", "x:int32", "y:int32", "z:int32", "block_state:uint16", "block_id:string"],
         ["Player", "entity_id:uint32", "username:string"],
-        ["Chunk", "x:int32", "z:int32", "data:array|uint8"],
+        ["Chunk", "x:int16", "z:int16", "data:array|uint8"],
         ["Rule", "rule:string", "value:boolean"],
         ["Item", "item_id:uint16", "count:uint16", "data:structure|ItemData"],
         ["ItemData", "key:string", "value:bson"]
