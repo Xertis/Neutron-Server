@@ -11,7 +11,7 @@ local ServerPipe = Pipeline.new()
 -- Принимаем все пакеты
 ServerPipe:add_middleware(function(client)
     local packet_count = 0
-    local max_packet_count = 10
+    local max_packet_count = 32
     while packet_count < max_packet_count do
         local length_bytes = client.network:recieve_bytes(2)
         if length_bytes then

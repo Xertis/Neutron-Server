@@ -5,6 +5,8 @@ local bson = require "lib/private/files/bson"
 local console = require "api/console"
 local sandbox = require "api/sandbox"
 local db = require "lib/public/database/api"
+local status_controller = start_require "api/status_controller"
+local callbacks = start_require "api/callbacks"
 
 local api = {
     events = events,
@@ -13,7 +15,9 @@ local api = {
     bson = bson,
     console = console,
     sandbox = sandbox,
-    db = db
+    db = db,
+    --callbacks = callbacks
+    --status_controller = status_controller
 }
 
 return {server = api}
