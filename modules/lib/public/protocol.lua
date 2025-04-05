@@ -38,16 +38,6 @@ local recursive_encode = function (data_struct, buffer, result) end
 local data_decode = function (data_type, buffer) end
 local data_encode = function (data_type, buffer) end
 
-local function encodePdataComponent(comp, max, name)
-    comp = math.floor(comp * 1000)
-
-    if comp > max or comp < 0 then
-        error("invalid "..name.." position")
-    end
-
-    return comp
-end
-
 -- Функции для кодирования и декодирования разных типов значений
 local DATA_ENCODE = {
     ["boolean"] = function(buffer, value)
@@ -56,15 +46,18 @@ local DATA_ENCODE = {
     ["var"] = function (buffer, value)
         buffer:put_bytes(bincode.encode_varint(value))
     end,
-    ["pdata"] = function (buffer, value)
-        local x, y, z, noclip, flight = unpack(value)
+    ["pos"] = function (buffer, value)
+        local x, y, z = unpack(value)
 
-        x, y, z = encodePdataComponent(x, 0x4000, 'x'), encodePdataComponent(y, 0x40000, 'y'), encodePdataComponent(z, 0x4000, 'z')
+        y = math.clamp(y, 0, 262)
 
-        noclip, flight = noclip and 1 or 0, flight and 1 or 0
+        local chunk_x, chunk_z = math.floor(x / 16), math.floor(z / 16)
+        local chunk_id = chunk_x % 2 + chunk_z % 2 * 2
 
-        buffer:put_uint24(bit.bor(x, bit.lshift(bit.band(y, 0x3FF), 14)))
-        buffer:put_uint24(bit.bor(bit.bor(bit.rshift(y, 10), bit.lshift(z, 8)), bit.bor(bit.lshift(noclip, 22), bit.lshift(flight, 23))))
+        x, y, z = math.floor((x-chunk_x*16) * 1000 + 0.5), math.floor(y * 1000 + 0.5), math.floor((z - chunk_z*16) * 1000 + 0.5)
+
+        buffer:put_uint32(bit.band(x, 0x3FFF) + bit.lshift(bit.band(y, 0x3FFFF), 14))
+        buffer:put_uint16(bit.band(z, 0x3FFF) + bit.lshift(chunk_id, 14))
     end,
     ["bson"] = function (buffer, value)
         bson.encode(buffer, value)
@@ -142,18 +135,17 @@ local DATA_DECODE = {
     ["var"] = function (buffer)
         return bincode.decode_varint(buffer)
     end,
-    ["pdata"] = function (buffer)
-        local l = buffer:get_uint24()
-        local h = buffer:get_uint24()
+    ["pos"] = function (buffer)
+        local i = buffer:get_uint32()
+        local h = buffer:get_uint16()
 
-        local x = bit.band(l, 0x3FFF)
-        local y = bit.bor(bit.rshift(bit.band(l, 0xFFC000), 14), bit.lshift(bit.band(h, 0xFF), 10))
-        local z = bit.rshift(bit.band(h, 0x3FFF00), 8)
+        local x = bit.band(i, 0x3FFF)
+        local y = bit.rshift(bit.band(i, 0xFFFFC000), 14)
+        local z = bit.band(h, 0x3FFF)
 
-        local noclip = bit.band(h, 0x400000) ~= 0
-        local flight = bit.band(h, 0x800000) ~= 0
+        local chunk_id = bit.rshift(bit.band(h, 0xC000), 14)
 
-        return { x / 1000, y / 1000, z / 1000, noclip, flight }
+        return {x = x / 1000, y = y / 1000, z = z / 1000, chunk_indx = chunk_id}
     end,
     ["bson"] = function (buffer, value)
         return bson.decode(buffer)

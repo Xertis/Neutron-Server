@@ -231,7 +231,7 @@ matches.fsm:add_state("joining", {
 
         local state = sandbox.get_player_state(account_player)
         DATA = {state.x, state.y, state.z, state.yaw, state.pitch, state.noclip, state.flight}
-
+        account_player.region_pos = {x = math.floor(state.x / 32), z = math.floor(state.z / 32)}
         buffer = protocol.create_databuffer()
         buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.SynchronizePlayerPosition, unpack(DATA)))
         client.network:send(buffer.bytes)
@@ -394,15 +394,38 @@ matches.client_online_handler:add_case(protocol.ClientMsg.PlayerPosition, (
             return
         end
 
+        local x, z = packet.pos.x, packet.pos.z
+        local indx = packet.pos.chunk_indx
+
+        x = x + ((indx % 2) * 16) + client.player.region_pos.x * 32
+        z = z + ((math.floor(indx / 2)) * 16) + client.player.region_pos.z * 32
+
+        print("POS", x, packet.pos.y, z)
+
         sandbox.set_player_state(client.player, {
-            x = packet.x,
-            y = packet.y,
-            z = packet.z,
+            x = x,
+            y = packet.pos.y,
+            z = z,
             yaw = packet.yaw,
             pitch = packet.pitch,
             noclip = packet.noclip,
             flight = packet.flight
         })
+    end
+))
+
+matches.client_online_handler:add_case(protocol.ClientMsg.PlayerRegion, (
+    function (...)
+        local values = {...}
+        local packet = values[1]
+        local client = values[2]
+
+        if not client.account or not client.account.is_logged or not client.player.is_teleported then
+            return
+        end
+
+        print("REGION", packet.x, packet.z)
+        client.player.region_pos = {x = packet.x, z = packet.z}
     end
 ))
 
