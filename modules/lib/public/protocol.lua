@@ -38,6 +38,15 @@ local recursive_encode = function (data_struct, buffer, result) end
 local data_decode = function (data_type, buffer) end
 local data_encode = function (data_type, buffer) end
 
+local function encodePdataComponent(comp, max, name)
+    comp = math.floor(comp * 1000)
+
+    if comp > max or comp < 0 then
+        error("invalid "..name.." position")
+    end
+
+    return comp
+end
 
 -- Функции для кодирования и декодирования разных типов значений
 local DATA_ENCODE = {
@@ -48,8 +57,14 @@ local DATA_ENCODE = {
         buffer:put_bytes(bincode.encode_varint(value))
     end,
     ["pdata"] = function (buffer, value)
-        --value = {x, y, z, noclip, flight}
-        -- ну и добавляешь в буффер 6 байт по итогу
+        local x, y, z, noclip, flight = unpack(value)
+
+        x, y, z = encodePdataComponent(x, 0x4000, 'x'), encodePdataComponent(y, 0x40000, 'y'), encodePdataComponent(z, 0x4000, 'z')
+
+        noclip, flight = noclip and 1 or 0, flight and 1 or 0
+
+        buffer:put_uint24(bit.bor(x, bit.lshift(bit.band(y, 0x3FF), 14)))
+        buffer:put_uint24(bit.bor(bit.bor(bit.rshift(y, 10), bit.lshift(z, 8)), bit.bor(bit.lshift(noclip, 22), bit.lshift(flight, 23))))
     end,
     ["bson"] = function (buffer, value)
         bson.encode(buffer, value)
@@ -128,8 +143,17 @@ local DATA_DECODE = {
         return bincode.decode_varint(buffer)
     end,
     ["pdata"] = function (buffer)
-        --Читаешь из буффера свои 6 байт
-        --return возвращаешь массив из {x, y, z, noclip, flight}
+        local l = buffer:get_uint24()
+        local h = buffer:get_uint24()
+
+        local x = bit.band(l, 0x3FFF)
+        local y = bit.bor(bit.rshift(bit.band(l, 0xFFC000), 14), bit.lshift(bit.band(h, 0xFF), 10))
+        local z = bit.rshift(bit.band(h, 0x3FFF00), 8)
+
+        local noclip = bit.band(h, 0x400000) ~= 0
+        local flight = bit.band(h, 0x800000) ~= 0
+
+        return { x / 1000, y / 1000, z / 1000, noclip, flight }
     end,
     ["bson"] = function (buffer, value)
         return bson.decode(buffer)
