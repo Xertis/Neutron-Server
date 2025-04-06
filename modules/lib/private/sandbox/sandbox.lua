@@ -19,9 +19,9 @@ function module.join_player(account)
         account_player:set("pid", pid)
         account_player:set("entity_id", player.get_entity(account_player.pid))
 
-        local y = 255
-        while block.get(0, y, 0) == 0 do
-            y = y - 1
+        local y = 0
+        while block.get(0, y, 0) ~= 0 and block.get(0, y, 0) ~= -1 do
+            y = y + 1
         end
 
         player.set_pos(account_player.pid, 0, y+1, 0)
