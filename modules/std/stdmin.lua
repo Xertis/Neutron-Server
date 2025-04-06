@@ -94,6 +94,10 @@ function logger.log(text, type)
 
     local content = file.read(path)
 
+    if #content > 600000 then
+        content = ''
+    end
+
     file.write(path, content .. '\n' .. message)
 end
 
