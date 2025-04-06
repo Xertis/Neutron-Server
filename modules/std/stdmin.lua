@@ -89,6 +89,8 @@ end
 
 --- TABLE
 
+table.unpack = unpack
+
 function table.keys(t)
     local keys = {}
 
