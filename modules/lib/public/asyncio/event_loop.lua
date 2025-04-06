@@ -274,16 +274,12 @@ do
 		self:remove_tasks()
 	end
 
-	function EventLoop:run_until_complete(task)
-		local future = self:new_object(Future)
-		task:add_future(future)
-
-		self:add_task(task)
-		while not future.done do
-			self:run()
+	function EventLoop:run_until_complete()
+		while self.tasks_index > 0 do
+			self.timers:run()
+			self:run_tasks()
+			self:remove_tasks()
 		end
-
-		return unpack(future.result)
 	end
 
 	--[[@
