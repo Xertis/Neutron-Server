@@ -84,7 +84,17 @@ function logger.log(text, type)
 
     local timestamp = string.format("[%s] %s", type, uptime)
 
-    print(timestamp .. string.left_pad(out, #out+33-#timestamp))
+    local path = "export:server.log"
+    local message = timestamp .. string.left_pad(out, #out+33-#timestamp)
+    print(message)
+
+    if not file.exists(path) then
+        file.write(path, "")
+    end
+
+    local content = file.read(path)
+
+    file.write(path, content .. '\n' .. message)
 end
 
 --- TABLE
