@@ -45,7 +45,7 @@ function Player:revive()
     end
 
     self.active = true
-    Player:to_load(data)
+    self:to_load(data)
     return CODES.players.ReviveSuccess
 end
 

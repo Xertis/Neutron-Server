@@ -72,7 +72,7 @@ end
 
 logger = {}
 
-function logger.log(text, type)
+function logger.log(text, type, only_save)
     type = type or 'I'
 
     text = string.first_up(text)
@@ -86,7 +86,10 @@ function logger.log(text, type)
 
     local path = "export:server.log"
     local message = timestamp .. string.left_pad(out, #out+33-#timestamp)
-    print(message)
+
+    if not only_save then
+        print(message)
+    end
 
     if not file.exists(path) then
         file.write(path, "")
@@ -98,7 +101,7 @@ function logger.log(text, type)
         content = ''
     end
 
-    file.write(path, content .. '\n' .. message)
+    file.write(path, content .. message .. '\n')
 end
 
 --- TABLE
