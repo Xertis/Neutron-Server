@@ -34,7 +34,7 @@ function bit_buffer:put_bit(bit)
 end
 
 function bit_buffer:get_bit()
-	local bit = getExp(self.bytes[math.floor(self.pos / 8)], (self.pos - 1) % 8) ~= 0
+	local bit = getExp(self.bytes[math.floor(self.pos / 8)] + 1, (self.pos - 1) % 8) ~= 0
 
 	self.pos = self.pos + 1
 
