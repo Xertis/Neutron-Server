@@ -77,6 +77,10 @@ function data_buffer:put_byte(byte)
 	self.pos = self.pos + 1
 end
 
+function data_buffer:put_bit_buffer(buf)
+	self:put_bytes(buf:get_bytes())
+end
+
 function data_buffer:put_bytes(bytes)
     if type(self.bytes) == 'table' then
         for i = 1, #bytes do
