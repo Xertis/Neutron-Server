@@ -1,6 +1,26 @@
 local bincode = require "lib/public/common/bincode"
 local bson = require "lib/private/files/bson"
 
+local MAX_UINT16 = 65535
+local MIN_UINT16 = 0
+local MAX_UINT32 = 4294967295
+local MIN_UINT32 = 0
+local MAX_UINT64 = 18446744073709551615
+local MIN_UINT64 = 0
+
+local MAX_BYTE = 255
+local MIN_BYTE = 0
+
+local MAX_INT8 = 127
+local MAX_INT16 = 32767
+local MAX_INT32 = 2147483647
+local MAX_INT64 = 9223372036854775807
+
+local MIN_INT8 = -127
+local MIN_INT16 = -32768
+local MIN_INT32 = -2147483648
+local MIN_INT64 = -9223372036854775808
+
 local protocol = {}
 local data_buffer = require "lib/public/data_buffer"
 protocol.data = json.parse(file.read("server:default_data/protocol.json"))
@@ -41,6 +61,8 @@ local data_encode = function (data_type, buffer) end
 -- Функции для кодирования и декодирования разных типов значений
 local DATA_ENCODE = {
     ["boolean"] = function(buffer, value)
+        value = value and true or false
+
         buffer:put_bool(value)
     end,
     ["var"] = function (buffer, value)
@@ -63,18 +85,43 @@ local DATA_ENCODE = {
         bson.encode(buffer, value)
     end,
     ["int8"] = function(buffer, value)
+        if value > MAX_INT8 or value < MIN_INT8 then
+            logger.log(string.format("Out of range for int8: %s", value), 'E', true)
+            value = math.clamp(value, MIN_INT8, MAX_INT8)
+        end
+
         buffer:put_byte(value + 127)
     end,
     ["uint8"] = function(buffer, value)
+        if value > MAX_BYTE or value < MIN_BYTE then
+            logger.log(string.format("Out of range for uint8: %s", value), 'E', true)
+            value = math.clamp(value, MIN_BYTE, MAX_BYTE)
+        end
+
         buffer:put_byte(value)
     end,
     ["int16"] = function(buffer, value)
+        if value > MAX_INT16 or value < MIN_INT16 then
+            logger.log(string.format("Out of range for int16: %s", value), 'E', true)
+            value = math.clamp(value, MIN_INT16, MAX_INT16)
+        end
+
         buffer:put_sint16(value)
     end,
     ["uint16"] = function(buffer, value)
+        if value > MAX_UINT16 or value < MIN_UINT16 then
+            logger.log(string.format("Out of range for uint16: %s", value), 'E', true)
+            value = math.clamp(value, MIN_UINT16, MAX_UINT16)
+        end
+
         buffer:put_uint16(value)
     end,
     ["int32"] = function(buffer, value)
+        if value > MAX_INT32 or value < MIN_INT32 then
+            logger.log(string.format("Out of range for int32: %s", value), 'E', true)
+            value = math.clamp(value, MIN_INT32, MAX_INT32)
+        end
+
         buffer:put_sint32(value)
     end,
     ["degree"] = function(buffer, value)
@@ -85,9 +132,19 @@ local DATA_ENCODE = {
         buffer:put_uint24(math.floor(normalized * 16777215 + 0.5))
     end,
     ["uint32"] = function(buffer, value)
+        if value > MAX_UINT32 or value < MIN_UINT32 then
+            logger.log(string.format("Out of range for uint32: %s", value), 'E', true)
+            value = math.clamp(value, MIN_UINT32, MAX_UINT32)
+        end
+
         buffer:put_uint32(value)
     end,
     ["int64"] = function(buffer, value)
+        if value > MAX_INT64 or value < MIN_INT64 then
+            logger.log(string.format("Out of range for int32: %s", value), 'E', true)
+            value = math.clamp(value, MIN_INT64, MAX_INT64)
+        end
+
         buffer:put_int64(value)
     end,
     ["f32"] = function(buffer, value)
@@ -237,14 +294,7 @@ recursive_parse = function(data_struct, buffer, result)
             local type_descr = string.explode("|", value)[1]
             local struct_descr = string.explode("|", value)[2]
             local func = DATA_DECODE[string.explode(":", type_descr)[2]]
-            local state, res = pcall(func, buffer, struct_descr)
-            if not state then
-                print(debug.traceback())
-                print(json.tostring(data_struct))
-                print(table.tostring(buffer:get_bytes()))
-                print(table.tostring(result))
-                return
-            end
+            local res = func(buffer, struct_descr)
             result[string.explode(":", type_descr)[1]] = res
         end
     end
@@ -334,7 +384,20 @@ function protocol.build_packet(client_or_server, packet_type, ...)
     buffer:put_byte(packet_type - 1)
 
     local data_struct = protocol.data[client_or_server][packet_type]
-    recursive_encode(data_struct, data, buffer)
+    local state, res = pcall(recursive_encode, data_struct, data, buffer)
+
+    if not state then
+        logger.log("Packet encoding crash, additional information in server.log", 'E')
+
+        logger.log("Traceback:", 'E', true)
+        logger.log(debug.traceback(), 'E', true)
+
+        logger.log("Packet:", 'E', true)
+        logger.log(table.tostring({client_or_server, packet_type}), 'E', true)
+
+        logger.log("Data:", 'E', true)
+        logger.log(table.tostring({...}), 'E', true)
+    end
 
     return buffer.bytes
 end
@@ -352,7 +415,22 @@ function protocol.parse_packet(client_or_server, data)
     result.packet_type = packet_type
     local data_struct = protocol.data[client_or_server][packet_type] or {}
     -- TODO: улучшить парсинг для возможности парсинга структур (сделано) и массивов (сделано)
-    recursive_parse(data_struct, buffer, result)
+
+    local state, res = pcall(recursive_parse, data_struct, buffer, result)
+
+    if not state then
+        logger.log("Packet parsing crash, additional information in server.log", 'E')
+
+        logger.log("Traceback:", 'E', true)
+        logger.log(debug.traceback(), 'E', true)
+
+        logger.log("Packet:", 'E', true)
+        logger.log(table.tostring({client_or_server, packet_type}), 'E', true)
+
+        logger.log("Data:", 'E', true)
+        logger.log(table.tostring(data), 'E', true)
+    end
+
     return result
 end
 
