@@ -2,6 +2,20 @@ local data_buffer = require "lib/public/data_buffer"
 
 _G['$VoxelOnline'] = "server"
 
+--- PLAYER
+
+function player.get_dir(pid)
+    local yaw, pitch = player.get_rot(pid)
+    local yaw_rad = math.rad(yaw)
+    local pitch_rad = math.rad(pitch)
+
+    local x = math.cos(pitch_rad) * math.sin(yaw_rad)
+    local y = -math.sin(pitch_rad)
+    local z = math.cos(pitch_rad) * math.cos(yaw_rad)
+
+    return {-x, -y, -z}
+end
+
 --- STRING
 
 function string.first_up(str)

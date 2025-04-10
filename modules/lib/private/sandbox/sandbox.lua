@@ -78,8 +78,6 @@ function module.place_block(block_state, pid)
     if block_state.rotation then
         block.set_rotation(block_state.x, block_state.y, block_state.z, block_state.rotation)
     end
-
-    --block.set_rotation(block_state.x, block_state.y, block_state.z, bit.band(block_state.states, 0x7))
 end
 
 function module.destroy_block(pos, pid)
