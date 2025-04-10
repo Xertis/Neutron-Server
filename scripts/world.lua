@@ -1,27 +1,31 @@
-local function get(path)
+function start_require(path)
+    if not string.find(path, ':') then
+        local prefix, _ = parse_path(debug.getinfo(2).source)
+        return start_require(prefix..':'..path)
+    end
+
+    local old_path = path
+    local prefix, file = parse_path(path)
+    path = prefix..":modules/"..file..".lua"
+
     if not _G["/$p"] then
-        return
+        return require(old_path)
     end
 
     return _G["/$p"][path]
 end
 
-local server_echo = get("server:modules/multiplayer/server/server_echo.lua")
-local matches = get("server:modules/multiplayer/server/server_matches.lua")
-local protocol = get("server:modules/lib/public/protocol.lua")
+local server_echo = start_require("server:multiplayer/server/server_echo")
+local protocol = start_require("server:lib/public/protocol")
 
 local function upd(blockid, x, y, z, playerid)
-    if not server_echo then
-        server_echo = get("server:modules/multiplayer/server/server_echo.lua")
-        matches = get("server:modules/multiplayer/server/server_matches.lua")
-        protocol = get("server:modules/lib/public/protocol.lua")
-        return
-    end
-
-    local pseudo_packet = {
-        type_packet = "protocol.ClientMsg.RequestChunk",
-        x = math.floor(x / 16),
-        z = math.floor(z / 16)
+    local data = {
+        x,
+        y,
+        z,
+        block.get_states(x, y, z),
+        block.get(x, y, z),
+        playerid
     }
 
     server_echo.put_event(
@@ -29,7 +33,10 @@ local function upd(blockid, x, y, z, playerid)
             if client.active ~= true then
                 return
             end
-            matches.client_online_handler:switch(protocol.ClientMsg.RequestChunk, pseudo_packet, client)
+
+            local buffer = protocol.create_databuffer()
+            buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.BlockChanged, unpack(data)))
+            client.network:send(buffer.bytes)
         end
     )
 end
@@ -40,14 +47,6 @@ function on_block_placed( ... )
 end
 
 function on_block_broken( ... )
-    upd(...)
-end
-
-function on_block_replaced( ... )
-    upd(...)
-end
-
-function on_block_interact( ... )
     upd(...)
 end
 

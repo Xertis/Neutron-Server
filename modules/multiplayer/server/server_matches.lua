@@ -317,7 +317,6 @@ matches.client_online_handler:add_case(protocol.ClientMsg.BlockUpdate, (
             y = packet.y,
             z = packet.z,
             states = packet.block_state,
-            rotation = packet.block_rotation,
             id = packet.block_id
         }
 

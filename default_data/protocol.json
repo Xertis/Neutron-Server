@@ -14,7 +14,7 @@
         ["RequestChunks", "chunks:array|int16"],
         ["ChatMessage", "message:string"],
         ["CommandMessage", "message:string"],
-        ["BlockUpdate", "x:int32", "y:int32", "z:int32", "block_state:uint8", "block_rotation:uint8", "block_id:uint16"],
+        ["BlockUpdate", "x:int32", "y:int32", "z:int32", "block_state:uint16", "block_id:uint16"],
         ["BlockInteract", "x:int32", "y:int32", "z:int32"],
         ["BlockDestroy", "x:int32", "y:int32", "z:int32"],
         ["PacksHashes", "packs:array|string"],
@@ -39,7 +39,7 @@
         ["ChunkData", "x:int16", "z:int16", "data:array|uint8"],
         ["ChunksData", "list:structure|Chunk"],
         ["ChatMessage", "message:string"],
-        ["BlockUpdate", "x:int32", "y:int32", "z:int32", "block_state:uint8", "block_rotation:uint8", "block_id:uint16", "pid:uint32"],
+        ["BlockChanged", "x:int32", "y:int32", "z:int32", "block_state:uint16", "block_id:uint16", "pid:uint32"],
         ["PacksList", "packs:array|string"],
         ["PackEvent", "pack:string", "event:string", "bytes:array|uint8"],
         ["Disconnect", "reason:string"]
