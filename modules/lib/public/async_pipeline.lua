@@ -8,6 +8,7 @@ function Pipeline.new()
     local self = setmetatable({}, Pipeline)
 
     self._middlewares = {}
+    self.loop = {}
 
     return self
 end
@@ -21,6 +22,7 @@ end
 
 function Pipeline:process( data, loop )
     local result = data or true
+    self.loop = loop
     for index, callback in ipairs(self._middlewares) do
         local async_callback = async(function (_result)
             return callback( _result )

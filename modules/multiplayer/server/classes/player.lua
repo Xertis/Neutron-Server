@@ -1,6 +1,7 @@
 local List = require "lib/public/common/list"
 
 local Player = {}
+local max_id = 0
 Player.__index = Player
 
 function Player.new(active, network, address, port, username)
@@ -11,12 +12,14 @@ function Player.new(active, network, address, port, username)
     self.username = username
     self.address = address
     self.port = port
-    self.client_id = -1
+    self.client_id = max_id
     self.account = nil
     self.player = nil
 
     self.response_queue = List.new()
     self.received_packets = List.new()
+
+    max_id = max_id + 1
 
     return self
 end

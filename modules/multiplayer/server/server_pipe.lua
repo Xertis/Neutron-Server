@@ -3,7 +3,9 @@ local protocol = require "lib/public/protocol"
 local protect = require "lib/private/protect"
 local matches = require "multiplayer/server/server_matches"
 local ClientPipe = require "multiplayer/server/client_pipe"
-local asyncio = require "server:lib/public/asyncio/init"
+local asyncio = require "lib/public/asyncio/init"
+
+local async = asyncio.async
 
 local List = require "lib/public/common/list"
 
@@ -38,12 +40,18 @@ ServerPipe:add_middleware(function(client)
     while not List.is_empty(client.received_packets) do
         local packet = List.popleft(client.received_packets)
 
-        if client.active == false then
-            matches.fsm:handle_event(client, packet)
-        elseif client.active == true then
-            matches.client_online_handler:switch(packet.packet_type, packet, client)
-            ClientPipe:process(client)
-        end
+        local x = async(
+            function ()
+                if client.active == false then
+                    matches.fsm:handle_event(client, packet)
+                elseif client.active == true then
+                    matches.client_online_handler:switch(packet.packet_type, packet, client)
+                    ClientPipe:process(client)
+                end
+            end
+        )
+
+        ServerPipe.loop:await(x())
     end
     return client
 end)
