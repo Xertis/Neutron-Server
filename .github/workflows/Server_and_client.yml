@@ -23,10 +23,11 @@ jobs:
       run: |
 
         mkdir -p archive
-
-        cp -r ./ archive/current-repo/
+        
+        rsync -a --exclude='archive/' ./ archive/current-repo/
+        
         cp -r ./external-repo/ archive/external-repo/
-
+        
         zip -r repositories.zip archive/
         
     - name: Upload zip archive
