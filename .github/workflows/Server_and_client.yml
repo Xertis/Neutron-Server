@@ -1,4 +1,4 @@
-name: Create Repositories Zip Archive
+name: Create Server-Client Zip Archive
 
 on:
   workflow_dispatch:
@@ -10,28 +10,34 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    - name: Checkout current repository
+    - name: Checkout server repository
       uses: actions/checkout@v2
       with:
+        path: 'server'
         fetch-depth: 0
-    
-    - name: Clone external repository
-      run: |
-        git clone --depth 1 --branch main https://github.com/GHOST3118/voxel-engine-multiplayer-client.git external-repo
-        
-    - name: Create zip archive
-      run: |
 
-        mkdir -p archive
+    - name: Clone client repository
+      run: |
+        git clone --depth 1 --branch main https://github.com/GHOST3118/voxel-engine-multiplayer-client.git client
         
-        rsync -a --exclude='archive/' ./ archive/current-repo/
+    - name: Create clean archive structure
+      run: |
+        # Создаем чистую структуру
+        mkdir -p bundle
+        mv server bundle/server
+        mv client bundle/client
         
-        cp -r ./external-repo/ archive/external-repo/
+        # Удаляем ненужные файлы (если требуется)
+        rm -rf bundle/server/.git
+        rm -rf bundle/client/.git
         
-        zip -r repositories.zip archive/
+    - name: Create final zip
+      run: |
+        cd bundle
+        zip -r ../server-client-bundle.zip .
         
-    - name: Upload zip archive
+    - name: Upload bundle
       uses: actions/upload-artifact@v4
       with:
-        name: repositories-archive
-        path: repositories.zip
+        name: server-client-bundle
+        path: server-client-bundle.zip
