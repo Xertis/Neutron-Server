@@ -20,24 +20,17 @@ jobs:
       run: |
         git clone --depth 1 --branch main https://github.com/GHOST3118/voxel-engine-multiplayer-client.git client
         
-    - name: Create clean archive structure
+    - name: Prepare bundle structure
       run: |
-        # Создаем чистую структуру
         mkdir -p bundle
         mv server bundle/server
         mv client bundle/client
-        
-        # Удаляем ненужные файлы (если требуется)
+
         rm -rf bundle/server/.git
         rm -rf bundle/client/.git
-        
-    - name: Create final zip
-      run: |
-        cd bundle
-        zip -r ../server-client-bundle.zip .
-        
-    - name: Upload bundle
+
+    - name: Upload as artifact
       uses: actions/upload-artifact@v4
       with:
         name: server-client-bundle
-        path: server-client-bundle.zip
+        path: bundle
