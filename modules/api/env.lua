@@ -56,6 +56,18 @@ function module.__env_update__(pack, env_name, key, value)
     end
 
     pack_envs[env_name][key] = value
+
+    server_echo.put_event(
+        function (client)
+            if client.active ~= true then
+                return
+            end
+
+            local buffer = protocol.create_databuffer()
+            buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.PackEnv, pack, env_name, key, value))
+            client.network:send(buffer.bytes)
+        end
+    )
 end
 
 return module
