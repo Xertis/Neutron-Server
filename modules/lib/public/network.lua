@@ -45,8 +45,7 @@ end
 function Network:recieve(length)
 
     if self.socket then
-        local data = socketlib.receive_text( self.socket, length or 1024 
-    )
+        local data = socketlib.receive_text( self.socket, length or 1024 )
         return data
     end
 end
@@ -54,12 +53,26 @@ end
 function Network:recieve_bytes(length)
     length = length or 1024
 
-    if self.socket then
-        local bytes = socketlib.receive( self.socket, length )
+    local tries = 0
+    local max_tries_count = 1
 
-        while #bytes < length do
+    if self.socket then
+        local bytes = socketlib.receive( self.socket, length ) or {}
+
+        while #bytes < length and tries < max_tries_count do
             coroutine.yield()
-            table.merge(bytes, socketlib.receive(self.socket, math.max(length - #bytes, 0)))
+
+            local data = socketlib.receive(self.socket, math.max(length - #bytes, 0)) or {}
+
+            table.merge(bytes, data)
+
+            if #data == 0 then
+                tries = tries + 1
+            end
+        end
+
+        if #bytes == 0 then
+            return nil
         end
 
         return bytes

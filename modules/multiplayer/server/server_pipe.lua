@@ -13,24 +13,46 @@ local ServerPipe = Pipeline.new()
 
 -- Принимаем все пакеты
 ServerPipe:add_middleware(function(client)
-    local packet_count = 0
-    local max_packet_count = 64
-    while packet_count < max_packet_count do
-        local length_bytes = client.network:recieve_bytes(2)
-        if length_bytes then
-            local length_buffer = protocol.create_databuffer(length_bytes)
-            local length = length_buffer:get_uint16()
-            if length then
-                local data_bytes = client.network:recieve_bytes(length)
-                if data_bytes then
-                    local packet = protocol.parse_packet("client", data_bytes)
-                    List.pushright(client.received_packets, packet)
-                    packet_count = packet_count + 1
+    local co = client.meta.recieve_co
+    if not co then
+        co = coroutine.create(function()
+            local packet_count = 0
+            local max_packet_count = 64
+
+            while packet_count < max_packet_count do
+                local length_bytes = client.network:recieve_bytes(2)
+                if length_bytes then
+                    local length_buffer = protocol.create_databuffer(length_bytes)
+                    local length = length_buffer:get_uint16()
+                    if length then
+                        local data_bytes = client.network:recieve_bytes(length)
+                        if data_bytes then
+                            local packet = protocol.parse_packet("client", data_bytes)
+                            List.pushright(client.received_packets, packet)
+
+                            packet_count = packet_count + 1
+                        else break end
+                    else break end
                 else break end
-            else break end
-        else break end
+            end
+
+            return client
+        end)
+        client.meta.recieve_co = co
     end
-    return client
+
+    local success, result = coroutine.resume(co)
+
+    if not success then
+        client.meta.recieve_co = nil
+        error(result)
+    elseif coroutine.status(co) == "dead" then
+        client.meta.recieve_co = nil
+
+        return result
+    end
+
+    return nil
 end)
 
 -- Обрабатываем пакеты
