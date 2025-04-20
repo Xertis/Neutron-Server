@@ -37,7 +37,7 @@ jobs:
     - name: Upload packages
       uses: actions/upload-artifact@v4
       with:
-        name: game-packages
+        name: server_and_client
         path: |
           server.zip
           client.zip
