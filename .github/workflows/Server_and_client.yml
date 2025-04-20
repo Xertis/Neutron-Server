@@ -1,0 +1,36 @@
+name: Create Repositories Zip Archive
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  create-archive:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout current repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Clone external repository
+      run: |
+        git clone --depth 1 --branch main https://github.com/GHOST3118/voxel-engine-multiplayer-client.git external-repo
+        
+    - name: Create zip archive
+      run: |
+
+        mkdir -p archive
+
+        cp -r ./ archive/current-repo/
+        cp -r ./external-repo/ archive/external-repo/
+
+        zip -r repositories.zip archive/
+        
+    - name: Upload zip archive
+      uses: actions/upload-artifact@v3
+      with:
+        name: repositories-archive
+        path: repositories.zip
