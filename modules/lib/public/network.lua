@@ -45,15 +45,24 @@ end
 function Network:recieve(length)
 
     if self.socket then
-        local data = socketlib.receive_text( self.socket, length or 1024)
+        local data = socketlib.receive_text( self.socket, length or 1024 
+    )
         return data
     end
 end
 
 function Network:recieve_bytes(length)
+    length = length or 1024
 
     if self.socket then
-        return socketlib.receive( self.socket, length or 1024)
+        local bytes = socketlib.receive( self.socket, length )
+
+        while #bytes < length do
+            coroutine.yield()
+            table.merge(bytes, socketlib.receive(self.socket, math.max(length - #bytes, 0)))
+        end
+
+        return bytes
     end
 end
 
