@@ -88,6 +88,7 @@ logger = {}
 
 function logger.log(text, type, only_save)
     type = type or 'I'
+    type = type:upper()
 
     text = string.first_up(text)
 

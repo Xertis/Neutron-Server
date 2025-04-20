@@ -8,6 +8,7 @@ local chat = require "multiplayer/server/chat/chat"
 local timeout_executor = require "lib/private/common/timeout_executor"
 local echo = require "multiplayer/server/server_echo"
 local api_events = require "api/events"
+local api_env = require "api/env"
 local lib = require "lib/private/min"
 local mfsm = require "lib/public/common/multifsm"
 
@@ -571,5 +572,15 @@ matches.client_online_handler:add_case(protocol.ClientMsg.PackEvent, (
         api_events.__emit__(packet.pack, packet.event, packet.bytes, client)
     end
 ))
+
+matches.client_online_handler:add_case(protocol.ClientMsg.PackEnv, (
+    function (...)
+        local values = {...}
+        local packet = values[1]
+
+        api_env.__env_update__(packet.pack, packet.env, packet.key, packet.value)
+    end
+))
+
 
 return protect.protect_return(matches)

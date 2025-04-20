@@ -2,6 +2,23 @@ local bit_converter = require "lib/public/common/bit_converter"
 
 -- Data buffer
 
+local MAX_UINT16 = 65535
+local MIN_UINT16 = 0
+local MAX_UINT24 = 16777215
+local MAX_UINT32 = 4294967295
+local MIN_UINT32 = 0
+local MAX_UINT64 = 18446744073709551615
+local MIN_UINT64 = 0
+
+local MAX_BYTE = 255
+
+local MAX_INT16 = 32767
+local MIN_INT16 = -32768
+local MAX_INT32 = 2147483647
+local MIN_INT32 = -2147483648
+local MAX_INT64 = 9223372036854775807
+local MIN_INT64 = -9223372036854775808
+
 local STANDART_TYPES = {
     b = 1,
     B = 1,
@@ -12,6 +29,24 @@ local STANDART_TYPES = {
     l = 8,
     L = 8,
     ['?'] = 1
+}
+
+local TYPES = {
+	null       = 0,
+	int8       = 1,
+	int16      = 2,
+	int32      = 3,
+	int64      = 4,
+	uint8      = 5,
+	uint16     = 6,
+	uint24 	   = 7,
+	uint32     = 8,
+	string     = 9,
+	norm8      = 10,
+	norm16     = 11,
+	float32    = 12,
+	float64    = 13,
+	bool       = 14
 }
 
 local data_buffer =
@@ -140,7 +175,82 @@ function data_buffer:put_int64(int64)
 	self:pack("l", int64)
 end
 
+function data_buffer:put_any(value)
+	if type(value) == "boolean" then
+		self:put_byte(TYPES.bool)
+		self:put_bool(value)
+	elseif type(value) == "string" then
+		self:put_byte(TYPES.string)
+		self:put_string(value)
+	elseif type(value) == "nil" then
+		self:put_byte(TYPES.null)
+	elseif type(value) == "number" then
+		if value ~= math.floor(value) then
+			self:put_byte(TYPES.float64)
+			self:put_float64(value)
+		elseif value < 0 then
+			if value >= MIN_INT16 then
+				self:put_byte(TYPES.int16)
+				self:put_sint16(value)
+			elseif value >= MIN_INT32 then
+				self:put_byte(TYPES.int32)
+				self:put_sint32(value)
+			elseif value >= MIN_INT64 then
+				self:put_byte(TYPES.int64)
+				self:put_int64(value)
+			end
+		elseif value >= 0 then
+			if value <= MAX_BYTE then
+				self:put_byte(TYPES.uint8)
+				self:put_byte(value)
+			elseif value <= MAX_UINT16 then
+				self:put_byte(TYPES.uint16)
+				self:put_uint16(value)
+			elseif value <= MAX_UINT24 then
+				self:put_byte(TYPES.uint24)
+				self:put_uint24(value)
+			elseif value <= MAX_UINT32 then
+				self:put_byte(TYPES.uint32)
+				self:put_uint32(value)
+			elseif value <= MAX_INT64 then
+				self:put_byte(TYPES.int64)
+				self:put_int64(value)
+			end
+		end
+	end
+end
+
 -- Get functions
+
+function data_buffer:get_any()
+    local type_byte = self:get_byte()
+
+    if type_byte == TYPES.bool then
+        return self:get_bool()
+    elseif type_byte == TYPES.string then
+        return self:get_string()
+    elseif type_byte == TYPES.null then
+        return nil
+    elseif type_byte == TYPES.float64 then
+        return self:get_float64()
+    elseif type_byte == TYPES.int16 then
+        return self:get_sint16()
+    elseif type_byte == TYPES.int32 then
+        return self:get_sint32()
+    elseif type_byte == TYPES.int64 then
+        return self:get_int64()
+    elseif type_byte == TYPES.uint8 then
+        return self:get_byte()
+    elseif type_byte == TYPES.uint16 then
+        return self:get_uint16()
+    elseif type_byte == TYPES.uint24 then
+        return self:get_uint24()
+    elseif type_byte == TYPES.uint32 then
+        return self:get_uint32()
+    else
+        error("Unknown type byte: " .. tostring(type_byte))
+    end
+end
 
 function data_buffer:get_byte()
 	local byte = self.bytes[self.pos]

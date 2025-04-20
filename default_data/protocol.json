@@ -20,6 +20,7 @@
         ["PacksHashes", "packs:array|string"],
         ["PackEvent", "pack:string", "event:string", "bytes:array|uint8"],
         ["PlayerRegion", "x:int16", "z:int16"],
+        ["PackEnv", "pack:string", "env:string", "key:string", "value:any"],
         ["Disconnect"]
     ],
     "server": [
@@ -42,6 +43,7 @@
         ["BlockChanged", "x:int32", "y:int32", "z:int32", "block_state:uint16", "block_id:uint16", "pid:uint32"],
         ["PacksList", "packs:array|string"],
         ["PackEvent", "pack:string", "event:string", "bytes:array|uint8"],
+        ["PackEnv", "pack:string", "env:string", "key:string", "value:any"],
         ["Disconnect", "reason:string"]
     ],
     "states": ["Status", "Login", "Active"],

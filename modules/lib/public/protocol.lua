@@ -68,6 +68,9 @@ local DATA_ENCODE = {
     ["var"] = function (buffer, value)
         buffer:put_bytes(bincode.encode_varint(value))
     end,
+    ["any"] = function (buffer, value)
+        return buffer:put_any(value)
+    end,
     ["pos"] = function (buffer, value)
         local x, y, z = unpack(value)
 
@@ -192,6 +195,9 @@ local DATA_DECODE = {
     ["var"] = function (buffer)
         return bincode.decode_varint(buffer)
     end,
+    ["any"] = function (buffer)
+        return buffer:get_any()
+    end,
     ["pos"] = function (buffer)
         local i = buffer:get_uint32()
         local h = buffer:get_uint16()
@@ -204,7 +210,7 @@ local DATA_DECODE = {
 
         return {x = x / 1000, y = y / 1000, z = z / 1000, chunk_indx = chunk_id}
     end,
-    ["bson"] = function (buffer, value)
+    ["bson"] = function (buffer)
         return bson.decode(buffer)
     end,
     ["int8"] = function(buffer)
