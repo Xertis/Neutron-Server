@@ -63,7 +63,7 @@ function Network:recieve_bytes(length)
         coroutine.yield()
         local data = socketlib.receive(self.socket, math.max(length - #bytes, 0))
         table.merge(bytes, data or {})
-        tries = tries + (not data and 1 or 0)
+        tries = tries + (not data and 1 or -tries)
     end
 
     return #bytes > 0 and bytes or nil
