@@ -1,4 +1,4 @@
-name: Create Server-Client Zip Archive
+name: Create Server-Client Packages
 
 on:
   workflow_dispatch:
@@ -6,31 +6,38 @@ on:
     branches: [ main ]
 
 jobs:
-  create-archive:
+  package:
     runs-on: ubuntu-latest
     
     steps:
-    - name: Checkout server repository
-      uses: actions/checkout@v2
+    - name: Checkout server
+      uses: actions/checkout@v4
       with:
-        path: 'server'
-        fetch-depth: 0
+        path: 'server-src'
 
-    - name: Clone client repository
+    - name: Clone client
       run: |
-        git clone --depth 1 --branch main https://github.com/GHOST3118/voxel-engine-multiplayer-client.git client
-        
-    - name: Prepare bundle structure
+        git clone --depth 1 --branch main https://github.com/GHOST3118/voxel-engine-multiplayer-client.git client-src
+
+    - name: Prepare packages
       run: |
-        mkdir -p bundle
-        mv server bundle/server
-        mv client bundle/client
+        rm -rf server-src/.git
+        rm -rf client-src/.git
 
-        rm -rf bundle/server/.git
-        rm -rf bundle/client/.git
+        mkdir -p VoxelOnline-LuaServer
+        cp -r server-src/* VoxelOnline-LuaServer/
+        zip -r server.zip VoxelOnline-LuaServer
+        rm -rf VoxelOnline-LuaServer
 
-    - name: Upload as artifact
-      uses: actions/upload-artifact@v4
+        mkdir -p voxelonline
+        cp -r client-src/* voxelonline/
+        zip -r client.zip voxelonline
+        rm -rf voxelonline
+
+    - name: Upload packages
+      uses: actions/upload-artifact@v2
       with:
-        name: server-client-bundle
-        path: bundle
+        name: game-packages
+        path: |
+          server.zip
+          client.zip
