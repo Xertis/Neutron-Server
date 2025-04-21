@@ -303,48 +303,6 @@ matches.fsm:set_default_state("idle")
 
 --- CASES
 
-matches.client_online_handler:add_case(protocol.ClientMsg.BlockUpdate, (
-    function (...)
-        local values = {...}
-        local packet = values[1]
-        local client = values[2]
-
-        if not client.account or not client.account.is_logged then
-            return
-        end
-
-        local block = {
-            x = packet.x,
-            y = packet.y,
-            z = packet.z,
-            states = packet.block_state,
-            id = packet.block_id
-        }
-
-        sandbox.place_block(block, client.player.pid)
-    end
-))
-
-matches.client_online_handler:add_case(protocol.ClientMsg.BlockDestroy, (
-    function (...)
-        local values = {...}
-        local packet = values[1]
-        local client = values[2]
-
-        if not client.account or not client.account.is_logged then
-            return
-        end
-
-        if table.has({0, -1}, block.get(packet.x, packet.y, packet.z)) then
-            return
-        end
-
-        sandbox.destroy_block({x = packet.x, y = packet.y, z = packet.z}, client.player.pid)
-    end
-))
-
----------
-
 local function chunk_responce(...)
     local values = {...}
     local packet = values[1]
@@ -429,10 +387,9 @@ matches.client_online_handler:add_case(protocol.ClientMsg.PlayerPosition, (
         end
 
         local x, z = packet.pos.x, packet.pos.z
-        local indx = packet.pos.chunk_indx
 
-        x = x + ((indx % 2) * 16) + client.player.region_pos.x * 32
-        z = z + ((math.floor(indx / 2)) * 16) + client.player.region_pos.z * 32
+        x = x + client.player.region_pos.x * 32
+        z = z + client.player.region_pos.z * 32
 
         sandbox.set_player_state(client.player, {
             x = x,
@@ -558,6 +515,118 @@ matches.client_online_handler:add_case(protocol.ClientMsg.BlockInteract, (
         local block_name = block.name(block_id)
         events.emit(block_name .. ".interact", x, y, z, client.player.pid)
         events.emit("server:block_interact", block_id, x, y, z, client.player.pid)
+    end
+))
+
+matches.client_online_handler:add_case(protocol.ClientMsg.BlockRegionInteract, (
+    function (...)
+        local values = {...}
+        local packet = values[1]
+        local client = values[2]
+
+        local x, y, z = packet.pos.x, packet.pos.y, packet.pos.z
+
+        x = x + client.player.region_pos.x * 32
+        z = z + client.player.region_pos.z * 32
+
+        local block_id = block.get(x, y, z)
+        local block_name = block.name(block_id)
+        events.emit(block_name .. ".interact", x, y, z, client.player.pid)
+        events.emit("server:block_interact", block_id, x, y, z, client.player.pid)
+    end
+))
+
+--------
+
+matches.client_online_handler:add_case(protocol.ClientMsg.BlockUpdate, (
+    function (...)
+        local values = {...}
+        local packet = values[1]
+        local client = values[2]
+
+        if not client.account or not client.account.is_logged then
+            return
+        end
+
+        local block = {
+            x = packet.x,
+            y = packet.y,
+            z = packet.z,
+            states = packet.block_state,
+            id = packet.block_id
+        }
+
+        sandbox.place_block(block, client.player.pid)
+    end
+))
+
+matches.client_online_handler:add_case(protocol.ClientMsg.BlockRegionUpdate, (
+    function (...)
+        local values = {...}
+        local packet = values[1]
+        local client = values[2]
+
+        if not client.account or not client.account.is_logged then
+            return
+        end
+
+        local x, y, z = packet.pos.x, packet.pos.y, packet.pos.z
+
+        x = x + client.player.region_pos.x * 32
+        z = z + client.player.region_pos.z * 32
+
+        local block = {
+            x = x,
+            y = y,
+            z = z,
+            states = packet.block_state,
+            id = packet.block_id
+        }
+
+        sandbox.place_block(block, client.player.pid)
+    end
+))
+
+--------
+
+matches.client_online_handler:add_case(protocol.ClientMsg.BlockDestroy, (
+    function (...)
+        local values = {...}
+        local packet = values[1]
+        local client = values[2]
+
+        if not client.account or not client.account.is_logged then
+            return
+        end
+
+        if table.has({0, -1}, block.get(packet.x, packet.y, packet.z)) then
+            return
+        end
+
+        sandbox.destroy_block({x = packet.x, y = packet.y, z = packet.z}, client.player.pid)
+    end
+))
+
+matches.client_online_handler:add_case(protocol.ClientMsg.BlockRegionDestroy, (
+    function (...)
+        local values = {...}
+        local packet = values[1]
+        local client = values[2]
+
+        if not client.account or not client.account.is_logged then
+            return
+        end
+
+        local x, y, z = packet.pos.x, packet.pos.y, packet.pos.z
+
+        x = x + client.player.region_pos.x * 32
+        z = z + client.player.region_pos.z * 32
+
+        if table.has({0, -1}, block.get(x, y, z)) then
+            return
+        end
+
+        sandbox.destroy_block({x = x, y = y, z = z}, client.player.pid)
     end
 ))
 

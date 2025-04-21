@@ -71,18 +71,33 @@ local DATA_ENCODE = {
     ["any"] = function (buffer, value)
         return buffer:put_any(value)
     end,
-    ["pos"] = function (buffer, value)
+    ["player_pos"] = function (buffer, value)
         local x, y, z = unpack(value)
-
         y = math.clamp(y, 0, 262)
 
-        local chunk_x, chunk_z = math.floor(x / 16), math.floor(z / 16)
-        local chunk_id = chunk_x % 2 + chunk_z % 2 * 2
+        x = (x - math.floor(x / 32) * 32) * 1000 + 0.5
+        y = math.floor(y * 1000 + 0.5)
+        z = (z - math.floor(z / 32) * 32) * 1000 + 0.5
 
-        x, y, z = math.floor((x-chunk_x*16) * 1000 + 0.5), math.floor(y * 1000 + 0.5), math.floor((z - chunk_z*16) * 1000 + 0.5)
+        local part1 = bit.band(x, 0x7FFF) + bit.lshift(bit.band(y, 0x1FFFF), 15)
 
-        buffer:put_uint32(bit.band(x, 0x3FFF) + bit.lshift(bit.band(y, 0x3FFFF), 14))
-        buffer:put_uint16(bit.band(z, 0x3FFF) + bit.lshift(chunk_id, 14))
+        local part2 = bit.lshift(bit.band(y, 0x20000) ~= 0 and 1 or 0, 15) + bit.lshift(bit.band(z, 0x7FFF), 1)
+
+        buffer:put_uint32(part1)
+        buffer:put_uint16(part2)
+    end,
+    ["block_pos"] = function (buffer, value)
+
+        local x, y, z = unpack(value)
+
+        x = (x - math.floor(x / 32) * 32)
+        z = (z - math.floor(z / 32) * 32)
+
+        buffer:put_uint24(bit.bor(
+            bit.lshift(x, 19),
+            bit.lshift(y, 11),
+            bit.lshift(z, 6)
+        ))
     end,
     ["bson"] = function (buffer, value)
         bson.encode(buffer, value)
@@ -198,17 +213,26 @@ local DATA_DECODE = {
     ["any"] = function (buffer)
         return buffer:get_any()
     end,
-    ["pos"] = function (buffer)
-        local i = buffer:get_uint32()
-        local h = buffer:get_uint16()
+    ["player_pos"] = function(buffer)
+        local i1 = buffer:get_uint32()
+        local i2 = buffer:get_uint16()
 
-        local x = bit.band(i, 0x3FFF)
-        local y = bit.rshift(bit.band(i, 0xFFFFC000), 14)
-        local z = bit.band(h, 0x3FFF)
+        local x = bit.band(i1, 0x7FFF)
 
-        local chunk_id = bit.rshift(bit.band(h, 0xC000), 14)
+        local y = bit.rshift(bit.band(i1, 0xFFFF8000), 15) + bit.lshift(bit.band(i2, 0x0001), 17)
 
-        return {x = x / 1000, y = y / 1000, z = z / 1000, chunk_indx = chunk_id}
+        local z = bit.rshift(bit.band(i2, 0xFFFE), 1)
+
+        return {x = x / 1000, y = y / 1000, z = z / 1000}
+    end,
+    ["block_pos"] = function (buffer)
+        local pos = buffer:get_uint24()
+
+        local x = bit.rshift(bit.band(pos, 0xF80000), 19)
+        local y = bit.rshift(bit.band(pos, 0x07F800), 11)
+        local z = bit.rshift(bit.band(pos, 0x0007C0), 6)
+
+        return {x = x, y = y, z = z}
     end,
     ["bson"] = function (buffer)
         return bson.decode(buffer)

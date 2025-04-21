@@ -52,6 +52,7 @@ end
 
 function Network:recieve_bytes(length)
     length = length or 1024
+
     local tries = 0
     local max_tries_count = 1
 

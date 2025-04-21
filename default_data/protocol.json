@@ -7,16 +7,22 @@
         ["PingRequest", "payload:uint32"],
         ["JoinGame", "username:string"],
         ["KeepAlive", "challenge:uint32"],
-        ["PlayerPosition", "pos:pos"],
+        ["PlayerPosition", "pos:player_pos"],
         ["PlayerRotation", "pitch:f32", "yaw:f32"],
         ["PlayerCheats", "noclip:boolean", "flight:boolean"],
         ["RequestChunk", "x:int16", "z:int16"],
         ["RequestChunks", "chunks:array|int16"],
         ["ChatMessage", "message:string"],
         ["CommandMessage", "message:string"],
+
         ["BlockUpdate", "x:int32", "y:int32", "z:int32", "block_state:uint16", "block_id:uint16"],
         ["BlockInteract", "x:int32", "y:int32", "z:int32"],
         ["BlockDestroy", "x:int32", "y:int32", "z:int32"],
+
+        ["BlockRegionUpdate", "pos:block_pos", "block_state:uint16", "block_id:uint16"],
+        ["BlockRegionInteract", "pos:block_pos"],
+        ["BlockRegionDestroy", "pos:block_pos"],
+
         ["PacksHashes", "packs:array|string"],
         ["PackEvent", "pack:string", "event:string", "bytes:array|uint8"],
         ["PlayerRegion", "x:int16", "z:int16"],
