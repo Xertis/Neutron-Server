@@ -14,26 +14,28 @@ function Pipeline:add_middleware(func)
     end
 end
 
-function Pipeline:add_value(value)
-    table.insert(self._values, value)
-end
-
 function Pipeline:process(values)
-    self._values = #self._values > 0 and self._values or values
-    local results = {}
+    table.map(values, function (_, value)
+        return {state = 1, val = value}
+    end)
 
-    for _, middleware in ipairs(self._middlewares) do
-        for i, value in ipairs(self._values) do
-            if results[i] == nil then
-                results[i] = value
+    while #values > 0 do
+        for i=#values, 1, -1 do
+            local item = values[i]
+
+            local res, reload = self._middlewares[item.state](item.val)
+
+            if res ~= nil and not reload then
+                item.state = item.state + 1
+            elseif res ~= nil then
+                item.val = res
             end
-            if results[i] ~= nil then
-                results[i] = middleware(results[i])
+
+            if item.state > #self._middlewares or res == nil then
+                table.remove(values, i)
             end
         end
     end
-
-    return results
 end
 
 return Pipeline

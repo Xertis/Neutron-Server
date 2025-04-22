@@ -249,7 +249,7 @@ matches.fsm:add_state("joining", {
                     _client.player.is_teleported = true
                 end
             end,
-            {client, state.x, state.y, state.z, state.yaw, state.pitch, state.noclip, state.flight}, 1
+            {client, state.x, state.y, state.z, state.yaw, state.pitch, state.noclip, state.flight}, 3
         )
 
         ---

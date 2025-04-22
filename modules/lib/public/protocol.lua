@@ -71,20 +71,19 @@ local DATA_ENCODE = {
     ["any"] = function (buffer, value)
         return buffer:put_any(value)
     end,
-    ["player_pos"] = function (buffer, value)
+    ["player_pos"] = function(buffer, value)
         local x, y, z = unpack(value)
         y = math.clamp(y, 0, 262)
 
-        x = (x - math.floor(x / 32) * 32) * 1000 + 0.5
+        x = (x - (x - x % 32) ) * 1000 + 0.5
         y = math.floor(y * 1000 + 0.5)
-        z = (z - math.floor(z / 32) * 32) * 1000 + 0.5
+        z = (z - (z - z % 32) ) * 1000 + 0.5
 
-        local part1 = bit.band(x, 0x7FFF) + bit.lshift(bit.band(y, 0x1FFFF), 15)
+        local y_low = bit.band(y, 0x1FF)
+        local y_high = bit.rshift(y, 9)
 
-        local part2 = bit.lshift(bit.band(y, 0x20000) ~= 0 and 1 or 0, 15) + bit.lshift(bit.band(z, 0x7FFF), 1)
-
-        buffer:put_uint32(part1)
-        buffer:put_uint16(part2)
+        buffer:put_uint24(bit.bor(bit.lshift(y_low, 15), x))
+        buffer:put_uint24(bit.bor(bit.lshift(z, 9), y_high))
     end,
     ["bson"] = function (buffer, value)
         bson.encode(buffer, value)
@@ -201,14 +200,16 @@ local DATA_DECODE = {
         return buffer:get_any()
     end,
     ["player_pos"] = function(buffer)
-        local i1 = buffer:get_uint32()
-        local i2 = buffer:get_uint16()
+        local i1 = buffer:get_uint24()
+        local i2 = buffer:get_uint24()
 
         local x = bit.band(i1, 0x7FFF)
 
-        local y = bit.rshift(bit.band(i1, 0xFFFF8000), 15) + bit.lshift(bit.band(i2, 0x0001), 17)
+        local y_low = bit.rshift(i1, 15)
+        local y_high = bit.band(i2, 0x1FF)
+        local y = bit.bor(bit.lshift(y_high, 9), y_low)
 
-        local z = bit.rshift(bit.band(i2, 0xFFFE), 1)
+        local z = bit.rshift(i2, 9)
 
         return {x = x / 1000, y = y / 1000, z = z / 1000}
     end,

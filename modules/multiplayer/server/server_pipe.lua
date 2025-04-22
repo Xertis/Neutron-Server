@@ -55,8 +55,7 @@ end)
 -- Обрабатываем пакеты
 
 ServerPipe:add_middleware(function(client)
-
-    while not List.is_empty(client.received_packets) do
+    if not List.is_empty(client.received_packets) then
         local packet = List.popleft(client.received_packets)
 
         if client.active == false then
@@ -66,6 +65,11 @@ ServerPipe:add_middleware(function(client)
             ClientPipe:process(client)
         end
     end
+
+    if not List.is_empty(client.received_packets) then
+        return client, true
+    end
+
     return client
 end)
 
