@@ -611,7 +611,6 @@ matches.client_online_handler:add_case(protocol.ClientMsg.BlockDestroy, (
 
 matches.client_online_handler:add_case(protocol.ClientMsg.BlockRegionDestroy, (
     function (...)
-        print("IN REGION")
         local values = {...}
         local packet = values[1]
         local client = values[2]

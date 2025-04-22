@@ -1,42 +1,39 @@
-local asyncio = require "lib/public/asyncio/init"
-local async = asyncio.async
-
 local Pipeline = {}
 Pipeline.__index = Pipeline
 
 function Pipeline.new()
     local self = setmetatable({}, Pipeline)
-
     self._middlewares = {}
-    self.loop = {}
-
+    self._values = {}
     return self
 end
 
 function Pipeline:add_middleware(func)
     if type(func) == "function" then
-
-        table.insert( self._middlewares, func )
+        table.insert(self._middlewares, func)
     end
 end
 
-function Pipeline:process( data, loop )
-    local result = data or true
-    self.loop = loop
-    for index, callback in ipairs(self._middlewares) do
-        local async_callback = async(function (_result)
-            return callback( _result )
-        end)
+function Pipeline:add_value(value)
+    table.insert(self._values, value)
+end
 
-        if result then
-            result = loop:await(async_callback(result))
-        else
-            break
+function Pipeline:process(values)
+    self._values = #self._values > 0 and self._values or values
+    local results = {}
+
+    for _, middleware in ipairs(self._middlewares) do
+        for i, value in ipairs(self._values) do
+            if results[i] == nil then
+                results[i] = value
+            end
+            if results[i] ~= nil then
+                results[i] = middleware(results[i])
+            end
         end
-
     end
 
-    return result
+    return results
 end
 
 return Pipeline
