@@ -520,14 +520,15 @@ matches.client_online_handler:add_case(protocol.ClientMsg.BlockInteract, (
 
 matches.client_online_handler:add_case(protocol.ClientMsg.BlockRegionInteract, (
     function (...)
+        print("IN REGION")
         local values = {...}
         local packet = values[1]
         local client = values[2]
 
-        local x, y, z = packet.pos.x, packet.pos.y, packet.pos.z
+        local x, y, z = packet.x, packet.y, packet.z
 
-        x = x + client.player.region_pos.x * 32
-        z = z + client.player.region_pos.z * 32
+        x = client.player.region_pos.x * 32 + x
+        z = client.player.region_pos.z * 32 + z
 
         local block_id = block.get(x, y, z)
         local block_name = block.name(block_id)
@@ -562,6 +563,7 @@ matches.client_online_handler:add_case(protocol.ClientMsg.BlockUpdate, (
 
 matches.client_online_handler:add_case(protocol.ClientMsg.BlockRegionUpdate, (
     function (...)
+        print("IN REGION")
         local values = {...}
         local packet = values[1]
         local client = values[2]
@@ -570,10 +572,10 @@ matches.client_online_handler:add_case(protocol.ClientMsg.BlockRegionUpdate, (
             return
         end
 
-        local x, y, z = packet.pos.x, packet.pos.y, packet.pos.z
+        local x, y, z = packet.x, packet.y, packet.z
 
-        x = x + client.player.region_pos.x * 32
-        z = z + client.player.region_pos.z * 32
+        x = client.player.region_pos.x * 32 + x
+        z = client.player.region_pos.z * 32 + z
 
         local block = {
             x = x,
@@ -609,6 +611,7 @@ matches.client_online_handler:add_case(protocol.ClientMsg.BlockDestroy, (
 
 matches.client_online_handler:add_case(protocol.ClientMsg.BlockRegionDestroy, (
     function (...)
+        print("IN REGION")
         local values = {...}
         local packet = values[1]
         local client = values[2]
@@ -617,10 +620,10 @@ matches.client_online_handler:add_case(protocol.ClientMsg.BlockRegionDestroy, (
             return
         end
 
-        local x, y, z = packet.pos.x, packet.pos.y, packet.pos.z
+        local x, y, z = packet.x, packet.y, packet.z
 
-        x = x + client.player.region_pos.x * 32
-        z = z + client.player.region_pos.z * 32
+        x = client.player.region_pos.x * 32 + x
+        z = client.player.region_pos.z * 32 + z
 
         if table.has({0, -1}, block.get(x, y, z)) then
             return

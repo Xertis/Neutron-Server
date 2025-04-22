@@ -56,7 +56,7 @@ end
 local recursive_parse = function (data_struct, buffer, result) end
 local recursive_encode = function (data_struct, buffer, result) end
 local data_decode = function (data_type, buffer) end
-local data_encode = function (data_type, buffer) end
+local data_encode = function (data_type, buffer, value) end
 
 -- Функции для кодирования и декодирования разных типов значений
 local DATA_ENCODE = {
@@ -85,19 +85,6 @@ local DATA_ENCODE = {
 
         buffer:put_uint32(part1)
         buffer:put_uint16(part2)
-    end,
-    ["block_pos"] = function (buffer, value)
-
-        local x, y, z = unpack(value)
-
-        x = (x - math.floor(x / 32) * 32)
-        z = (z - math.floor(z / 32) * 32)
-
-        buffer:put_uint24(bit.bor(
-            bit.lshift(x, 19),
-            bit.lshift(y, 11),
-            bit.lshift(z, 6)
-        ))
     end,
     ["bson"] = function (buffer, value)
         bson.encode(buffer, value)
@@ -224,15 +211,6 @@ local DATA_DECODE = {
         local z = bit.rshift(bit.band(i2, 0xFFFE), 1)
 
         return {x = x / 1000, y = y / 1000, z = z / 1000}
-    end,
-    ["block_pos"] = function (buffer)
-        local pos = buffer:get_uint24()
-
-        local x = bit.rshift(bit.band(pos, 0xF80000), 19)
-        local y = bit.rshift(bit.band(pos, 0x07F800), 11)
-        local z = bit.rshift(bit.band(pos, 0x0007C0), 6)
-
-        return {x = x, y = y, z = z}
     end,
     ["bson"] = function (buffer)
         return bson.decode(buffer)

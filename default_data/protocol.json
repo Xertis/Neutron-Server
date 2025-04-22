@@ -19,9 +19,9 @@
         ["BlockInteract", "x:int32", "y:int32", "z:int32"],
         ["BlockDestroy", "x:int32", "y:int32", "z:int32"],
 
-        ["BlockRegionUpdate", "pos:block_pos", "block_state:uint16", "block_id:uint16"],
-        ["BlockRegionInteract", "pos:block_pos"],
-        ["BlockRegionDestroy", "pos:block_pos"],
+        ["BlockRegionUpdate", "x:int8", "y:int8", "z:int8", "block_state:uint16", "block_id:uint16"],
+        ["BlockRegionInteract", "x:int8", "y:int8", "z:int8"],
+        ["BlockRegionDestroy", "x:int8", "y:int8", "z:int8"],
 
         ["PacksHashes", "packs:array|string"],
         ["PackEvent", "pack:string", "event:string", "bytes:array|uint8"],
