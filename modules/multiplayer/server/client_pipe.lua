@@ -17,6 +17,22 @@ ClientPipe:add_middleware(function(client)
     return client
 end)
 
+--Чекаем пинг
+ClientPipe:add_middleware(function(client)
+    local cur_time = time.uptime()
+
+    if cur_time - client.ping.last_upd < 5 then
+        return client
+    end
+
+    local buffer = protocol.create_databuffer()
+
+    buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.KeepAlive, math.random(0, 1000)))
+    client.network:send(buffer.bytes)
+    client.ping.last_upd = cur_time
+    return client
+end)
+
 --Запрос на логин/регистрацию
 ClientPipe:add_middleware(function(client)
     if not CONFIG.server.password_auth then

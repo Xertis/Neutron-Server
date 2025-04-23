@@ -13,6 +13,10 @@ console.set_command("list: -> Shows a list of online players", {}, function (arg
 
 end)
 
+console.set_command("ping: -> Shows the response time", {}, function (args, client)
+    console.tell(string.format("Ping: %sms", client.ping.ping), client)
+end)
+
 console.set_command("register: password=<string>, rpassword=<string> -> Registration", {}, function (args, client)
     local account = client.account
     local passwords = {args.password, args.rpassword}

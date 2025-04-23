@@ -15,6 +15,7 @@ function Player.new(active, network, address, port, username)
     self.client_id = max_id
     self.account = nil
     self.player = nil
+    self.ping = {ping = 0, last_upd = 0}
     self.meta = {}
 
     self.response_queue = List.new()

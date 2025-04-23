@@ -520,7 +520,6 @@ matches.client_online_handler:add_case(protocol.ClientMsg.BlockInteract, (
 
 matches.client_online_handler:add_case(protocol.ClientMsg.BlockRegionInteract, (
     function (...)
-        print("IN REGION")
         local values = {...}
         local packet = values[1]
         local client = values[2]
@@ -563,7 +562,6 @@ matches.client_online_handler:add_case(protocol.ClientMsg.BlockUpdate, (
 
 matches.client_online_handler:add_case(protocol.ClientMsg.BlockRegionUpdate, (
     function (...)
-        print("IN REGION")
         local values = {...}
         local packet = values[1]
         local client = values[2]
@@ -652,6 +650,20 @@ matches.client_online_handler:add_case(protocol.ClientMsg.PackEnv, (
         api_env.__env_update__(packet.pack, packet.env, packet.key, packet.value)
     end
 ))
+
+matches.client_online_handler:add_case(protocol.ClientMsg.KeepAlive, (
+    function (...)
+        local values = {...}
+        local packet = values[1]
+        local client = values[2]
+
+        local challenge = packet.challenge
+
+        local wait_time = time.uptime() - client.ping.last_upd
+        client.ping.ping = wait_time * 1000
+    end
+))
+
 
 
 return protect.protect_return(matches)
