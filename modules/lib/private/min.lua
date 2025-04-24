@@ -16,9 +16,15 @@ local lib = {
 function lib.world.preparation_main()
     --Загружаем мир
     local packs = table.freeze_unpack(CONFIG.game.content_packs)
+    local plugins = table.freeze_unpack(CONFIG.game.plugins)
     table.insert(packs, "server")
 
-    app.config_packs(packs)
+    if not lib.validate.plugins() then
+        logger.log("Plugins should not add new content.", "E")
+        error("Plugins should not add new content.")
+    end
+
+    app.config_packs(table.merge(packs, plugins))
     app.load_content()
 
     if not file.exists("user:worlds/" .. CONFIG.game.main_world .. "/world.json") then
@@ -91,6 +97,18 @@ function lib.validate.username(name)
         local char = name[i]
 
         if not table.has(alphabet, char) and not table.has(numbers, char) then
+            return false
+        end
+    end
+
+    return true
+end
+
+function lib.validate.plugins()
+    for _, plugin in ipairs(table.freeze_unpack(CONFIG.game.plugins)) do
+        local info = pack.get_info(plugin)
+
+        if info.has_indices then
             return false
         end
     end

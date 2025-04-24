@@ -26,9 +26,10 @@ matches.actions = {}
 
 local function check_mods(client_hashes)
     local packs = pack.get_installed()
+    local plugins = table.freeze_unpack(CONFIG.game.plugins)
 
     table.filter(packs, function (_, p)
-        if p == "server" then
+        if p == "server" or table.has(plugins, p) then
             return false
         end
         return true
