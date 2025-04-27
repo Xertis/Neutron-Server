@@ -18,7 +18,7 @@ function switcher:add_middleware(val, middleware)
     if self.switch[val] then
         local middlewares = table.set_default(self.switch[val], "middlewares", {})
 
-        table.insert(middlewares,middleware)
+        table.insert(middlewares, middleware)
     else
         error("The paсket handler was not found")
     end
