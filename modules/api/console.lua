@@ -137,12 +137,14 @@ function module.set_command(command, permitions, handler)
             temp_args[key] = typefunc(value)
         end
 
-        for _, permition in ipairs(permitions) do
-            local rules = account_manager.get_rules(client.account, true)
+        for i, _permition in pairs(permitions) do
+            for _, permition in ipairs(_permition) do
+                local rules = account_manager.get_rules(client.account, i == "server")
 
-            if not rules[permition] then
-                chat.tell(string.format("%s %s", module.colors.red, "You do not have sufficient permissions to perform this action!"), client)
-                return
+                if not rules[permition] then
+                    chat.tell(string.format("%s %s", module.colors.red, "You do not have sufficient permissions to perform this action!"), client)
+                    return
+                end
             end
         end
 

@@ -1,4 +1,5 @@
-local sandbox = require "lib/private/sandbox/sandbox"
+local sandbox = start_require("server:lib/private/sandbox/sandbox")
+local account_manager = start_require("server:lib/private/accounts/account_manager")
 
 local module = {
     players = {},
@@ -9,6 +10,22 @@ function module.players.get_all()
     local players = sandbox.get_players()
 
     return players
+end
+
+function module.players.get_player(account)
+    return sandbox.get_player(account)
+end
+
+function module.players.set_pos(player, pos)
+    local client = account_manager.by_username.get_account(player.username)
+    player.set_pos(player.pid, pos.x, pos.y, pos.z)
+
+    local state = sandbox.get_player_state(player)
+
+    local DATA = {pos.x, pos.y, pos.z, state.yaw, state.pitch, state.noclip, state.flight}
+    local buf = protocol.create_databuffer()
+    buf:put_packet(protocol.build_packet("server", protocol.ServerMsg.SynchronizePlayerPosition, unpack(DATA)))
+    client.network:send(buf.bytes)
 end
 
 function module.players.get_in_radius(target_pos, radius)

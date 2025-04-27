@@ -11,3 +11,9 @@ api.accounts.get_account_by_name(username: string) -> Account
 api.accounts.get_client(account: Account) -> Client
 ```
    - Возвращает класс типа **Client** игрока с аккаунтом **account**.
+
+3. **Кик аккаунта:**
+```lua
+api.accounts.kick(account: Account)
+```
+   - Кикает аккаунт **account** с сервера

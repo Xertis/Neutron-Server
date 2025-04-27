@@ -66,7 +66,7 @@ console.set_command("login: password=<string> -> Logging", {}, function (args, c
     console.tell(string.format("%s You have successfully logged in!", console.colors.yellow), client)
 end)
 
-console.set_command("kick: username=<string>, reason=[string] -> Kicks the user", {"kick"}, function (args, client)
+console.set_command("kick: username=<string>, reason=[string] -> Kicks the user", {server={"kick"}}, function (args, client)
     local account = client.account
     local kick_username = args.username or ''
     local reason = args.reason or "No reason"
@@ -108,7 +108,7 @@ console.set_command("role: username=[string] -> Returns the role of the user", {
     console.tell(string.format('%s The role of the player "%s" is: %s', console.colors.yellow, username, account.role), client)
 end)
 
-console.set_command("role_set: username=<string>, role=<string> -> Changes the role of the selected player", {"role_management"}, function (args, client)
+console.set_command("role_set: username=<string>, role=<string> -> Changes the role of the selected player", {server={"role_management"}}, function (args, client)
     local account = client.account
     local subject_username = args.username
     local role = args.role
@@ -139,7 +139,7 @@ console.set_command("role_set: username=<string>, role=<string> -> Changes the r
     console.echo(string.format("%s [%s] Player **%s** has been kicked with reason: %s", console.colors.red, account.username, kick_username, reason))
 end)
 
-console.set_command("time_set: time=<any> -> Changes day time", {"time_management"}, function (args, client)
+console.set_command("time_set: time=<any> -> Changes day time", {server={"time_management"}}, function (args, client)
     local time = args.time
     local account = client.account
 

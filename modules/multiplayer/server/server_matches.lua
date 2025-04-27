@@ -56,6 +56,13 @@ local function check_mods(client_hashes)
             incorrect = incorrect .. string.format("\n%s: %s", i, pack)
             i = i + 1
         end
+
+        client_hashes[pack] = nil
+    end
+
+    for pack, _ in pairs(client_hashes) do
+        incorrect = incorrect .. string.format("\n%s: %s", i, pack)
+        i = i + 1
     end
 
     return incorrect == '', incorrect
@@ -150,12 +157,12 @@ matches.fsm:add_state("sending_packs_list", {
         local buffer = protocol.create_databuffer()
 
         local packs = pack.get_installed()
+        local plugins = table.freeze_unpack(CONFIG.game.plugins)
 
         table.filter(packs, function (_, p)
-            if p == "server" then
+            if p == "server" or table.has(plugins, p) then
                 return false
             end
-
             return true
         end)
 

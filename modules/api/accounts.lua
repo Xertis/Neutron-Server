@@ -9,4 +9,12 @@ function module.get_client(account)
     return account_manager.get_client(account)
 end
 
+function module.kick(account)
+    if not account.username then
+        error("Invalid account")
+    end
+
+    account_manager.leave(account)
+end
+
 return module
