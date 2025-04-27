@@ -5,9 +5,8 @@ local bson = require "lib/private/files/bson"
 local console = require "api/console"
 local sandbox = require "api/sandbox"
 local db = require "lib/public/database/api"
-local status_controller = start_require "api/status_controller"
-local callbacks = start_require "api/callbacks"
 local env = start_require("server:api/env")
+local middlewares = require "api/middlewares"
 
 local api = {
     events = events,
@@ -17,9 +16,8 @@ local api = {
     console = console,
     sandbox = sandbox,
     db = db,
-    env = env
-    --callbacks = callbacks
-    --status_controller = status_controller
+    env = env,
+    middlewares = middlewares
 }
 
 return {server = api}
