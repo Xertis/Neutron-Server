@@ -62,6 +62,7 @@ local function check_mods(client_hashes)
 
     for pack, _ in pairs(client_hashes) do
         incorrect = incorrect .. string.format("\n%s: %s", i, pack)
+        logger.log(string.format('The account has a modified client and is trying to add "%s" pack.', pack), '!')
         i = i + 1
     end
 
