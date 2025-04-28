@@ -30,8 +30,8 @@ function switcher:switch(key, ...)
     end
 
     if self.switchs[key].middlewares then
-        local args = table.deep_copy({...})
         for _, middleware in ipairs(self.switchs[key].middlewares) do
+            local args = table.deep_copy({...})
             if not middleware(unpack(args)) then
                 return
             end
