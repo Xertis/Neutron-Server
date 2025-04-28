@@ -52,4 +52,4 @@ end
 server:stop()
 logger.log("world loop is stoped. Server is now offline.")
 logger.log("Saving and closing the world...")
-app.close_world(true)
+world.close_main()

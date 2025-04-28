@@ -11,7 +11,9 @@ CODES = {
 
 --Аккаунты
 RESERVED_USERNAMES = {
-    "server"
+    "server",
+    "root",
+    "admin"
 }
 
 --Сервер

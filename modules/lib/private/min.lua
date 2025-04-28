@@ -11,6 +11,8 @@ local lib = {
     hash = hash
 }
 
+ROOT = 0
+
 ---WORLD---
 
 function lib.world.preparation_main()
@@ -36,28 +38,57 @@ function lib.world.preparation_main()
             CONFIG.game.worlds[name].generator
         )
 
-        logger.log("Loading chunks...")
-        player.create("server")
-        local ctime = time.uptime()
+        player.create("root", ROOT)
+        player.set_noclip(ROOT, true)
+        player.set_flight(ROOT, true)
+        player.set_pos(ROOT, 0, 262, 0)
 
-        while world.count_chunks() < 12*CONFIG.server.chunks_loading_distance do
+        local expected = 3*(CONFIG.server.chunks_loading_distance^2)
+        logger.log("Loading chunks... Expected number of chunks: " .. expected)
+
+        local ctime = time.uptime()
+        local count_chunks = 0
+        local last_print = 0
+        while count_chunks < expected do
             app.tick()
 
             if ((time.uptime() - ctime) / 60) > 1 then
                 logger.log("Chunk loading timeout exceeded, exiting. Try changing the chunks_loading_speed.", "W")
                 break
             end
+
+            if count_chunks - last_print > 100 then
+                logger.log(string.format("Loaded: %s chunks.", count_chunks))
+                last_print = count_chunks
+            end
+
+            count_chunks = world.count_chunks()
         end
 
-        logger.log("Chunks loaded successfully.")
+        logger.log(string.format("Chunks loaded successfully. %s chunks loaded", count_chunks))
+
+        player.set_suspended(ROOT, true)
 
         app.close_world(true)
     end
 end
 
 function lib.world.open_main()
+
     logger.log("Discovery of the main world")
     app.open_world(CONFIG.game.main_world)
+
+    player.set_suspended(ROOT, false)
+
+    player.set_noclip(ROOT, true)
+    player.set_flight(ROOT, true)
+    player.set_pos(ROOT, 0, 262, 0)
+end
+
+function lib.world.close_main()
+    player.set_suspended(ROOT, true)
+
+    app.close_world(true)
 end
 
 function lib.roles.is_higher(role1, role2)
