@@ -240,16 +240,13 @@ matches.fsm:add_state("joining", {
         ---
 
         local state = sandbox.get_player_state(account_player)
-        DATA = {state.x, state.y, state.z, state.yaw, state.pitch, state.noclip, state.flight}
         account_player.region_pos = {x = math.floor(state.x / 32), z = math.floor(state.z / 32)}
-        buffer = protocol.create_databuffer()
-        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.SynchronizePlayerPosition, unpack(DATA)))
-        client.network:send(buffer.bytes)
         client:set_active(true)
 
         timeout_executor.push(
             function (_client, x, y, z, yaw, pitch, noclip, flight, is_last)
                 local _DATA = {x, y, z, yaw, pitch, noclip, flight}
+
                 local buf = protocol.create_databuffer()
                 buf:put_packet(protocol.build_packet("server", protocol.ServerMsg.SynchronizePlayerPosition, unpack(_DATA)))
                 _client.network:send(buf.bytes)
@@ -312,11 +309,7 @@ matches.fsm:set_default_state("idle")
 
 --- CASES
 
-local function chunk_responce(...)
-    local values = {...}
-    local packet = values[1]
-    local client = values[2]
-    local is_timeout = values[3]
+local function chunk_responce(packet, client, is_timeout)
 
     local chunk = sandbox.get_chunk({x = packet.x, z = packet.z})
 
@@ -352,10 +345,7 @@ matches.client_online_handler:add_case(protocol.ClientMsg.RequestChunk, chunk_re
 ---------
 
 matches.client_online_handler:add_case(protocol.ClientMsg.PlayerCheats, (
-    function (...)
-        local values = {...}
-        local packet = values[1]
-        local client = values[2]
+    function (packet, client)
 
         if not client.account or not client.account.is_logged or not client.player.is_teleported then
             return
@@ -369,10 +359,7 @@ matches.client_online_handler:add_case(protocol.ClientMsg.PlayerCheats, (
 ))
 
 matches.client_online_handler:add_case(protocol.ClientMsg.PlayerRotation, (
-    function (...)
-        local values = {...}
-        local packet = values[1]
-        local client = values[2]
+    function (packet, client)
 
         if not client.account or not client.account.is_logged or not client.player.is_teleported then
             return
@@ -386,10 +373,7 @@ matches.client_online_handler:add_case(protocol.ClientMsg.PlayerRotation, (
 ))
 
 matches.client_online_handler:add_case(protocol.ClientMsg.PlayerPosition, (
-    function (...)
-        local values = {...}
-        local packet = values[1]
-        local client = values[2]
+    function (packet, client)
 
         if not client.account or not client.account.is_logged or not client.player.is_teleported then
             return
@@ -409,10 +393,7 @@ matches.client_online_handler:add_case(protocol.ClientMsg.PlayerPosition, (
 ))
 
 matches.client_online_handler:add_case(protocol.ClientMsg.PlayerRegion, (
-    function (...)
-        local values = {...}
-        local packet = values[1]
-        local client = values[2]
+    function (packet, client)
 
         if not client.account or not client.account.is_logged or not client.player.is_teleported then
             return
@@ -425,10 +406,7 @@ matches.client_online_handler:add_case(protocol.ClientMsg.PlayerRegion, (
 ---------
 
 matches.client_online_handler:add_case(protocol.ClientMsg.ChatMessage, (
-    function (...)
-        local values = {...}
-        local packet = values[1]
-        local client = values[2]
+    function (packet, client)
 
         if not client.player then
             return
@@ -448,9 +426,7 @@ matches.client_online_handler:add_case(protocol.ClientMsg.ChatMessage, (
 ---------
 
 matches.client_online_handler:add_case(protocol.ClientMsg.Disconnect, (
-    function (...)
-        local values = {...}
-        local client = values[2]
+    function (packet, client)
 
         if not client.account then
             return
@@ -478,10 +454,8 @@ matches.client_online_handler:add_case(protocol.ClientMsg.Disconnect, (
 
 --------
 
-local function chunks_responce_optimizate(...)
-    local values = {...}
-    local chunks_packet = values[1].chunks
-    local client = values[2]
+local function chunks_responce_optimizate(packet, client)
+    local chunks_packet = packet.chunks
     local chunks_list = {}
 
     for indx=1, #chunks_packet, 2 do
@@ -513,10 +487,7 @@ matches.client_online_handler:add_case(protocol.ClientMsg.RequestChunks, chunks_
 --------
 
 matches.client_online_handler:add_case(protocol.ClientMsg.BlockInteract, (
-    function (...)
-        local values = {...}
-        local packet = values[1]
-        local client = values[2]
+    function (packet, client)
 
         local x, y, z = packet.x, packet.y, packet.z
 
@@ -528,10 +499,7 @@ matches.client_online_handler:add_case(protocol.ClientMsg.BlockInteract, (
 ))
 
 matches.client_online_handler:add_case(protocol.ClientMsg.BlockRegionInteract, (
-    function (...)
-        local values = {...}
-        local packet = values[1]
-        local client = values[2]
+    function (packet, client)
 
         local x, y, z = packet.x, packet.y, packet.z
 
@@ -548,10 +516,7 @@ matches.client_online_handler:add_case(protocol.ClientMsg.BlockRegionInteract, (
 --------
 
 matches.client_online_handler:add_case(protocol.ClientMsg.BlockUpdate, (
-    function (...)
-        local values = {...}
-        local packet = values[1]
-        local client = values[2]
+    function (packet, client)
 
         if not client.account or not client.account.is_logged then
             return
@@ -570,10 +535,7 @@ matches.client_online_handler:add_case(protocol.ClientMsg.BlockUpdate, (
 ))
 
 matches.client_online_handler:add_case(protocol.ClientMsg.BlockRegionUpdate, (
-    function (...)
-        local values = {...}
-        local packet = values[1]
-        local client = values[2]
+    function (packet, client)
 
         if not client.account or not client.account.is_logged then
             return
@@ -599,10 +561,7 @@ matches.client_online_handler:add_case(protocol.ClientMsg.BlockRegionUpdate, (
 --------
 
 matches.client_online_handler:add_case(protocol.ClientMsg.BlockDestroy, (
-    function (...)
-        local values = {...}
-        local packet = values[1]
-        local client = values[2]
+    function (packet, client)
 
         if not client.account or not client.account.is_logged then
             return
@@ -617,10 +576,7 @@ matches.client_online_handler:add_case(protocol.ClientMsg.BlockDestroy, (
 ))
 
 matches.client_online_handler:add_case(protocol.ClientMsg.BlockRegionDestroy, (
-    function (...)
-        local values = {...}
-        local packet = values[1]
-        local client = values[2]
+    function (packet, client)
 
         if not client.account or not client.account.is_logged then
             return
@@ -642,29 +598,21 @@ matches.client_online_handler:add_case(protocol.ClientMsg.BlockRegionDestroy, (
 --------
 
 matches.client_online_handler:add_case(protocol.ClientMsg.PackEvent, (
-    function (...)
-        local values = {...}
-        local packet = values[1]
-        local client = values[2]
+    function (packet, client)
 
         api_events.__emit__(packet.pack, packet.event, packet.bytes, client)
     end
 ))
 
 matches.client_online_handler:add_case(protocol.ClientMsg.PackEnv, (
-    function (...)
-        local values = {...}
-        local packet = values[1]
+    function (packet, client)
 
         api_env.__env_update__(packet.pack, packet.env, packet.key, packet.value)
     end
 ))
 
 matches.client_online_handler:add_case(protocol.ClientMsg.KeepAlive, (
-    function (...)
-        local values = {...}
-        local packet = values[1]
-        local client = values[2]
+    function (packet, client)
 
         local challenge = packet.challenge
 
