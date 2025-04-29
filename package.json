@@ -2,5 +2,6 @@
     "id": "server",
     "title": "VoxelOnline-Lua",
     "version": "0.2.0",
-    "description": "Server"
+    "description": "Server",
+    "creators": ["Wampal", "Murka124", "Ghost", "Xertis", "Onran"]
 }
