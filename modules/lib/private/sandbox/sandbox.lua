@@ -25,7 +25,7 @@ function module.join_player(account)
         end
 
         player.set_pos(account_player.pid, 0, y+1, 0)
-
+        player.set_spawnpoint(account_player.pid, 0, y+1, 0)
         account:set("world", CONFIG.game.main_world)
         account_player:set("active", true)
     end
