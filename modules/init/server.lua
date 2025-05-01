@@ -11,6 +11,7 @@ logger.log("std initialized")
 do
     if not file.exists(CONFIG_PATH) then
         file.write(CONFIG_PATH, file.read(PACK_ID .. ":default_data/server_config.json"))
+        IS_FIRST_RUN = true
     end
 end
 

@@ -1,14 +1,25 @@
 app.config_packs({"server"})
 app.load_content()
 
+require "server:constants"
+require "server:std/stdmin"
+
 local protect = require "server:lib/private/protect"
 if protect.protect_require() then return end
 
+logger.log(LOGO)
+logger.log("Welcome to VoxelOnline! Starting...")
+
 local lib = require "server:lib/private/min"
 
-require "server:constants"
 require "server:init/server"
 require "server:multiplayer/server/chat/commands"
+
+if IS_FIRST_RUN then
+    logger.log("The first startup was detected, server has been stopped.")
+    logger.log("A configuration file was created on the config:server_config.json. Please configure the settings and restart.")
+    return
+end
 
 local timeout_executor = require "server:lib/private/common/timeout_executor"
 local server = require "server:multiplayer/server/server"

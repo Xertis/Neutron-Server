@@ -22,6 +22,10 @@ function string.first_up(str)
     return (str:gsub("^%l", string.upper))
 end
 
+function string.first_low(str)
+    return (str:gsub("^%u", string.lower))
+end
+
 function string.type(str)
     if not str then
         return "nil", function (s)
@@ -90,7 +94,7 @@ function logger.log(text, type, only_save)
     type = type or 'I'
     type = type:upper()
 
-    text = string.first_up(text)
+    text = string.first_low(text)
 
     local source = file.name(debug.getinfo(2).source)
     local out = '[' .. string.left_pad(source, 20) .. '] ' .. text
