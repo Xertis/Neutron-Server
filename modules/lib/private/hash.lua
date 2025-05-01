@@ -137,7 +137,7 @@ function module.hash_mods(packs)
         end)
 
         for _, abs_file_path in ipairs(files) do
-            local file_data = file.read_bytes(abs_file_path)
+            local file_data = table.freeze_unpack(file.read_bytes(abs_file_path))
 
             hash_data = module.lite(file_data, tonumber(hash_data, 16))
         end
