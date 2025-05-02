@@ -19,28 +19,27 @@ RESERVED_USERNAMES = {
 --Сервер
 IS_RUNNING = false
 IS_FIRST_RUN = false
+IS_RELEASE = false
+SERVER_VERSION = json.parse(file.read("server:package.json")).version
+PROJECT_NAME = "Neutron"
 LOGO = [[
-
-__   __  _______  __   __  _______  ___      _______  __    _  ___      ___   __    _  _______ 
-|  | |  ||       ||  |_|  ||       ||   |    |       ||  |  | ||   |    |   | |  |  | ||       |
-|  |_|  ||   _   ||       ||    ___||   |    |   _   ||   |_| ||   |    |   | |   |_| ||    ___|
-|       ||  | |  ||       ||   |___ |   |    |  | |  ||       ||   |    |   | |       ||   |___ 
-|       ||  |_|  | |     | |    ___||   |___ |  |_|  ||  _    ||   |___ |   | |  _    ||    ___|
- |     | |       ||   _   ||   |___ |       ||       || | |   ||       ||   | | | |   ||   |___ 
-  |___|  |_______||__| |__||_______||_______||_______||_|  |__||_______||___| |_|  |__||_______|
+                                               
+    _   __              __                     
+   / | / /___   __  __ / /_ _____ ____   ____  
+  /  |/ // _ \ / / / // __// ___// __ \ / __ \ 
+ / /|  //  __// /_/ // /_ / /   / /_/ // / / / 
+/_/ |_/ \___/ \____/ \__//_/    \____//_/ /_/  
+                                               
 ]]
 
---Сессия
-if not Session then
-    Session = {}
-
-    Session.client = nil
-    Session.server = nil
-    Session.username = nil
-    Session.ip = nil
-    Session.port = nil
-
-end
+DEV = [[
+                    
+      ___           
+     / _ \___ _  __ 
+    / // / -_) |/ / 
+   /____/\__/|___/  
+                    
+]]
 
 --Прочее
 USER_ICON_PATH = "user:icon.png"

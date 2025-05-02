@@ -7,8 +7,20 @@ require "server:std/stdmin"
 local protect = require "server:lib/private/protect"
 if protect.protect_require() then return end
 
-logger.log(LOGO)
-logger.log("Welcome to VoxelOnline! Starting...")
+
+if IS_RELEASE then
+    logger.log(LOGO)
+else
+    logger.log(string.multiline_concat(LOGO, DEV))
+end
+
+logger.log(string.format("Welcome to %s! Starting...", PROJECT_NAME))
+logger.log(string.format([[
+
+%s status:
+    release: %s
+    version: %s
+]], PROJECT_NAME, IS_RELEASE, SERVER_VERSION))
 
 local lib = require "server:lib/private/min"
 
@@ -43,11 +55,9 @@ server:start()
 
 logger.log("server is started")
 
---local bytes = file.read_bytes("user:players_data.bjson")
---print(json.tostring(bjson.frombytes(bytes)))
-
 while IS_RUNNING do
     app.tick()
+    block.place(0, 40, 0, 131, 5)
     timeout_executor.process()
     server:tick()
 

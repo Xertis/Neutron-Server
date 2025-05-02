@@ -64,6 +64,34 @@ function string.trim_quotes(str)
     return str
 end
 
+function string.multiline_concat(str1, str2, space)
+    space = space or 0
+    local str1_lines = {}
+    for line in str1:gmatch("([^\n]+)") do
+        table.insert(str1_lines, line)
+    end
+
+    local str2_lines = {}
+    for line in str2:gmatch("([^\n]+)") do
+        table.insert(str2_lines, line)
+    end
+
+    local max_len = 0
+    for _, line in ipairs(str1_lines) do
+        max_len = math.max(max_len, #line)
+    end
+
+    local len = max_len + space
+
+    local result = {}
+    for i, line in ipairs(str1_lines) do
+        local str2_line = str2_lines[i] or ''
+        table.insert(result, line .. string.rep(' ', len-#line) .. str2_line)
+    end
+
+    return table.concat(result, '\n')
+end
+
 -- TIME
 
 function time.formatted_time()

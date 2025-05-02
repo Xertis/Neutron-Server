@@ -123,6 +123,8 @@ function module.set_day_time(time)
         time = 0
     elseif type(time)[1] ~= 'n' and not tonumber(time) then
         return false
+    elseif tonumber(time) < 0 then
+        return false
     end
 
     time = math.normalize(tonumber(time))
