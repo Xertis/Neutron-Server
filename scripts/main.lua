@@ -57,7 +57,6 @@ logger.log("server is started")
 
 while IS_RUNNING do
     app.tick()
-    block.place(0, 40, 0, 131, 5)
     timeout_executor.process()
     server:tick()
 
