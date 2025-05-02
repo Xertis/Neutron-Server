@@ -13,6 +13,10 @@ function List.is_empty(list)
     return list.first > list.last
 end
 
+function List.size(list)
+    return list.last - list.first
+end
+
 -- Добавляет элемент в начало списка
 function List.pushleft(list, value)
     list.first = list.first - 1

@@ -61,7 +61,7 @@ end
 function socketlib.receive(socket, max_length)
     if socket then
         local bytes = socket:recv(max_length, true) -- Читаем как таблицу
-        if bytes and #bytes > 0 then
+        if #bytes > 0 then
             return bytes
         else
             return nil

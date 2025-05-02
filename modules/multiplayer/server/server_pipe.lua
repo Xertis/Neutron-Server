@@ -14,7 +14,7 @@ ServerPipe:add_middleware(function(client)
     if not co then
         co = coroutine.create(function()
             local packet_count = 0
-            local max_packet_count = 64
+            local max_packet_count = 10
 
             while packet_count < max_packet_count do
                 local length_bytes = client.network:recieve_bytes(2)
