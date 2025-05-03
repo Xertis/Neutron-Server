@@ -289,8 +289,15 @@ matches.fsm:add_state("joining", {
         buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.PlayerList, player_keys))
         client.network:send(buffer.bytes)
 
+        local data = sandbox.get_inventory(account_player)
+        local inv, slot = data.inventory, data.slot
+
         buffer = protocol.create_databuffer()
-        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.PlayerInventory, sandbox.get_inventory(account_player)))
+        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.PlayerInventory, inv))
+        client.network:send(buffer.bytes)
+
+        buffer = protocol.create_databuffer()
+        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.PlayerHandSlot, slot))
         client.network:send(buffer.bytes)
 
         ---
@@ -633,6 +640,16 @@ matches.client_online_handler:add_case(protocol.ClientMsg.PlayerInventory, (
         end
 
         sandbox.set_inventory(client.player, packet.inventory)
+    end
+))
+
+matches.client_online_handler:add_case(protocol.ClientMsg.PlayerHandSlot, (
+    function (packet, client)
+        if not client.account or not client.account.is_logged then
+            return
+        end
+
+        sandbox.set_selected_slot(client.player, packet.slot)
     end
 ))
 

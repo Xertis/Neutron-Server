@@ -145,7 +145,16 @@ function module.set_inventory(_player, inv)
 end
 
 function module.get_inventory(_player)
-    return inventory.get_inv(player.get_inventory(_player.pid))
+    local invid, slot = player.get_inventory(_player.pid)
+    return {
+        invid = invid,
+        slot = slot,
+        inventory = inventory.get_inv(invid)
+    }
+end
+
+function module.set_selected_slot(_player, slot_id)
+    player.set_selected_slot(_player.pid, slot_id)
 end
 
 return protect.protect_return(module)
