@@ -376,33 +376,42 @@ audio.play_sound_2d = function () end
 
 -- INVENTORY
 
-function inventory.inv_to_tbl(invid)
-    local size = inventory.size(invid)
-    local tbl = {}
+function inventory.get_inv(invid)
+    local inv_size = inventory.size(invid)
+    local res_inv = {}
 
-    for i=1, size do
-        local item_id, item_count = inventory.get(invid, i)
-        local item_data = inventory.get_all_data(invid, i)
+    for slot = 0, inv_size - 1 do
+       local item_id, count = inventory.get(invid, slot)
 
-        table.insert(tbl, {
-            id = item_id,
-            count = item_count,
-            data = item_data
-        })
+       if item_id ~= 0 then
+          local item_data = inventory.get_all_data(invid, slot)
+          table.insert(res_inv, {item_id, count, item_data})
+       else
+          table.insert(res_inv, 0)
+       end
     end
 
-    return tbl
-end
+    return res_inv
+ end
 
-function inventory.tbl_to_inv(tbl, invid)
-    for i, item in ipairs(tbl) do
-        inventory.set(invid, i, item.id, item.count)
+ function inventory.set_inv(invid, res_inv)
+    for i, item in ipairs(res_inv) do
+       local slot = i - 1
+       if item ~= 0 then
+          local item_id, count, item_data = unpack(item)
 
-        for key, value in pairs(item.data) do
-            inventory.set_data(invid, i, key, value)
-        end
+          inventory.set(invid, slot, item_id, count)
+
+          if item_data then
+             for name, value in pairs(item_data) do
+                inventory.set_data(invid, slot, name, value)
+             end
+          end
+       else
+          inventory.set(invid, slot, 0, 0)
+       end
     end
-end
+ end
 
 -- BIT
 

@@ -140,4 +140,12 @@ function module.by_username.is_online(name)
     return false
 end
 
+function module.set_inventory(_player, inv)
+    inventory.set_inv(player.get_inventory(_player.pid), inv)
+end
+
+function module.get_inventory(_player)
+    return inventory.get_inv(player.get_inventory(_player.pid))
+end
+
 return protect.protect_return(module)

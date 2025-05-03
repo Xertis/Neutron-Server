@@ -181,7 +181,7 @@ matches.fsm:add_state("joining", {
         local values = matches.fsm.client_data[client]
         local packet = values.join_game
         local hashes = values.packs_hashes.packs
-        local buffer = protocol.create_databuffer()
+        local buffer = nil
 
         local account = account_manager.login(packet.username)
         local hash_status, hash_reason = check_mods(hashes)
@@ -233,6 +233,7 @@ matches.fsm:add_state("joining", {
             array_rules
         }
 
+        buffer = protocol.create_databuffer()
         buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.JoinSuccess, unpack(DATA)))
         client.network:send(buffer.bytes)
         logger.log("JoinSuccess has been sended")
@@ -286,6 +287,10 @@ matches.fsm:add_state("joining", {
 
         buffer = protocol.create_databuffer()
         buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.PlayerList, player_keys))
+        client.network:send(buffer.bytes)
+
+        buffer = protocol.create_databuffer()
+        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.PlayerInventory, sandbox.get_inventory(account_player)))
         client.network:send(buffer.bytes)
 
         ---
@@ -618,6 +623,16 @@ matches.client_online_handler:add_case(protocol.ClientMsg.KeepAlive, (
 
         local wait_time = time.uptime() - client.ping.last_upd
         client.ping.ping = wait_time * 1000
+    end
+))
+
+matches.client_online_handler:add_case(protocol.ClientMsg.PlayerInventory, (
+    function (packet, client)
+        if not client.account or not client.account.is_logged then
+            return
+        end
+
+        sandbox.set_inventory(client.player, packet.inventory)
     end
 ))
 

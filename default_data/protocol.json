@@ -10,6 +10,7 @@
         ["PlayerPosition", "pos:player_pos"],
         ["PlayerRotation", "pitch:f32", "yaw:f32"],
         ["PlayerCheats", "noclip:boolean", "flight:boolean"],
+        ["PlayerInventory", "inventory:bson"],
         ["RequestChunk", "x:int16", "z:int16"],
         ["RequestChunks", "chunks:array|int16"],
         ["ChatMessage", "message:string"],
@@ -43,6 +44,7 @@
         ["PlayerList", "list:structure|Player"],
         ["PlayerListAdd", "username:string", "entity_id:uint32"],
         ["PlayerListRemove", "username:string", "entity_id:uint32"],
+        ["PlayerInventory", "inventory:bson"],
         ["ChunkData", "x:int16", "z:int16", "data:array|uint8"],
         ["ChunksData", "list:structure|Chunk"],
         ["ChatMessage", "message:string"],
@@ -58,7 +60,6 @@
         ["Player", "entity_id:uint32", "username:string"],
         ["Chunk", "x:int16", "z:int16", "data:array|uint8"],
         ["Rule", "rule:string", "value:boolean"],
-        ["Item", "item_id:uint16", "count:uint16", "data:structure|ItemData"],
-        ["ItemData", "key:string", "value:bson"]
+        ["Item", "item_id:uint16", "count:uint16", "data:bson"]
     ]
 }
