@@ -1,5 +1,5 @@
 
-# <img src="https://github.com/Xertis/VoxelOnline-LuaServer/blob/main/banner.png?raw=true" width="10%" alt="Neutron Logo">
+# <img src="https://github.com/Xertis/VoxelOnline-LuaServer/blob/main/banner.png?raw=true" width="30%" alt="Neutron Logo">
 
 
 Является Lua сервером для [VoxelCore](https://github.com/MihailRis/VoxelEngine-Cpp), предоставляет API для поддержки модов
