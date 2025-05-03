@@ -101,7 +101,7 @@ end
 
 function module.get_player_state(account_player)
     local x, y, z = player.get_pos(account_player.pid)
-    local yaw, pitch = player.get_rot(account_player.pid, true)
+    local yaw, pitch = player.get_rot(account_player.pid)
     local noclip = player.is_noclip(account_player.pid)
     local flight = player.is_flight(account_player.pid)
 

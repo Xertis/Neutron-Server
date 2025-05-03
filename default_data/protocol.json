@@ -8,7 +8,7 @@
         ["JoinGame", "username:string"],
         ["KeepAlive", "challenge:uint32"],
         ["PlayerPosition", "pos:player_pos"],
-        ["PlayerRotation", "pitch:f32", "yaw:f32"],
+        ["PlayerRotation", "yaw:f32", "pitch:f32"],
         ["PlayerCheats", "noclip:boolean", "flight:boolean"],
         ["PlayerInventory", "inventory:bson"],
         ["PlayerHandSlot", "slot:uint8"],
