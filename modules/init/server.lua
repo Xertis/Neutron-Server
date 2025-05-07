@@ -17,7 +17,14 @@ end
 
 --Загружаем конфиг
 do
-    CONFIG = table.freeze(json.parse(file.read(CONFIG_PATH)))
+    CONFIG = json.parse(file.read(CONFIG_PATH))
+
+    if CONFIG.server.chunks_loading_distance > 255 then
+        CONFIG.server.chunks_loading_distance = 255
+        logger.log("Chunks distance is too high. Please select a value in the range of 0-255. The current chunks distance is set to 255", 'W')
+    end
+
+    CONFIG = table.freeze(CONFIG)
 end
 
 logger.log("config initialized")

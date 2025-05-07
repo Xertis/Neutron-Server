@@ -4,12 +4,11 @@ function start_require(path)
         return start_require(prefix..':'..path)
     end
 
-    local old_path = path
     local prefix, file = parse_path(path)
     path = prefix..":modules/"..file..".lua"
 
     if not _G["/$p"] then
-        return require(old_path)
+        return
     end
 
     return _G["/$p"][path]
@@ -17,6 +16,7 @@ end
 
 local server_echo = start_require("server:multiplayer/server/server_echo")
 local protocol = start_require("server:lib/public/protocol")
+local sandbox = start_require("server:lib/private/sandbox/sandbox")
 
 local function upd(blockid, x, y, z, playerid)
     local data = {
@@ -31,6 +31,17 @@ local function upd(blockid, x, y, z, playerid)
     server_echo.put_event(
         function (client)
             if client.active ~= true then
+                return
+            end
+
+            local client_states = sandbox.get_player_state(client.player)
+
+            if math.euclidian2D(
+                client_states.x,
+                client_states.z,
+                x,
+                z
+            ) > (CONFIG.server.chunks_loading_distance+5) then
                 return
             end
 

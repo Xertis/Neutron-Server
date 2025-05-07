@@ -230,7 +230,8 @@ matches.fsm:add_state("joining", {
         local DATA = {
             account_player.pid,
             time.day_time_to_uint16(world.get_day_time()),
-            array_rules
+            array_rules,
+            math.clamp(CONFIG.server.chunks_loading_distance, 0, 255)
         }
 
         buffer = protocol.create_databuffer()

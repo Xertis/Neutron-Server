@@ -57,12 +57,23 @@ end)
 --Обновляем позицию у других
 ClientPipe:add_middleware(function(client)
 
+    local client_states = sandbox.get_player_state(client.player)
+
     for _, player in pairs(sandbox.get_players()) do
         if table.has(RESERVED_USERNAMES, player.username) then
             goto continue
         end
 
         local state = sandbox.get_player_state(player)
+
+        if math.euclidian2D(
+            client_states.x,
+            client_states.z,
+            state.x,
+            state.z
+        ) > (CONFIG.server.chunks_loading_distance+5) * 16 then
+            return client
+        end
 
         local buffer = protocol.create_databuffer()
         local DATA = {

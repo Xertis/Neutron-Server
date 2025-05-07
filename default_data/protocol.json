@@ -32,7 +32,7 @@
         ["Disconnect"]
     ],
     "server": [
-        ["JoinSuccess", "entity_id:uint32", "game_time:uint16", "rules:structure|Rule"],
+        ["JoinSuccess", "entity_id:uint32", "game_time:uint16", "rules:structure|Rule", "chunks_loading_distance:uint8"],
         ["WorldData", "data:structure|Block", "progress:uint16", "max_progress:uint16"],
         ["SynchronizePlayerPosition", "x:f32", "y:f32", "z:f32", "yaw:f32", "pitch:f32", "noclip:boolean", "flight:boolean"],
         ["SetPlayerAbilities", "flags:uint8"],
