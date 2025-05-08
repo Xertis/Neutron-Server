@@ -27,6 +27,19 @@ local function __parse_scheme(scheme)
         table.insert(args, arg)
     end
 
+    local optional_found = false
+    for _, arg in ipairs(args) do
+        local _, _, _, close_bracket = arg:match("^([^=]+)=([%[<])([^%]>]+)([%]>])$")
+        if not close_bracket then
+            error("Ошибка: аргумент в неверном формате: " .. arg)
+        end
+        if close_bracket == "]" then
+            optional_found = true
+        elseif close_bracket == ">" and optional_found then
+            error("Ошибка: обязательный аргумент не может следовать за необязательным: " .. arg)
+        end
+    end
+
     local result = {main_part}
     for _, arg in ipairs(args) do
         table.insert(result, arg)
