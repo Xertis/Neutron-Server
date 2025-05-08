@@ -56,7 +56,7 @@ function lib.world.preparation_main()
             end
 
             if count_chunks - last_print > 100 then
-                logger.log(string.format("Loaded: %s chunks.", count_chunks))
+                logger.log(string.format("Loaded: %s chunks", count_chunks))
                 last_print = count_chunks
             end
 

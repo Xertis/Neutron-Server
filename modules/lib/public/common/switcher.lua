@@ -15,12 +15,12 @@ function switcher:add_case(val, func)
 end
 
 function switcher:add_middleware(val, middleware)
-    if self.switch[val] then
-        local middlewares = table.set_default(self.switch[val], "middlewares", {})
+    if self.switchs[val] then
+        local middlewares = table.set_default(self.switchs[val], "middlewares", {})
 
         table.insert(middlewares, middleware)
     else
-        error("The paсket handler was not found")
+        error("The handler was not found")
     end
 end
 

@@ -69,88 +69,78 @@ function module.echo(message)
     chat.echo(message)
 end
 
-function module.set_command(command, permitions, handler)
+function module.set_command(command, permissions, handler)
     local scheme = __parse_scheme(command)
-    local args_types = table.sub(scheme, 2, #scheme-1)
-    args_types = table.map(args_types, function (_, val) return __parse_arg(val) end)
+    local args_definitions = table.sub(scheme, 2, #scheme - 1)
+    args_definitions = table.map(args_definitions, function(_, val)
+        return __parse_arg(val)
+    end)
 
-    local function check(arg_type, arg)
-        if arg_type[2] ~= "any" then
-            if arg_type[3] == '!' then
-                return string.type(arg) ~= arg_type[2]
-            elseif arg_type[3] == '~' then
-                return string.type(arg) ~= arg_type[2] and arg
-            end
-        end
+    local function check_type(arg_type, value)
+        if arg_type[2] == "any" then return true end
+        if arg_type[3] == "!" and string.type(value) ~= arg_type[2] then return false end
+        if arg_type[3] == "~" and string.type(value) ~= arg_type[2] then return false end
+        return true
     end
 
-    return chat.add_command(scheme, function (args, client)
-        local parsed_args = {}
+    return chat.add_command(scheme, function(args, client)
         local unnamed_args = {}
         local named_args = {}
 
         for _, arg in ipairs(args) do
-            local parsed_arg = __parse_arg_name(arg)
-            if parsed_arg[1] == "" then
-                table.insert(unnamed_args, parsed_arg[2])
+            local parsed = __parse_arg_name(arg)
+            if parsed[1] == "" then
+                table.insert(unnamed_args, parsed[2])
             else
-                named_args[parsed_arg[1]] = parsed_arg[2]
+                named_args[parsed[1]] = parsed[2]
             end
         end
 
-        for i, arg_value in ipairs(unnamed_args) do
-            local arg_type = args_types[i]
-            if arg_type then
-                parsed_args[arg_type[1]] = arg_value
+        local parsed_args = {}
+        local unnamed_index = 1
+
+        for _, arg_def in ipairs(args_definitions) do
+            local key, expected_type, requirement = unpack(arg_def)
+
+            local value = named_args[key]
+
+            if value == nil and unnamed_index <= #unnamed_args then
+                value = unnamed_args[unnamed_index]
+                unnamed_index = unnamed_index + 1
             end
-        end
 
-        for key, value in pairs(named_args) do
-            parsed_args[key] = value
-        end
-
-        local required_args_count = 0
-        local temp_args = {}
-
-        for _, arg_type in ipairs(args_types) do
-            local key = arg_type[1]
-            local value = parsed_args[key]
-
-            if value == nil and arg_type[3] == '!' then
-                chat.tell(string.format("%s %s", module.colors.red, "Missing required argument: " .. key), client)
+            if requirement == "!" and value == nil then
+                chat.tell(string.format("%s Missing required argument: %s", module.colors.red, key), client)
                 return
             end
 
-            if value ~= nil and check(arg_type, value) then
-                chat.tell(string.format("%s %s", module.colors.red, "Invalid argument type for: " .. key), client)
+            if value ~= nil and not check_type(arg_def, value) then
+                chat.tell(string.format("%s Invalid type for argument: %s", module.colors.red, key), client)
                 return
             end
 
-            if arg_type[3] == '!' then
-                required_args_count = required_args_count + 1
-            end
-
-            local _type, typefunc = string.type(value)
-            if _type == "string" then
+            if type(value) == "string" then
                 value = string.trim_quotes(value)
             end
-            temp_args[key] = typefunc(value)
+
+            local _, cast = string.type(value)
+            parsed_args[key] = cast(value)
         end
 
-        for i, _permition in pairs(permitions) do
-            for _, permition in ipairs(_permition) do
-                local rules = account_manager.get_rules(client.account, i == "server")
-
-                if not rules[permition] then
-                    chat.tell(string.format("%s %s", module.colors.red, "You do not have sufficient permissions to perform this action!"), client)
+        for scope, perms in pairs(permissions) do
+            local rules = account_manager.get_rules(client.account, scope == "server")
+            for _, perm in ipairs(perms) do
+                if not rules[perm] then
+                    chat.tell(string.format("%s You do not have sufficient permissions to perform this action!", module.colors.red), client)
                     return
                 end
             end
         end
 
-        handler(temp_args, client)
+        handler(parsed_args, client)
     end)
 end
+
 
 function module.execute(command, client)
     chat.command(command, client)

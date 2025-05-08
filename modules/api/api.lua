@@ -7,6 +7,7 @@ local sandbox = require "api/sandbox"
 local db = require "lib/public/database/api"
 local env = start_require("server:api/env")
 local middlewares = require "api/middlewares"
+local protocol = require "api/protocol"
 
 local api = {
     events = events,
@@ -17,7 +18,8 @@ local api = {
     sandbox = sandbox,
     db = db,
     env = env,
-    middlewares = middlewares
+    middlewares = middlewares,
+    protocol = protocol
 }
 
 return {server = api}
