@@ -27,7 +27,7 @@ function module.command(message, client)
     end
 
     message = string.sub(message, 2)
-    local args = string.split(message, " ")
+    local args = string.soft_space_split(message)
     local executable = args[1]
     table.remove(args, 1)
 

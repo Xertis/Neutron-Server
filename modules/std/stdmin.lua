@@ -92,6 +92,51 @@ function string.multiline_concat(str1, str2, space)
     return table.concat(result, '\n')
 end
 
+function string.soft_space_split(str)
+    local result = {}
+    local current = {}
+    local in_quotes = false
+    local bracket_level = 0
+    local brace_level = 0
+
+    for i = 1, #str do
+        local char = str:sub(i, i)
+
+        if char == '"' and bracket_level == 0 and brace_level == 0 then
+            in_quotes = not in_quotes
+            table.insert(current, char)
+        elseif not in_quotes then
+            if char == '[' then
+                bracket_level = bracket_level + 1
+            elseif char == ']' then
+                bracket_level = bracket_level - 1
+            elseif char == '{' then
+                brace_level = brace_level + 1
+            elseif char == '}' then
+                brace_level = brace_level - 1
+            elseif char == ' ' and bracket_level == 0 and brace_level == 0 then
+                if #current > 0 then
+                    table.insert(result, table.concat(current))
+                    current = {}
+                end
+                goto continue
+            end
+            table.insert(current, char)
+        else
+            table.insert(current, char)
+        end
+
+        ::continue::
+    end
+
+    if #current > 0 then
+        table.insert(result, table.concat(current))
+    end
+
+    return result
+end
+
+
 -- TIME
 
 function time.formatted_time()
