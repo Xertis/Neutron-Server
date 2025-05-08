@@ -17,9 +17,9 @@
         ["ChatMessage", "message:string"],
         ["CommandMessage", "message:string"],
 
-        ["BlockUpdate", "x:int32", "y:int32", "z:int32", "block_state:uint16", "block_id:uint16"],
-        ["BlockInteract", "x:int32", "y:int32", "z:int32"],
-        ["BlockDestroy", "x:int32", "y:int32", "z:int32"],
+        ["BlockUpdate", "x:int32", "y:uint8", "z:int32", "block_state:uint16", "block_id:uint16"],
+        ["BlockInteract", "x:int32", "y:uint8", "z:int32"],
+        ["BlockDestroy", "x:int32", "y:uint8", "z:int32"],
 
         ["BlockRegionUpdate", "x:int8", "y:uint8", "z:int8", "block_state:uint16", "block_id:uint16"],
         ["BlockRegionInteract", "x:int8", "y:uint8", "z:int8"],
@@ -50,7 +50,7 @@
         ["ChunkData", "x:int16", "z:int16", "data:array|uint8"],
         ["ChunksData", "list:structure|Chunk"],
         ["ChatMessage", "message:string"],
-        ["BlockChanged", "x:int32", "y:int32", "z:int32", "block_state:uint16", "block_id:uint16", "pid:uint32"],
+        ["BlockChanged", "x:int32", "y:uint8", "z:int32", "block_state:uint16", "block_id:uint16", "pid:uint32"],
         ["PacksList", "packs:array|string"],
         ["PackEvent", "pack:string", "event:string", "bytes:array|uint8"],
         ["PackEnv", "pack:string", "env:string", "key:string", "value:any"],
@@ -58,7 +58,7 @@
     ],
     "states": ["Status", "Login", "Active"],
     "structures": [
-        ["Block", "x:int32", "y:int32", "z:int32", "block_state:uint16", "block_id:string"],
+        ["Block", "x:int32", "y:uint8", "z:int32", "block_state:uint16", "block_id:string"],
         ["Player", "entity_id:uint32", "username:string"],
         ["Chunk", "x:int16", "z:int16", "data:array|uint8"],
         ["Rule", "rule:string", "value:boolean"],
