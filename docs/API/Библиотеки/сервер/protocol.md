@@ -10,8 +10,11 @@
 
 ## 2. Основные методы
 
-### `send_packet(client, packet_type, data)`
+### `tell(client, packet_type, data)`
 Отправляет пакет указанному клиенту.
+
+### `echo(packet_type, data)`
+Отправляет пакет всем клиентам.
 
 **Параметры:**
 - `client` (Client) - объект клиента, которому отправляется пакет
@@ -20,7 +23,7 @@
 
 **Пример использования:**
 ```lua
-protocol.send_packet(client, Protocol.ServerMsg.PlayerRotation, {
+protocol.tell(client, Protocol.ServerMsg.PlayerRotation, {
     0, -- yaw
     0  -- pitch
 })
