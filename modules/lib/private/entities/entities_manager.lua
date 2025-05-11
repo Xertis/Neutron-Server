@@ -1,0 +1,191 @@
+local protect = require "lib/private/protect"
+if protect.protect_require() then return end
+
+local protocol = require "lib/public/protocol"
+local server_echo = require "multiplayer/server/server_echo"
+
+local module = {}
+local reg_entities = {}
+local entities_data = {}
+
+local culling = function (pid, pos, target_pos)
+    return vec3.culling(player.get_dir(pid), pos, target_pos, 120)
+end
+
+local example_entities_data = {
+    ["1"] = {
+        ["pid"] = {
+            custom_fields = {
+                hp = 8
+            },
+
+            standart_fields = {
+                tsf = {
+                    pos = 20
+                }
+            }
+        }
+    }
+}
+
+local example_config = {
+    custom_fields = {
+        hp = {
+            maximum_deviation = 1, -- Максимальное отклонение в данных
+            evaluate_deviation = function (dist, cur_val, client_val)
+
+                -- К возвращаемому значению применяется math.abs
+                return cur_val - client_val-- Возвращает значение ошибки, если оно выше maximum_deviation, то данные отправляются
+            end,
+            provider = function (uid, field_name) -- Должно быть обязательно, возвращает значение кастомного поля
+                return 0
+            end
+        } -- Если поле не указано, отслеживаться оно не будет
+    },
+    standart_fields = {
+        tsf_rot = {...}, -- как в hp, но без provider
+        tsf_pos = {...}, -- как в hp, но без provider
+        tsf_size = {...}, -- как в hp, но без provider
+        body_phys = {...}, -- как в hp, но без provider
+        body_size = {...}, -- как в hp, но без provider
+    }
+}
+
+function module.register(entity_name, config)
+    reg_entities[entity_name] = {
+        config = config
+    }
+end
+
+function module.despawn(uid)
+    entities_data[uid] = nil
+
+    local buffer = protocol.create_databuffer()
+    buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.EntityDespawn, uid))
+
+    server_echo.put_event(
+        function (client)
+            client.network:send(buffer.bytes)
+        end
+    )
+end
+
+local function __create_data(entity)
+    local uid = entity:get_uid()
+    local str_name = entity:def_name()
+    local tsf = entity.transform
+    local body = entity.rigidbody
+
+    local data = {
+        standart_fields = {
+            tsf_rot = tsf:get_rot(),
+            tsf_pos = tsf:get_pos(),
+            tsf_size = tsf:get_size(),
+            body_phys = body:is_enabled(),
+            body_size = body:get_size()
+        }
+    }
+
+    local custom_fields = {}
+
+    for field_name, field in pairs(reg_entities[str_name].config.custom_fields) do
+        custom_fields[field_name] = field.provider(uid, field_name)
+    end
+
+    data.custom_fields = custom_fields
+
+    return data
+end
+
+local function __get_dirty(entity, data, cur_data, p_pos, e_pos)
+    local dirty = table.deep_copy(data)
+    local str_name = entity:def_name()
+    local dist = math.euclidian3D(
+        e_pos[1], e_pos[2], e_pos[3],
+        p_pos[1], p_pos[2], p_pos[3]
+    )
+
+    for fields_type, type in pairs(data) do
+        for field_name, value in pairs(type) do
+            local config = reg_entities[str_name].config[fields_type][field_name]
+
+            local cur_val = cur_data[fields_type][field_name]
+            local max_deviation = config.maximum_deviation
+            local eval = config.evaluate_deviation
+
+            local deviation = math.abs(eval(dist, cur_val, value))
+
+            if deviation <= max_deviation then
+                dirty[fields_type][field_name] = nil
+            end
+        end
+    end
+
+    return dirty
+end
+
+local function __update_data(data, dirty, cur_data)
+    for fields_type, type in pairs(dirty) do
+        for field_name, _ in pairs(type) do
+            data[fields_type][field_name] = cur_data[fields_type][field_name]
+        end
+    end
+end
+
+local function __send_dirty(uid, id, dirty, client)
+    local data = {
+        uid,
+        id,
+        dirty
+    }
+
+    local buffer = protocol.create_databuffer()
+    buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.EntityUpdate, unpack(data)))
+    client.network:send(buffer.bytes)
+end
+
+function module.process(client)
+    local c_player = client.player
+    local pid = c_player.pid
+    local p_pos = {player.get_pos(pid)}
+    local chunk_distance = CONFIG.server.chunks_loading_distance
+
+    local render_distance = (chunk_distance + 5) * 16
+
+    for _, uid in pairs(entities.get_all_in_radius(p_pos, render_distance)) do
+        local entity = entities.get(uid)
+        local tsf = entity.transform
+
+        local id = entity:def_index()
+        local str_id = entity:def_name()
+
+        if not reg_entities[str_id] then
+            goto continue
+        end
+
+        local cur_data = __create_data(entity)
+        local data = table.set_default(entities_data, uid, {})
+
+        if not data[pid] then
+            data[pid] = cur_data
+        end
+
+        local e_pos = tsf:get_pos()
+        data = data[pid]
+
+        local last_culling = culling(pid, p_pos, data.standart_fields.tsf_pos)
+        local cur_culling = culling(pid, p_pos, e_pos)
+
+        if not (last_culling or cur_culling) then
+            goto continue
+        end
+
+        local dirty = __get_dirty(entity, data, cur_data, p_pos, e_pos)
+        __update_data(data, dirty, cur_data)
+        __send_dirty(uid, id, dirty, client)
+
+        ::continue::
+    end
+end
+
+return module

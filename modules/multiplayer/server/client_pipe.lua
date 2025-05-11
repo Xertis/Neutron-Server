@@ -2,7 +2,7 @@ local Pipeline = require "lib/public/pipeline"
 local protocol = require "lib/public/protocol"
 local protect = require "lib/private/protect"
 local sandbox = require "lib/private/sandbox/sandbox"
-local account_manager = require "lib/private/accounts/account_manager"
+local entities_manager = require "lib/private/entities/entities_manager"
 
 local ClientPipe = Pipeline.new()
 
@@ -50,6 +50,13 @@ ClientPipe:add_middleware(function(client)
         buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.SynchronizePlayerPosition, unpack(DATA)))
         client.network:send(buffer.bytes)
     end
+
+    return client
+end)
+
+--Обновляем мобов
+ClientPipe:add_middleware(function(client)
+    entities_manager.process(client)
 
     return client
 end)

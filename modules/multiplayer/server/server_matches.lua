@@ -1,5 +1,4 @@
 local protocol = require "lib/public/protocol"
-local matcher = require "lib/public/common/matcher"
 local switcher = require "lib/public/common/switcher"
 local protect = require "lib/private/protect"
 local sandbox = require "lib/private/sandbox/sandbox"

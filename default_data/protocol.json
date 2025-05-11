@@ -54,6 +54,8 @@
         ["PacksList", "packs:array|string"],
         ["PackEvent", "pack:string", "event:string", "bytes:array|uint8"],
         ["PackEnv", "pack:string", "env:string", "key:string", "value:any"],
+        ["EntityUpdate", "uid:uint32", "entity_def:uint16", "dirty:bson"],
+        ["EntityDespawn", "uid:uint32"],
         ["Disconnect", "reason:string"]
     ],
     "states": ["Status", "Login", "Active"],

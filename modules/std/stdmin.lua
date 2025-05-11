@@ -513,6 +513,38 @@ function bit.tonum(bits, is_sign)
     return num
 end
 
+-- VEC
+
+function vec3.lerp(cur_pos, target_pos, t)
+    t = math.clamp(t, 0, 1)
+    local diff = vec3.sub(target_pos, cur_pos)
+    local scaledDiff = vec3.mul(diff, t)
+    return vec3.add(cur_pos, scaledDiff)
+end
+
+function vec3.culling(view_dir, pos, target_pos, fov_degrees)
+    if vec3.length(view_dir) == 0 then
+        return false
+    end
+
+    local to_target = vec3.sub(target_pos, pos)
+
+    if vec3.length(to_target) == 0 then
+        return false
+    end
+
+    local view_dir_norm = vec3.normalize(view_dir)
+    local to_target_norm = vec3.normalize(to_target)
+
+    local dot_product = vec3.dot(view_dir_norm, to_target_norm)
+    dot_product = math.max(-1, math.min(1, dot_product))
+
+    local angle_rad = math.acos(dot_product)
+    local angle_deg = math.deg(angle_rad)
+
+    return angle_deg <= (fov_degrees+30) / 2
+end
+
 -- OTHER
 
 function cached_require(path)
