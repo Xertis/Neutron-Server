@@ -83,6 +83,10 @@ matches.fsm:add_state("idle", {
             return
         end
 
+        if event.protocol_version ~= protocol.Version then
+            return
+        end
+
         if event.next_state == protocol.States.Status then
             return "awaiting_status_request"
         elseif event.next_state == protocol.States.Login then

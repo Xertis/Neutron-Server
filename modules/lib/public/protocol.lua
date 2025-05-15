@@ -491,6 +491,8 @@ protocol.States = {}
 -- Перечисление Структур
 protocol.Structures = {}
 
+protocol.Version = protocol.data.version
+
 -- Парсим из json типы пакетов клиента и сервера
 for index, value in ipairs(protocol.data.client) do
     protocol.ClientMsg[index] = value[1] -- Имя типа пакета по индексу
