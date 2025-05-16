@@ -9,7 +9,7 @@ end
 function module.despawn(uid)
     entities_manager.despawn(uid)
 
-    local entity = entites.get(uid)
+    local entity = entities.get(uid)
     if entity then
         entity:despawn()
     else

@@ -200,6 +200,18 @@ end
 
 table.unpack = unpack
 
+function table.get_default(tbl, ...)
+    for _, key in ipairs({...}) do
+        if not tbl[key] then
+            return nil
+        end
+
+        tbl = tbl[key]
+    end
+
+    return tbl
+end
+
 function table.keys(t)
     local keys = {}
 

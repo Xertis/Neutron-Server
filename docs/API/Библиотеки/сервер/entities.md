@@ -12,6 +12,7 @@
   - `body_phys` (boolean): состояние физики (вкл/выкл).
   - `body_size` (vec3): размер физического тела.
 - **custom_fields**: пользовательские поля, например, `hp`.
+- **textures**: Ключи текстур с их значениями
 
 ### 1.2. Основные функции
 
@@ -39,6 +40,12 @@ entities.register(entity_name, config)
             evaluate_deviation = function(dist, cur_val, client_val),
             provider = function(uid, field_name) -- Получение значения поля
         }
+    },
+    textures = {
+        key1 = {
+            maximum_deviation = number, -- Максимальное отклонение
+            evaluate_deviation = function(dist, cur_val, client_val) -- Оценка отклонения
+        },
     }
 }
 ```

@@ -23,6 +23,9 @@ local example_entities_data = {
                 tsf = {
                     pos = 20
                 }
+            },
+            textures = {
+                key = "abc"
             }
         }
     }
@@ -46,8 +49,10 @@ local example_config = {
         tsf_rot = {...}, -- как в hp, но без provider
         tsf_pos = {...}, -- как в hp, но без provider
         tsf_size = {...}, -- как в hp, но без provider
-        body_phys = {...}, -- как в hp, но без provider
         body_size = {...}, -- как в hp, но без provider
+    },
+    textures = {
+        key = "abc"
     }
 }
 
@@ -75,20 +80,29 @@ local function __create_data(entity)
     local str_name = entity:def_name()
     local tsf = entity.transform
     local body = entity.rigidbody
+    local rig = entity.skeleton
+
+    local conf = reg_entities[str_name].config
 
     local data = {
         standart_fields = {
             tsf_rot = tsf:get_rot(),
             tsf_pos = tsf:get_pos(),
             tsf_size = tsf:get_size(),
-            body_phys = body:is_enabled(),
-            body_size = body:get_size()
-        }
+            body_size = body:get_size(),
+        },
     }
+
+    if conf.textures then
+        data.textures = {}
+        for key, _ in pairs(conf.textures) do
+            data.textures[key] = rig:get_texture(key)
+        end
+    end
 
     local custom_fields = {}
 
-    for field_name, field in pairs(reg_entities[str_name].config.custom_fields) do
+    for field_name, field in pairs(conf.custom_fields) do
         custom_fields[field_name] = field.provider(uid, field_name)
     end
 
@@ -98,18 +112,20 @@ local function __create_data(entity)
 end
 
 local function __get_dirty(entity, data, cur_data, p_pos, e_pos)
-    local dirty = table.deep_copy(data)
+    local dirty = table.deep_copy(cur_data)
     local str_name = entity:def_name()
     local dist = math.euclidian3D(
         e_pos[1], e_pos[2], e_pos[3],
         p_pos[1], p_pos[2], p_pos[3]
     )
 
-    for fields_type, type in pairs(data) do
-        for field_name, value in pairs(type) do
+    for fields_type, type in pairs(cur_data) do
+
+        for field_name, cur_val in pairs(type) do
             local config = reg_entities[str_name].config[fields_type][field_name]
 
-            local cur_val = cur_data[fields_type][field_name]
+            table.set_default(data, fields_type, {})
+            local value = data[fields_type][field_name]
             local max_deviation = config.maximum_deviation
             local eval = config.evaluate_deviation
 
@@ -139,6 +155,20 @@ local function __send_dirty(uid, id, dirty, client)
         dirty
     }
 
+    if table.count_pairs(dirty.standart_fields) == 0 then
+        dirty.standart_fields = nil
+    end
+    if table.count_pairs(dirty.custom_fields) == 0 then
+        dirty.custom_fields = nil
+    end
+    if table.count_pairs(dirty.textures) == 0 then
+        dirty.textures = nil
+    end
+
+    if table.count_pairs(dirty) == 0 then
+        return
+    end
+
     local buffer = protocol.create_databuffer()
     buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.EntityUpdate, unpack(data)))
     client.network:send(buffer.bytes)
@@ -167,13 +197,14 @@ function module.process(client)
         local data = table.set_default(entities_data, uid, {})
 
         if not data[pid] then
-            data[pid] = cur_data
+            data[pid] = {}
         end
 
         local e_pos = tsf:get_pos()
         data = data[pid]
 
-        local last_culling = culling(pid, p_pos, data.standart_fields.tsf_pos)
+        local cul_pos = table.get_default(data, "standart_fields", "tsf_pos") or tsf:get_pos()
+        local last_culling = culling(pid, p_pos, cul_pos)
         local cur_culling = culling(pid, p_pos, e_pos)
 
         if not (last_culling or cur_culling) then

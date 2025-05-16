@@ -65,3 +65,75 @@ events.on("server:block_interact", function (...)
     upd(...)
 end)
 
+function on_world_open()
+    local api = require "server:api/api".server
+    local entities = api.entities
+
+    entities.register(
+        "base:falling_block",
+        {
+            custom_fields = {},
+            standart_fields = {
+                tsf_pos = {
+                    maximum_deviation = 1,
+                    evaluate_deviation = function (dist, cur_val, client_val)
+                        if not client_val then
+                            return 3
+                        end
+                        return math.euclidian3D(
+                            cur_val[1], cur_val[2], cur_val[3],
+                            client_val[1], client_val[2], client_val[3]
+                        )
+                    end},
+                tsf_rot = {
+                    maximum_deviation = 1,
+                    evaluate_deviation = function (dist, cur_val, client_val)
+                        return 0
+                    end
+                },
+                tsf_size = {
+                    maximum_deviation = 1,
+                    evaluate_deviation = function (dist, cur_val, client_val)
+                        return 0
+                    end},
+                body_size = {
+                    maximum_deviation = 1,
+                    evaluate_deviation = function (dist, cur_val, client_val)
+                        return 0
+                    end},
+            },
+            textures = {
+                ['$0'] = {
+                    maximum_deviation = 1,
+                    evaluate_deviation = function (dist, cur_val, client_val)
+                        return cur_val ~= client_val and 2 or 0
+                    end},
+                ['$1'] = {
+                    maximum_deviation = 1,
+                    evaluate_deviation = function (dist, cur_val, client_val)
+                        return cur_val ~= client_val and 2 or 0
+                    end},
+                ['$2'] = {
+                    maximum_deviation = 1,
+                    evaluate_deviation = function (dist, cur_val, client_val)
+                        return cur_val ~= client_val and 2 or 0
+                    end},
+                ['$3'] = {
+                    maximum_deviation = 1,
+                    evaluate_deviation = function (dist, cur_val, client_val)
+                        return cur_val ~= client_val and 2 or 0
+                    end},
+                ['$4'] = {
+                    maximum_deviation = 1,
+                    evaluate_deviation = function (dist, cur_val, client_val)
+                        return cur_val ~= client_val and 2 or 0
+                    end},
+                ['$5'] = {
+                    maximum_deviation = 1,
+                    evaluate_deviation = function (dist, cur_val, client_val)
+                        return cur_val ~= client_val and 2 or 0
+                    end},
+            }
+        }
+    )
+end
