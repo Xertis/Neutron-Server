@@ -23,7 +23,7 @@ function bit_buffer:new(bytes)
 end
 
 function bit_buffer:put_bit(bit)
-	self.current = putExp(self.current, bit and 1 or 0, (self.pos - 1) % 8)
+	self.current = putExp(self.current, bit, (self.pos - 1) % 8)
 
 	if bitIndex == 7 then
 		bytes:append(self.current)
