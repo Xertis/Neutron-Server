@@ -1,6 +1,7 @@
 local protect = require "lib/private/protect"
 local protocol = require "lib/public/protocol"
 local server_echo = require "multiplayer/server/server_echo"
+local states = require "multiplayer/server/chat/chat_states"
 local module = {}
 
 local no_logged_commands = {"register", "login"}
@@ -22,11 +23,16 @@ function module.tell(message, client)
 end
 
 function module.command(message, client)
-    if message[1] ~= '.' then
-        return
+    local state = states.get_state(client)
+
+    if message[1] ~= '.' and not state  then
+        return false
     end
 
-    message = string.sub(message, 2)
+    if not state then
+        message = string.sub(message, 2)
+    end
+
     local args = string.soft_space_split(message)
     local executable = args[1]
     table.remove(args, 1)
@@ -35,8 +41,10 @@ function module.command(message, client)
         return
     end
 
-    if handlers[executable] then
+    if handlers[executable] and not state then
         handlers[executable].handler(args, client)
+    elseif state then
+        handlers[state.id].handler(message, state, client)
     else
         module.tell("[#ff0000] Unknow command: " .. executable, client)
     end
@@ -51,8 +59,23 @@ function module.add_command(schem, handler)
     return true
 end
 
+function module.set_state_handler(state, handler)
+    if handlers[state.id] then
+        return false
+    end
+
+    handlers[state.id] = {handler = handler}
+end
+
 function module.get_handlers()
-    return handlers
+    local pairs_handlers = {}
+
+    for key, handler in pairs(handlers) do
+        if type(key) ~= "number" then
+            pairs_handlers[key] = handler
+        end
+    end
+    return pairs_handlers
 end
 
 return protect.protect_return(module)

@@ -1,4 +1,5 @@
 local chat = start_require "multiplayer/server/chat/chat"
+local states = start_require "multiplayer/server/chat/chat_states"
 local account_manager = start_require "server:lib/private/accounts/account_manager"
 local module = {}
 
@@ -74,12 +75,24 @@ local function __parse_arg_name(arg)
     return {key, value}
 end
 
+function module.create_state(name)
+    return states.create_state(name)
+end
+
 function module.tell(message, client)
     chat.tell(message, client)
 end
 
 function module.echo(message)
     chat.echo(message)
+end
+
+function module.set_state(state, client)
+    state:__set(client)
+end
+
+function module.set_state_handler(state, handler)
+    return chat.set_state_handler(state, handler)
 end
 
 function module.set_command(command, permissions, handler)

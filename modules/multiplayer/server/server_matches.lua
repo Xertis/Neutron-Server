@@ -430,10 +430,8 @@ matches.client_online_handler:add_case(protocol.ClientMsg.ChatMessage, (
 
         local player = sandbox.get_player(client.player)
         local message = string.format("[%s] %s", player.username, packet.message)
-
-        if packet.message[1] == '.' then
-            chat.command(packet.message, client)
-        else
+        local state = chat.command(packet.message, client)
+        if state == false then
             chat.echo(message)
         end
     end
