@@ -29,6 +29,7 @@
         ["PackEvent", "pack:string", "event:string", "bytes:array|uint8"],
         ["PlayerRegion", "x:int16", "z:int16"],
         ["PackEnv", "pack:string", "env:string", "key:string", "value:any"],
+        ["EntitySpawnTry", "entity_def:uint16", "args:bson"],
         ["Disconnect"]
     ],
     "server": [

@@ -67,9 +67,9 @@ end)
 
 function on_world_open()
     local api = require "server:api/api".server
-    local entities = api.entities
+    local _entities = api.entities
 
-    entities.register(
+    _entities.register(
         "base:falling_block",
         {
             custom_fields = {},
@@ -133,7 +133,75 @@ function on_world_open()
                     evaluate_deviation = function (dist, cur_val, client_val)
                         return cur_val ~= client_val and 2 or 0
                     end},
+            },
+            components = {
+                ["base:falling_block"] = {
+                    maximum_deviation = 1,
+                    evaluate_deviation = function (dist, cur_val, client_val)
+                        return client_val ~= false and 2 or 0
+                    end,
+                    provider = function ()
+                        return false
+                    end
+                }
             }
         }
+    )
+
+_entities.register(
+        "base:drop",
+        {
+            custom_fields = {},
+            standart_fields = {
+                tsf_pos = {
+                    maximum_deviation = 0.1,
+                    evaluate_deviation = function (dist, cur_val, client_val)
+                        if not client_val then
+                            return 3
+                        end
+                        return math.euclidian3D(
+                            cur_val[1], cur_val[2], cur_val[3],
+                            client_val[1], client_val[2], client_val[3]
+                        )
+                    end},
+                tsf_rot = {
+                    maximum_deviation = 1,
+                    evaluate_deviation = function (dist, cur_val, client_val)
+                        return 0
+                    end
+                },
+                tsf_size = {
+                    maximum_deviation = 1,
+                    evaluate_deviation = function (dist, cur_val, client_val)
+                        return 0
+                    end},
+                body_size = {
+                    maximum_deviation = 1,
+                    evaluate_deviation = function (dist, cur_val, client_val)
+                        return 0
+                    end},
+            },
+            models = {
+                ["0"] = {
+                    maximum_deviation = 1,
+                    evaluate_deviation = function (dist, cur_val, client_val)
+                        return cur_val ~= client_val and 2 or 0
+                    end},
+            },
+            components = {
+                ["base:drop"] = {
+                    maximum_deviation = 1,
+                    evaluate_deviation = function (dist, cur_val, client_val)
+                        return client_val ~= false and 2 or 0
+                    end,
+                    provider = function ()
+                        return false
+                    end
+                }
+            }
+        }, function (name, args, client)
+            local tbl = table.merge({name}, args)
+            entities.spawn(unpack(tbl))
+        end
     )
 end

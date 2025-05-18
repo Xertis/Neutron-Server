@@ -26,6 +26,9 @@ local example_entities_data = {
             },
             textures = {
                 key = "abc"
+            },
+            components = {
+                key = false -- И провайдер
             }
         }
     }
@@ -53,13 +56,32 @@ local example_config = {
     },
     textures = {
         key = "abc"
+    },
+    components = {
+        key = false -- Тут ещё провайдер
+    },
+    models = {
+
     }
 }
 
-function module.register(entity_name, config)
+function module.register(entity_name, config, handler)
     reg_entities[entity_name] = {
-        config = config
+        config = config,
+        spawn_handler = handler
     }
+end
+
+function module.get_reg_config(entity_name)
+    return reg_entities[entity_name]
+end
+
+function module.clear_pid(pid)
+    for _, data in pairs(entities_data) do
+        if data[pid] then
+            data[pid] = nil
+        end
+    end
 end
 
 function module.despawn(uid)
@@ -97,6 +119,26 @@ local function __create_data(entity)
         data.textures = {}
         for key, _ in pairs(conf.textures) do
             data.textures[key] = rig:get_texture(key)
+        end
+    end
+
+    if conf.models then
+        data.models = {}
+        for key, _ in pairs(conf.models) do
+            data.models[key] = rig:get_model(key)
+        end
+    end
+
+    if conf.components then
+        data.components = {}
+        for component, val in pairs(conf.components) do
+            local is_on = val.provider(uid, component)
+
+            if type(is_on) ~= "boolean" then
+                error("Incorrect state of the component")
+            end
+
+            data.components[component] = is_on
         end
     end
 
@@ -158,11 +200,17 @@ local function __send_dirty(uid, id, dirty, client)
     if table.count_pairs(dirty.standart_fields) == 0 then
         dirty.standart_fields = nil
     end
-    if table.count_pairs(dirty.custom_fields) == 0 then
+    if table.count_pairs(dirty.custom_fields or {}) == 0 then
         dirty.custom_fields = nil
     end
-    if table.count_pairs(dirty.textures) == 0 then
+    if table.count_pairs(dirty.textures or {}) == 0 then
         dirty.textures = nil
+    end
+    if table.count_pairs(dirty.components or {}) == 0 then
+        dirty.components = nil
+    end
+    if table.count_pairs(dirty.models or {}) == 0 then
+        dirty.models = nil
     end
 
     if table.count_pairs(dirty) == 0 then
@@ -189,6 +237,7 @@ function module.process(client)
         local id = entity:def_index()
         local str_id = entity:def_name()
 
+        print(str_id)
         if not reg_entities[str_id] then
             goto continue
         end
@@ -206,11 +255,11 @@ function module.process(client)
         local cul_pos = table.get_default(data, "standart_fields", "tsf_pos") or tsf:get_pos()
         local last_culling = culling(pid, p_pos, cul_pos)
         local cur_culling = culling(pid, p_pos, e_pos)
-
+        print(2)
         if not (last_culling or cur_culling) then
             goto continue
         end
-
+        print(1)
         local dirty = __get_dirty(entity, data, cur_data, p_pos, e_pos)
         __update_data(data, dirty, cur_data)
         __send_dirty(uid, id, dirty, client)

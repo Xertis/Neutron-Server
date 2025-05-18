@@ -33,6 +33,28 @@ ClientPipe:add_middleware(function(client)
     return client
 end)
 
+--Обновляем инвентарь
+ClientPipe:add_middleware(function (client)
+    local player = client.player
+
+    if not player.inv_is_changed then
+        return client
+    end
+
+    local data = sandbox.get_inventory(player)
+    local inv, slot = data.inventory, data.slot
+
+    local buffer = protocol.create_databuffer()
+    buffer = protocol.create_databuffer()
+    buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.PlayerInventory, inv))
+    client.network:send(buffer.bytes)
+
+    buffer = protocol.create_databuffer()
+    buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.PlayerHandSlot, slot))
+    client.network:send(buffer.bytes)
+
+end)
+
 --Запрос на логин/регистрацию
 ClientPipe:add_middleware(function(client)
     if not CONFIG.server.password_auth then

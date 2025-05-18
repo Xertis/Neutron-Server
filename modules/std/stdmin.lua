@@ -300,6 +300,27 @@ function table.equals(tbl1, tbl2)
     return table.easy_concat(tbl1) == table.easy_concat(tbl2)
 end
 
+function table.deep_equals(tbl1, tbl2)
+    for key, item in pairs(tbl1) do
+        local itype = type(item)
+        if itype ~= type(tbl2) then
+            return false
+        end
+
+        if item ~= tbl2[key] and itype ~= "table" then
+            return false
+        end
+
+        if itype == "table" then
+            if not table.deep_equals(item, tbl2[key]) then
+                return false
+            end
+        end
+    end
+
+    return true
+end
+
 --- MATH
 
 function math.euclidian3D(x1, y1, z1, x2, y2, z2)

@@ -2,8 +2,8 @@ local entities_manager = start_require "lib/private/entities/entities_manager"
 
 local module = {}
 
-function module.register(entity_name, config)
-    entities_manager.register(entity_name, config)
+function module.register(entity_name, config, handler)
+    entities_manager.register(entity_name, config, handler)
 end
 
 function module.despawn(uid)
