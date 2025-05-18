@@ -13,16 +13,19 @@
   - `body_size` (vec3): размер физического тела.
 - **custom_fields**: пользовательские поля, например, `hp`.
 - **textures**: Ключи текстур с их значениями
+- **models**: Индексы (String) костей с их моделями
+- **components**: Названия компонентов сущностей со значением их активности (true/false)
 
 ### 1.2. Основные функции
 
 #### Регистрация сущности
 ```lua
-entities.register(entity_name, config)
+entities.register(entity_name, config, spawn_handler)
 ```
 **Параметры:**
 - `entity_name` (string): имя типа сущности (например, `"example:zombie"`).
 - `config` (table): конфигурация полей сущности.
+- `spawn_handler` (function (name, args, client) ): вызывается в том случае, когда клиент пытается заспавнить зарегистрированную сущность 
 
 **Сигнатура config:**
 ```lua
@@ -45,6 +48,20 @@ entities.register(entity_name, config)
         key1 = {
             maximum_deviation = number, -- Максимальное отклонение
             evaluate_deviation = function(dist, cur_val, client_val) -- Оценка отклонения
+        },
+    }
+    models = {
+        ["index"] = { -- Индекс кости всегда надо записывать строчкой
+            maximum_deviation = number, -- Максимальное отклонение
+            evaluate_deviation = function(dist, cur_val, client_val) -- Оценка отклонения
+        },
+    }
+    components = {
+        component = {
+            maximum_deviation = number, -- Максимальное отклонение
+            evaluate_deviation = function(dist, cur_val, client_val) -- Оценка отклонения
+            provider = function(uid, field_name) -- Получение значения поля, всегда bool
+            -- Если provider вернёт true, компонент включится у клиента, если false - выключится
         },
     }
 }
