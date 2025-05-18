@@ -3,7 +3,8 @@ local container = require "lib/private/common/container"
 local Player = require "lib/private/sandbox/classes/player"
 local metadata = require "lib/private/files/metadata"
 local module = {
-    by_username = {}
+    by_username = {},
+    by_invid = {}
 }
 
 function module.join_player(account)
@@ -26,8 +27,11 @@ function module.join_player(account)
 
         player.set_pos(account_player.pid, 0, y+1, 0)
         player.set_spawnpoint(account_player.pid, 0, y+1, 0)
-        account:set("world", CONFIG.game.main_world)
+        account_player:set("world", CONFIG.game.main_world)
         account_player:set("active", true)
+
+        local invid, _ = player.get_inventory(account_player.pid)
+        account_player:set("invid", invid)
     end
 
     if account_player:is_active() then
@@ -54,6 +58,24 @@ function module.leave_player(account_player)
     player.set_suspended(account_player.pid, true)
 
     return account_player
+end
+
+function module.get_client(player)
+    if not player then
+        error("Invalid player")
+    end
+
+    for _, client in pairs(container.clients_all.get()) do
+        if not client.player then
+            logger.log("Player information lost. Client: " .. json.tostring(client), "E")
+            goto continue
+        end
+        if client.player.username == player.username then
+            return client
+        end
+
+        ::continue::
+    end
 end
 
 function module.get_players()
@@ -155,6 +177,41 @@ end
 
 function module.set_selected_slot(_player, slot_id)
     player.set_selected_slot(_player.pid, slot_id)
+end
+
+function module.by_invid.get(invid)
+
+    for _, player in pairs(module.get_players()) do
+        if player.invid == invid then
+            return player
+        end
+    end
+end
+
+--Вынужденый ужас
+--TODO: В СРОЧНОМ ПОРЯДКЕ ЗАСУНУТЬ ЭТО В БОЛЕЕ ПРАВИЛЬНОЕ МЕСТО
+do
+    local inventory_funcs = {
+        set = inventory.set, set_count = inventory.set_count,
+        add = inventory.add, remove = inventory.remove,
+        set_data = inventory.set_data, decrement = inventory.decrement,
+        use = inventory.use
+    }
+
+    for name, func in pairs(inventory_funcs) do
+        inventory[name] = function (invid, ...)
+            local res = {func(invid, ...)}
+
+            local player = module.by_invid.get(invid)
+
+            if not player then
+                return unpack(res)
+            end
+
+            player.inv_is_changed = true
+            return unpack(res)
+        end
+    end
 end
 
 return protect.protect_return(module)

@@ -237,7 +237,6 @@ function module.process(client)
         local id = entity:def_index()
         local str_id = entity:def_name()
 
-        print(str_id)
         if not reg_entities[str_id] then
             goto continue
         end
@@ -255,11 +254,11 @@ function module.process(client)
         local cul_pos = table.get_default(data, "standart_fields", "tsf_pos") or tsf:get_pos()
         local last_culling = culling(pid, p_pos, cul_pos)
         local cur_culling = culling(pid, p_pos, e_pos)
-        print(2)
+
         if not (last_culling or cur_culling) then
             goto continue
         end
-        print(1)
+
         local dirty = __get_dirty(entity, data, cur_data, p_pos, e_pos)
         __update_data(data, dirty, cur_data)
         __send_dirty(uid, id, dirty, client)

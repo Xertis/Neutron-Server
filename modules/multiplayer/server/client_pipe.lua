@@ -41,6 +41,8 @@ ClientPipe:add_middleware(function (client)
         return client
     end
 
+    player.inv_is_changed = false
+
     local data = sandbox.get_inventory(player)
     local inv, slot = data.inventory, data.slot
 
