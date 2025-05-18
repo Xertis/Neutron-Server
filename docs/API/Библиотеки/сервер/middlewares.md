@@ -30,7 +30,12 @@ function(packet, client)
 - `true` - продолжить обработку пакета
 - `false/nil` - прекратить обработку пакета
 
-## 3. Пример использования
+## 3. Добавление общего обработчика для всех пакетов
+```lua
+api.middlewares.add_general_middleware(middleware)
+```
+
+## 4. Пример использования
 
 ```lua
 middlewares.add_middleware("ClientMsg", function(packet, client)

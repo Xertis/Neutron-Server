@@ -6,6 +6,7 @@ function switcher.new(func)
 
     self.switchs = {}
     self.func = func
+    self.general_middlewares = {}
 
     return self
 end
@@ -24,9 +25,20 @@ function switcher:add_middleware(val, middleware)
     end
 end
 
+function switcher:add_general_middleware(middleware)
+    table.insert(self.general_middlewares, middleware)
+end
+
 function switcher:switch(key, ...)
     if self.switchs[key] == nil then
         return self.func(...)
+    elseif #self.general_middlewares ~= 0 then
+        for _, middleware in ipairs(self.general_middlewares) do
+            local args = table.deep_copy({...})
+            if not middleware(unpack(args)) then
+                return
+            end
+        end
     end
 
     if self.switchs[key].middlewares then
