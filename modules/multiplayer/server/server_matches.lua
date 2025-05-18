@@ -8,6 +8,7 @@ local timeout_executor = require "lib/private/common/timeout_executor"
 local echo = require "multiplayer/server/server_echo"
 local api_events = require "api/events"
 local api_env = require "api/env"
+local entities_manager = require "lib/private/entities/entities_manager"
 local lib = require "lib/private/min"
 local mfsm = require "lib/public/common/multifsm"
 
@@ -70,6 +71,7 @@ end
 
 
 function matches.actions.Disconnect(client, reason)
+    entities_manager.clear_pid(client.player.pid)
     local buffer = protocol.create_databuffer()
     buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.Disconnect, reason))
     client.network:send(buffer.bytes)
@@ -455,6 +457,8 @@ matches.client_online_handler:add_case(protocol.ClientMsg.Disconnect, (
         local pid = client.player.pid
         local username = client.player.username
 
+        entities_manager.clear_pid(pid)
+
         local buffer = protocol.create_databuffer()
         buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.PlayerListRemove, username, pid))
 
@@ -652,6 +656,17 @@ matches.client_online_handler:add_case(protocol.ClientMsg.PlayerHandSlot, (
         end
 
         sandbox.set_selected_slot(client.player, packet.slot)
+    end
+))
+
+matches.client_online_handler:add_case(protocol.ClientMsg.EntitySpawnTry, (
+    function (packet, client)
+        local name = entities.def_name(packet.entity_def)
+        local conf = entities_manager.get_reg_config(name) or {}
+
+        if conf.spawn_handler then
+            conf.spawn_handler(name, packet.args, client)
+        end
     end
 ))
 
