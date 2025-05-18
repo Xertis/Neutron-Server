@@ -70,7 +70,7 @@ end)
 
 1. **Создание состояния по имени**
 ```lua
-api.console.create_state(name: string) -> State
+api.console.create_state(name: String) -> State
 ```
 
 2. **Установка состояния клиенту**
@@ -82,7 +82,7 @@ api.console.set_state(state: State, client: Client)
 ```lua
 api.console.set_state_handler(
    state: State, 
-   handler: function (message: string, state: State, client: Client)
+   handler: function (message: String, state: State, client: Client)
 )
 ```
 
