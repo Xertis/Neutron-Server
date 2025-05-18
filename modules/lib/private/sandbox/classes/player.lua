@@ -16,6 +16,8 @@ function Player.new(username)
     self.world = nil
     self.is_teleported = false
     self.region_pos = {x = 0, z = 0}
+    self.invid = 0
+    self.inv_is_changed = false
 
     return self
 end
@@ -58,7 +60,8 @@ function Player:to_save()
         username = self.username,
         entity_id = self.entity_id,
         world = self.world,
-        pid = self.pid
+        pid = self.pid,
+        invid = self.invid
     }
 end
 
@@ -67,6 +70,7 @@ function Player:to_load(data)
     self.entity_id = data.entity_id
     self.world = data.world
     self.pid = data.pid
+    self.invid = data.invid
 end
 
 return Player
