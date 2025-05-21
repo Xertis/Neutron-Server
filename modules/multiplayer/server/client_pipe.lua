@@ -3,6 +3,7 @@ local protocol = require "lib/public/protocol"
 local protect = require "lib/private/protect"
 local sandbox = require "lib/private/sandbox/sandbox"
 local entities_manager = require "lib/private/entities/entities_manager"
+local matches = require "multiplayer/server/server_matches"
 
 local ClientPipe = Pipeline.new()
 
@@ -30,6 +31,20 @@ ClientPipe:add_middleware(function(client)
     buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.KeepAlive, math.random(0, 1000)))
     client.network:send(buffer.bytes)
     client.ping.last_upd = cur_time
+    return client
+end)
+
+--Чекаем чанки
+ClientPipe:add_middleware(function(client)
+    if not client.account.is_logged then
+        return client
+    elseif not client.meta.chunks_queue then
+        return client
+    end
+
+    matches.client_online_handler:switch(protocol.ClientMsg.RequestChunks, client.meta.chunks_queue, client)
+    client.meta.chunks_queue = nil
+
     return client
 end)
 

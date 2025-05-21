@@ -327,41 +327,6 @@ matches.fsm:set_default_state("idle")
 
 --- CASES
 
-local function chunk_responce(packet, client, is_timeout)
-
-    local chunk = sandbox.get_chunk({x = packet.x, z = packet.z})
-
-    if not chunk then
-        if not is_timeout then
-            timeout_executor.push(
-                chunk_responce,
-                {packet, client, true},
-                30
-            )
-        end
-
-        return
-    end
-
-    local buffer = protocol.create_databuffer()
-
-    local DATA = {
-        packet.x,
-        packet.z,
-        chunk
-    }
-
-    buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.ChunkData, unpack(DATA)))
-    client.network:send(buffer.bytes)
-
-    return true
-end
-
-
-matches.client_online_handler:add_case(protocol.ClientMsg.RequestChunk, chunk_responce)
-
----------
-
 matches.client_online_handler:add_case(protocol.ClientMsg.PlayerCheats, (
     function (packet, client)
 
@@ -472,9 +437,55 @@ matches.client_online_handler:add_case(protocol.ClientMsg.Disconnect, (
 
 --------
 
+local function chunk_responce(packet, client, is_timeout)
+    local chunk_pos = {x = packet.x, z = packet.z}
+
+    if not client.account.is_logged then
+        local queue = table.set_default(client.meta, "chunks_queue", {})
+        table.merge(queue, {packet.x, packet.z})
+        return
+    end
+
+    local chunk = sandbox.get_chunk(chunk_pos)
+
+    if not chunk then
+        if not is_timeout then
+            timeout_executor.push(
+                chunk_responce,
+                {packet, client, true},
+                30
+            )
+        end
+
+        return
+    end
+
+    local buffer = protocol.create_databuffer()
+
+    local DATA = {
+        packet.x,
+        packet.z,
+        chunk
+    }
+
+    buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.ChunkData, unpack(DATA)))
+    client.network:send(buffer.bytes)
+
+    return true
+end
+
+
+matches.client_online_handler:add_case(protocol.ClientMsg.RequestChunk, chunk_responce)
+
 local function chunks_responce_optimizate(packet, client)
     local chunks_packet = packet.chunks
     local chunks_list = {}
+
+    if not client.account.is_logged then
+        local queue = table.set_default(client.meta, "chunks_queue", {})
+        table.merge(queue, chunks_packet)
+        return
+    end
 
     for indx=1, #chunks_packet, 2 do
         local x, z = chunks_packet[indx], chunks_packet[indx+1]
