@@ -95,7 +95,7 @@ function module.set_state_handler(state, handler)
     return chat.set_state_handler(state, handler)
 end
 
-function module.set_command(command, permissions, handler)
+function module.set_command(command, permissions, handler, is_no_logged)
     local scheme = __parse_scheme(command)
     local args_definitions = table.sub(scheme, 2, #scheme - 1)
     args_definitions = table.map(args_definitions, function(_, val)
@@ -164,7 +164,7 @@ function module.set_command(command, permissions, handler)
         end
 
         handler(parsed_args, client)
-    end)
+    end, is_no_logged)
 end
 
 

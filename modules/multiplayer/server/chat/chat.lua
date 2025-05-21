@@ -4,7 +4,7 @@ local server_echo = require "multiplayer/server/server_echo"
 local states = require "multiplayer/server/chat/chat_states"
 local module = {}
 
-local no_logged_commands = {"register", "login"}
+local no_logged_commands = {}
 local handlers = {}
 
 function module.echo(message)
@@ -50,9 +50,13 @@ function module.command(message, client)
     end
 end
 
-function module.add_command(schem, handler)
+function module.add_command(schem, handler, is_no_logged)
     if handlers[schem[1]] then
         return false
+    end
+
+    if is_no_logged then
+        table.insert(no_logged_commands, schem[1])
     end
 
     handlers[schem[1]] = {handler = handler, schem = schem}

@@ -43,7 +43,7 @@ console.set_command("register: password=<string>, rpassword=<string> -> Registra
 
     account.is_logged = true
     console.tell(string.format("%s You have successfully registered!", console.colors.yellow), client)
-end)
+end, true)
 
 console.set_command("login: password=<string> -> Logging", {}, function (args, client)
     local account = client.account
@@ -64,7 +64,7 @@ console.set_command("login: password=<string> -> Logging", {}, function (args, c
     end
 
     console.tell(string.format("%s You have successfully logged in!", console.colors.yellow), client)
-end)
+end, true)
 
 console.set_command("kick: username=<string>, reason=[string] -> Kicks the user", {server={"kick"}}, function (args, client)
     local account = client.account
