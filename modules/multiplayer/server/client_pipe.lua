@@ -95,6 +95,10 @@ end)
 
 --Обновляем мобов
 ClientPipe:add_middleware(function(client)
+    if not client.account.is_logged then
+        return client
+    end
+
     entities_manager.process(client)
 
     return client
