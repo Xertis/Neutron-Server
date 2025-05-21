@@ -17,3 +17,28 @@ api.accounts.get_client(account: Account) -> Client
 api.accounts.kick(account: Account)
 ```
    - Кикает аккаунт **account** с сервера
+
+4. **Получение роли:**
+```lua
+api.accounts.roles.get(account: Account) -> table
+```
+   - Возвращает конфиг роли по аккаунту
+
+5. **Получение правил аккаунта:**
+```lua
+api.accounts.roles.get_rules(account: Account, [опционально] category: boolean) -> table
+```
+   - Возвращает таблицу правил роли по аккаунту
+   - Category - категория тех правил, которые надо вернуть (false -> game_rules / true  -> server_rules)
+
+6. **Сравнение приоритета ролей:**
+```lua
+api.accounts.roles.is_higher(role1: table, role2: table) -> boolean
+```
+   - Возвращает `true` если первая роль имеет больший приоритет, чем вторая
+
+7. **Проверка на существование роли:**
+```lua
+api.accounts.roles.exists(role: table) -> boolean
+```
+   - Возвращает `true` если роль существует

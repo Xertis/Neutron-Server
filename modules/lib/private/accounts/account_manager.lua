@@ -81,14 +81,14 @@ function module.get_client(account)
     end
 end
 
-function module.get_rules(account, root)
-    if not root then
-        root = "game_rules"
-    elseif root == true then
-        root = "server_rules"
+function module.get_rules(account, category)
+    if not category then
+        category = "game_rules"
+    elseif category == true then
+        category = "server_rules"
     end
 
-    return CONFIG.roles[account.role][root]
+    return CONFIG.roles[account.role][category]
 end
 
 return module
