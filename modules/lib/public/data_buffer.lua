@@ -281,7 +281,7 @@ end
 
 function data_buffer:get_string()
 	local str = bit_converter.bytes_to_string(self.bytes, self.pos)
-	self.pos = self.pos + 2 + #str
+	self.pos = self.pos + #str + 1
 	return str
 end
 

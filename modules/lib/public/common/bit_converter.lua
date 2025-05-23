@@ -127,31 +127,23 @@ function bit_converter.bytes_to_float64(bytes, order)
 end
 
 function bit_converter.bytes_to_string(bytes, pos)
-	local len = byteutil.unpack("<H",{ bytes[pos], bytes[pos+1] })
+  local str_bytes = {}
 
-	local str = ""
-
-	for i = pos+2, len+pos+1 do
-		str = str..string.char(bytes[i])
+	for i = pos, math.huge do
+    local byte = bytes[i]
+		if byte ~= 255 then
+      table.insert(str_bytes, byte)
+    else
+      break
+    end
 	end
 
-	return str
+	return utf8.tostring(str_bytes)
 end
 
 function bit_converter.string_to_bytes(str)
-	local bytes = { }
-
-	local len = string.len(str)
-
-	local lenBytes = byteutil.tpack("<H", len)
-
-	for i = 1, #lenBytes do
-		bytes[i] = lenBytes[i]
-	end
-
-	for i = 1, len do
-		bytes[#bytes + 1] = string.byte(string.sub(str, i, i))
-	end
+	local bytes = utf8.tobytes(str, true)
+  table.insert(bytes, 255)
 
 	return bytes
 end
