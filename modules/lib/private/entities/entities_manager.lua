@@ -12,59 +12,6 @@ local culling = function (pid, pos, target_pos)
     return vec3.culling(player.get_dir(pid), pos, target_pos, 120)
 end
 
-local example_entities_data = {
-    ["1"] = {
-        ["pid"] = {
-            custom_fields = {
-                hp = 8
-            },
-
-            standart_fields = {
-                tsf = {
-                    pos = 20
-                }
-            },
-            textures = {
-                key = "abc"
-            },
-            components = {
-                key = false -- И провайдер
-            }
-        }
-    }
-}
-
-local example_config = {
-    custom_fields = {
-        hp = {
-            maximum_deviation = 1, -- Максимальное отклонение в данных
-            evaluate_deviation = function (dist, cur_val, client_val)
-
-                -- К возвращаемому значению применяется math.abs
-                return cur_val - client_val-- Возвращает значение ошибки, если оно выше maximum_deviation, то данные отправляются
-            end,
-            provider = function (uid, field_name) -- Должно быть обязательно, возвращает значение кастомного поля
-                return 0
-            end
-        } -- Если поле не указано, отслеживаться оно не будет
-    },
-    standart_fields = {
-        tsf_rot = {...}, -- как в hp, но без provider
-        tsf_pos = {...}, -- как в hp, но без provider
-        tsf_size = {...}, -- как в hp, но без provider
-        body_size = {...}, -- как в hp, но без provider
-    },
-    textures = {
-        key = "abc"
-    },
-    components = {
-        key = false -- Тут ещё провайдер
-    },
-    models = {
-
-    }
-}
-
 function module.register(entity_name, config, handler)
     reg_entities[entity_name] = {
         config = config,

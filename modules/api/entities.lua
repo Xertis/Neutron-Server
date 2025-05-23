@@ -6,19 +6,4 @@ function module.register(entity_name, config, handler)
     entities_manager.register(entity_name, config, handler)
 end
 
-function module.despawn(uid)
-    entities_manager.despawn(uid)
-
-    local entity = entities.get(uid)
-    if entity then
-        entity:despawn()
-    else
-        error(string.format(
-            "The entity with uid: %s does not exist",
-            uid
-            )
-        )
-    end
-end
-
 return module
