@@ -3,6 +3,7 @@ local protocol = require "lib/public/protocol"
 local protect = require "lib/private/protect"
 local sandbox = require "lib/private/sandbox/sandbox"
 local entities_manager = require "lib/private/entities/entities_manager"
+local weather_manager = require "lib/private/weather/weather_manager"
 local matches = require "multiplayer/server/server_matches"
 
 local ClientPipe = Pipeline.new()
@@ -101,6 +102,49 @@ ClientPipe:add_middleware(function(client)
 
     entities_manager.process(client)
 
+    return client
+end)
+
+--Обновляем погоду
+ClientPipe:add_middleware(function(client)
+    if not client.account.is_logged then
+        return client
+    end
+
+    local cplayer = client.player
+    local pos = {player.get_pos(cplayer.pid)}
+
+    local weather = weather_manager.get_by_pos(pos[1], pos[3])
+    local DATA = nil
+
+    if not weather then
+        if cplayer.current_wid == nil then
+            return
+        end
+
+        DATA = {{}, 5, "clear"}
+        cplayer.current_wid = nil
+    end
+
+
+    if weather then
+        if cplayer.current_wid == weather.wid then
+            return
+        end
+
+        DATA = {
+            weather.weather,
+            weather.time_transition,
+            weather.name
+        }
+
+        cplayer.current_wid = weather.wid
+    end
+
+
+    local buffer = protocol.create_databuffer()
+    buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.WeatherChanged, unpack(DATA)))
+    client.network:send(buffer.bytes)
     return client
 end)
 

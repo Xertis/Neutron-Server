@@ -39,12 +39,15 @@ local metadata = require "server:lib/private/files/metadata"
 local world = lib.world
 
 _G["/$p"] = table.copy(package.loaded)
+local events_handlers = table.copy(events.handlers)
 
 require "server:init/engine_patcher"
 
 IS_RUNNING = true
 world.open_main()
 logger.log("world loop is started")
+
+events.handlers = events_handlers
 
 local save_interval = CONFIG.server.auto_save_interval * 60
 local last_time_save = 0
@@ -66,6 +69,7 @@ while IS_RUNNING do
     if ctime % save_interval == 0 and ctime - last_time_save > 1 then
         logger.log("Saving world...")
         last_time_save = ctime
+        events.emit("server:save")
         metadata.save()
         app.save_world()
     end

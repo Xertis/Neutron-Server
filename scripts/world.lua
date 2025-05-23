@@ -28,6 +28,9 @@ local function upd(blockid, x, y, z, playerid)
         playerid
     }
 
+    local buffer = protocol.create_databuffer()
+    buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.BlockChanged, unpack(data)))
+
     server_echo.put_event(
         function (client)
             if client.active ~= true then
@@ -45,13 +48,10 @@ local function upd(blockid, x, y, z, playerid)
                 return
             end
 
-            local buffer = protocol.create_databuffer()
-            buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.BlockChanged, unpack(data)))
             client.network:send(buffer.bytes)
         end
     )
 end
-
 
 function on_block_placed( ... )
     upd(...)

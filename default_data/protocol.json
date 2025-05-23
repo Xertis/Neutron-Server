@@ -57,6 +57,7 @@
         ["PackEnv", "pack:string", "env:string", "key:string", "value:any"],
         ["EntityUpdate", "uid:uint32", "entity_def:uint16", "dirty:bson"],
         ["EntityDespawn", "uid:uint32"],
+        ["WeatherChanged", "weather:bson", "time:uint16", "name:string"],
         ["Disconnect", "reason:string"]
     ],
     "states": ["Status", "Login", "Active"],

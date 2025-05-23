@@ -9,6 +9,7 @@ local env = start_require("server:api/env")
 local middlewares = require "api/middlewares"
 local entities = require "api/entities"
 local protocol = require "api/protocol"
+local weather = require "api/weather"
 
 local api = {
     events = events,
@@ -21,7 +22,8 @@ local api = {
     env = env,
     middlewares = middlewares,
     protocol = protocol,
-    entities = entities
+    entities = entities,
+    weather = weather
 }
 
 return {server = api}
