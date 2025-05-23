@@ -40,7 +40,6 @@ local world = lib.world
 
 _G["/$p"] = table.copy(package.loaded)
 
-logger.log("Patching the engine before start")
 require "server:init/engine_patcher"
 
 IS_RUNNING = true
