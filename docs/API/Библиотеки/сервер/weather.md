@@ -205,7 +205,7 @@ end
 
 local rain = weather.create({
     type = "heightmap",
-    heightmap_generator = gen end,
+    heightmap_generator = gen,
     range = {0.2, 0.8}
 }, {
     weather = {
