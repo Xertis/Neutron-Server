@@ -181,7 +181,7 @@ rain:remove()
 ```
 
 ```lua
--- Создание погодного эффекта типа "heightmap"
+-- Создание дождя типа "heightmap"
 
 function gen(x, y, SEED)
     local w, h = 32, 32
