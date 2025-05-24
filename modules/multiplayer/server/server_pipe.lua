@@ -60,7 +60,6 @@ ServerPipe:add_middleware(function(client)
             matches.fsm:handle_event(client, packet)
         elseif client.active == true then
             matches.client_online_handler:switch(packet.packet_type, packet, client)
-            ClientPipe:process(client)
         end
     end)
 
@@ -71,6 +70,8 @@ ServerPipe:add_middleware(function(client)
     if not client.active then
         return nil
     end
+
+    ClientPipe:process(client)
     while not List.is_empty(client.response_queue) do
         local packet = List.popleft(client.response_queue)
         local success, err = pcall(function()

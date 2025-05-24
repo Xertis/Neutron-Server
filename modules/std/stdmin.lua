@@ -285,6 +285,21 @@ function table.has(t, x)
     return false
 end
 
+function table.to_serializable(t)
+    local serializable = {}
+
+    for k, v in pairs(t) do
+        local item_type = type(v)
+        if item_type == "table" then
+            serializable[k] = table.to_serializable(v)
+        elseif table.has({"number", "string", "boolean"}, item_type) then
+            serializable[k] = v
+        end
+    end
+
+    return serializable
+end
+
 function table.easy_concat(tbl)
     local output = ""
     for i, value in pairs(tbl) do
@@ -301,20 +316,30 @@ function table.equals(tbl1, tbl2)
 end
 
 function table.deep_equals(tbl1, tbl2)
-    for key, item in pairs(tbl1) do
-        local itype = type(item)
-        if itype ~= type(tbl2) then
-            return false
-        end
+    if type(tbl1) ~= type(tbl2) then
+        return false
+    end
 
-        if item ~= tbl2[key] and itype ~= "table" then
-            return false
-        end
+    if type(tbl1) ~= "table" then
+        return tbl1 == tbl2
+    end
 
-        if itype == "table" then
-            if not table.deep_equals(item, tbl2[key]) then
-                return false
-            end
+    if tbl1 == tbl2 then
+        return true
+    end
+
+    local count1 = 0
+    for _ in pairs(tbl1) do count1 = count1 + 1 end
+    local count2 = 0
+    for _ in pairs(tbl2) do count2 = count2 + 1 end
+    if count1 ~= count2 then
+        return false
+    end
+
+    for key, value1 in pairs(tbl1) do
+        local value2 = tbl2[key]
+        if value2 == nil or not table.deep_equals(value1, value2) then
+            return false
         end
     end
 

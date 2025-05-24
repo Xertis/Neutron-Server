@@ -30,7 +30,7 @@ if __vc_coroutines ~= nil then
         local co = __vc_coroutines[id]
         if not co then return false end
 
-        local success, err = pcall(coroutine.resume, co)
+        local success, err = coroutine.resume(co)
         if not success then
             debug.error(err)
             logger.log("Engine coroutine error: " .. tostring(err), 'P')

@@ -85,35 +85,47 @@ local DATA_ENCODE = {
         buffer:put_uint24(bit.bor(bit.lshift(y_low, 15), x))
         buffer:put_uint24(bit.bor(bit.lshift(z, 9), y_high))
     end,
-    ["block_pos"] = function (buffer, value)
-
-        local x, y, z = unpack(value)
-
-        x = (x - math.floor(x / 32) * 32)
-        z = (z - math.floor(z / 32) * 32)
-
-        buffer:put_uint24(bit.bor(
-            bit.lshift(x, 19),
-            bit.lshift(y, 11),
-            bit.lshift(z, 6)
-        ))
-    end,
     ["bson"] = function (buffer, value)
         bson.encode(buffer, value)
     end,
     ["int8"] = function(buffer, value)
+        if value > MAX_INT8 or value < MIN_INT8 then
+            logger.log(string.format("Out of range for int8: %s", value), 'E', true)
+            value = math.clamp(value, MIN_INT8, MAX_INT8)
+        end
+
         buffer:put_byte(value + 127)
     end,
     ["uint8"] = function(buffer, value)
+        if value > MAX_BYTE or value < MIN_BYTE then
+            logger.log(string.format("Out of range for uint8: %s", value), 'E', true)
+            value = math.clamp(value, MIN_BYTE, MAX_BYTE)
+        end
+
         buffer:put_byte(value)
     end,
     ["int16"] = function(buffer, value)
+        if value > MAX_INT16 or value < MIN_INT16 then
+            logger.log(string.format("Out of range for int16: %s", value), 'E', true)
+            value = math.clamp(value, MIN_INT16, MAX_INT16)
+        end
+
         buffer:put_sint16(value)
     end,
     ["uint16"] = function(buffer, value)
+        if value > MAX_UINT16 or value < MIN_UINT16 then
+            logger.log(string.format("Out of range for uint16: %s", value), 'E', true)
+            value = math.clamp(value, MIN_UINT16, MAX_UINT16)
+        end
+
         buffer:put_uint16(value)
     end,
     ["int32"] = function(buffer, value)
+        if value > MAX_INT32 or value < MIN_INT32 then
+            logger.log(string.format("Out of range for int32: %s", value), 'E', true)
+            value = math.clamp(value, MIN_INT32, MAX_INT32)
+        end
+
         buffer:put_sint32(value)
     end,
     ["degree"] = function(buffer, value)
@@ -124,9 +136,19 @@ local DATA_ENCODE = {
         buffer:put_uint24(math.floor(normalized * 16777215 + 0.5))
     end,
     ["uint32"] = function(buffer, value)
+        if value > MAX_UINT32 or value < MIN_UINT32 then
+            logger.log(string.format("Out of range for uint32: %s", value), 'E', true)
+            value = math.clamp(value, MIN_UINT32, MAX_UINT32)
+        end
+
         buffer:put_uint32(value)
     end,
     ["int64"] = function(buffer, value)
+        if value > MAX_INT64 or value < MIN_INT64 then
+            logger.log(string.format("Out of range for int32: %s", value), 'E', true)
+            value = math.clamp(value, MIN_INT64, MAX_INT64)
+        end
+
         buffer:put_int64(value)
     end,
     ["f32"] = function(buffer, value)
@@ -190,15 +212,6 @@ local DATA_DECODE = {
         local z = bit.rshift(i2, 9)
 
         return {x = x / 1000, y = y / 1000, z = z / 1000}
-    end,
-    ["block_pos"] = function (buffer)
-        local pos = buffer:get_uint24()
-
-        local x = bit.rshift(bit.band(pos, 0xF80000), 19)
-        local y = bit.rshift(bit.band(pos, 0x07F800), 11)
-        local z = bit.rshift(bit.band(pos, 0x0007C0), 6)
-
-        return {x = x, y = y, z = z}
     end,
     ["bson"] = function (buffer)
         return bson.decode(buffer)

@@ -47,7 +47,7 @@ IS_RUNNING = true
 world.open_main()
 logger.log("world loop is started")
 
-events.handlers = events_handlers
+events.handlers["server:save"] = events_handlers["server:save"]
 
 local save_interval = CONFIG.server.auto_save_interval * 60
 local last_time_save = 0

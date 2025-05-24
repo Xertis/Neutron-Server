@@ -1,6 +1,6 @@
 # Документация модуля погоды
 
-Для работы с погодными эффектами предоставляется библиотека **weather**.
+Для работы с погодными эффектами предоставляется библиотека **weather**, поддерживающая два типа погодных эффектов: "point" и "heightmap".
 
 ## Создание и управление погодными эффектами
 
@@ -8,33 +8,39 @@
 
 1. **Создание погодного эффекта**
 ```lua
-weather.create(
-    x: number, 
-    z: number, 
-    radius: number, 
-    duration: number, 
-    on_finished: function, 
-    conf: table
-) -> WeatherObj
+weather.create(region: table, conf: table) -> WeatherObj
 ```
 Параметры:
-- `x`, `z` - координаты центра погодного эффекта
-- `radius` - радиус действия эффекта в блоках
-- `duration` - продолжительность в секундах (-1 для бесконечного эффекта)
-- `on_finished` - функция обратного вызова при завершении эффекта (может быть nil)
-- `conf` - таблица с настройками погоды
+- `region` - таблица, описывающая регион действия эффекта:
+  - Для типа "point":
+    - `type = "point"`
+    - `x: number`, `z: number` - координаты центра эффекта
+    - `radius: number` - радиус действия в блоках
+    - `duration: number` - продолжительность в секундах (-1 для бесконечного эффекта)
+    - `on_finished: function` - функция обратного вызова при завершении эффекта (может быть nil)
+  - Для типа "heightmap":
+    - `type = "heightmap"`
+    - `heightmap_generator: function (x, z, SEED) -> HeightMap` - функция генерации карты высот
+    - `range: table` - диапазон значений высот `{min, max}`
+- `conf` - таблица с настройками погоды:
+  - `weather: table` - настройки погодного эффекта
+  - `name: string` - имя эффекта (опционально)
+  - `time: number` - время перехода между состояниями
+
+>[!IMPORTANT]
+> В функцию `heightmap_generator` передаётся специальный сид погоды, который обновляется на основе текущего игрового времени, обеспечивая изменчивость погодных эффектов
 
 2. **Получение погоды по ID**
 ```lua
 weather.get(wid: number) -> WeatherObj | nil
 ```
-Возвращает объект погоды или nil, если эффект не найден
+Возвращает объект погоды или nil, если эффект не найден.
 
 3. **Получение погоды по позиции**
 ```lua
-weather.get_by_pos(x: number, z: number) -> table | nil
+weather.get_by_pos(x: number, z: number) -> WeatherObj | nil
 ```
-Возвращает сырые данные о погоде в указанных координатах
+Возвращает объект погоды на указанных координатах или nil.
 
 ### Конфигурация погоды (параметр `conf`)
 
@@ -65,7 +71,7 @@ weather.get_by_pos(x: number, z: number) -> table | nil
         clouds = 0
     },
     name = "rain",
-    time = 5  -- время перехода между состояниями
+    time = 5
 }
 ```
 
@@ -80,64 +86,147 @@ weather.get_by_pos(x: number, z: number) -> table | nil
 weather_obj:remove()
 ```
 
-2. **Перемещение центра эффекта**
+2. **Перемещение центра эффекта (только для типа "point")**
 ```lua
 weather_obj:move(x: number, z: number)
 ```
 
-3. **Получение конфигурации**
-```lua
-weather_obj:get_config() -> table
-```
-Возвращает таблицу с текущими настройками погоды
-
-4. **Получение ID эффекта**
-```lua
-weather_obj:get_wid() -> number
-```
-
-5. **Изменение радиуса действия**
+3. **Изменение радиуса действия (только для типа "point")**
 ```lua
 weather_obj:set_radius(radius: number)
 ```
 
-6. **Изменение продолжительности**
+4. **Изменение продолжительности (только для типа "point")**
 ```lua
 weather_obj:set_duration(duration: number)
 ```
 
-7. **Проверка активности**
+5. **Изменение обработчика окончания погоды (только для типа "point")**
+```lua
+weather_obj:set_finish_handler(handler: function)
+```
+
+6. **Установка генератора карты высот (только для типа "heightmap")**
+```lua
+weather_obj:set_heightmap_generator(heightmap_generator: function)
+```
+
+7. **Установка диапазона высот (только для типа "heightmap")**
+```lua
+weather_obj:set_height_range(min: number, max: number)
+```
+
+8. **Получение конфигурации**
+```lua
+weather_obj:get_config() -> table
+```
+Возвращает таблицу с текущими настройками погоды.
+
+9. **Получение ID эффекта**
+```lua
+weather_obj:get_wid() -> number
+```
+
+10. **Получение типа эффекта**
+```lua
+weather_obj:get_type() -> string
+```
+Возвращает тип эффекта ("point" или "heightmap").
+
+11. **Проверка активности**
 ```lua
 weather_obj:is_active() -> boolean
 ```
-Возвращает true, если эффект все еще активен
+Возвращает true, если эффект активен.
 
 ### Пример использования
 
 ```lua
--- Создание дождя
-local rain = weather.create(0, 0, 25, -1, nil, {
+-- Создание дождя типа "point"
+local rain = weather.create({
+    type = "point",
+    x = 0,
+    z = 0,
+    radius = 25,
+    duration = -1,
+    on_finished = nil
+}, {
     weather = {
-        fall = { ... },
-        fog = { ... }
+        fall = {
+            texture = "misc/rain",
+            max_intensity = 0.5,
+            vspeed = 2,
+            noise = "ambient/rain",
+            min_opacity = 0.8
+        },
+        fog_curve = 0.5,
+        fog_opacity = 0.5,
+        fog_dencity = 1.7
     },
     name = "rain",
     time = 5
 })
 
 if rain:is_active() then
-    -- Перемещаем дождь
+    print("Тип эффекта: " .. rain:get_type())
     rain:move(10, 15)
-    
-    -- Увеличиваем радиус
     rain:set_radius(30)
-    
-    -- Получаем конфигурацию
-    local config = rain:get_config()
-    config.fog_opacity = 0.7  -- Меняем параметры тумана
-    
-    -- Устанавливаем время действия
     rain:set_duration(60)
+    
+    local config = rain:get_config()
+    config.fog_opacity = 0.7
+end
+
+rain:remove()
+```
+
+```lua
+-- Создание погодного эффекта типа "heightmap"
+
+function gen(x, y, SEED)
+    local w, h = 32, 32
+    local s = 0.2
+
+    local umap = Heightmap(w, h)
+    local vmap = Heightmap(w, h)
+    umap.noiseSeed = SEED
+    vmap.noiseSeed = SEED
+    vmap:noise({x+521, y+70}, 0.1*s, 3, 25.8)
+    vmap:noise({x+95, y+246}, 0.15*s, 3, 25.8)
+
+    local map = Heightmap(w, h)
+    map.noiseSeed = SEED
+    map:noise({x, y}, 0.8*s, 4, 0.02)
+    map:cellnoise({x, y}, 0.1*s, 3, 0.3, umap, vmap)
+    map:add(0.7)
+
+    return map
+end
+
+local rain = weather.create({
+    type = "heightmap",
+    heightmap_generator = gen end,
+    range = {0.2, 0.8}
+}, {
+    weather = {
+        fall = {
+            texture = "misc/rain",
+            max_intensity = 0.5,
+            vspeed = 2,
+            noise = "ambient/rain",
+            min_opacity = 0.8
+        },
+        fog_curve = 0.5,
+        fog_opacity = 0.5,
+        fog_dencity = 1.7
+    },
+    name = "rain",
+    time = 5
+})
+
+if rain:is_active() then
+    rain:set_height_range(0.3, 0.9)
+    rain:set_heightmap_generator(gen)
 end
 
 rain:remove()

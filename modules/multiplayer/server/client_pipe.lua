@@ -118,29 +118,32 @@ ClientPipe:add_middleware(function(client)
     local DATA = nil
 
     if not weather then
-        if cplayer.current_wid == nil then
-            return
+        if cplayer.current_weather == nil then
+            return client
         end
 
-        DATA = {{}, 5, "clear"}
-        cplayer.current_wid = nil
+        DATA = {{}, 1, "clear"}
+        cplayer.current_weather = nil
     end
 
-
     if weather then
-        if cplayer.current_wid == weather.wid then
-            return
+        if table.deep_equals(cplayer.current_weather or {}, weather.weather) then
+            return client
+        end
+
+        local packet_time = weather.time_transition
+        if weather.time_start + weather.time_transition < time.uptime() then
+            packet_time = 1
         end
 
         DATA = {
             weather.weather,
-            weather.time_transition,
+            packet_time,
             weather.name
         }
 
-        cplayer.current_wid = weather.wid
+        cplayer.current_weather = weather.weather
     end
-
 
     local buffer = protocol.create_databuffer()
     buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.WeatherChanged, unpack(DATA)))
