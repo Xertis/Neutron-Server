@@ -173,11 +173,8 @@ function module.process(client)
     local c_player = client.player
     local pid = c_player.pid
     local p_pos = {player.get_pos(pid)}
-    local chunk_distance = CONFIG.server.chunks_loading_distance
 
-    local render_distance = (chunk_distance + 5) * 16
-
-    for _, uid in pairs(entities.get_all_in_radius(p_pos, render_distance)) do
+    for _, uid in pairs(entities.get_all_in_radius(p_pos, RENDER_DISTANCE)) do
         local entity = entities.get(uid)
         local tsf = entity.transform
 

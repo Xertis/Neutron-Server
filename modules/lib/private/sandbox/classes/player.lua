@@ -18,7 +18,7 @@ function Player.new(username)
     self.region_pos = {x = 0, z = 0}
     self.invid = 0
     self.inv_is_changed = false
-    self.current_weather = nil
+    self.temp = {}
 
     return self
 end

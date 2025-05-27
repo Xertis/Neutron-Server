@@ -5,6 +5,7 @@ CONFIG_PATH = "config:server_config.json"
 CONFIG = {} --Инициализируется в std
 
 --Песочница
+RENDER_DISTANCE = 0
 CODES = {
     codes_path = "server:default_data/codes.json"
 }

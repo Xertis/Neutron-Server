@@ -307,6 +307,7 @@ matches.fsm:add_state("joining", {
         client.network:send(buffer.bytes)
 
         ---
+        events.emit("server:client_connected", client)
 
         if not CONFIG.server.password_auth then
             client.account.is_logged = true
@@ -426,6 +427,7 @@ matches.client_online_handler:add_case(protocol.ClientMsg.Disconnect, (
 
         local buffer = protocol.create_databuffer()
         buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.PlayerListRemove, username, pid))
+        events.emit("server:client_disconnected", client)
 
         echo.put_event(
             function (c)

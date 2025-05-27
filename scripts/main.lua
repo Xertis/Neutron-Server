@@ -48,6 +48,8 @@ world.open_main()
 logger.log("world loop is started")
 
 events.handlers["server:save"] = events_handlers["server:save"]
+events.handlers["server:client_connected"] = events_handlers["server:client_connected"]
+events.handlers["server:client_disconnected"] = events_handlers["server:client_disconnected"]
 
 local save_interval = CONFIG.server.auto_save_interval * 60
 local last_time_save = 0
@@ -57,6 +59,8 @@ metadata.load()
 
 server = server.new(CONFIG.server.port)
 server:start()
+
+
 
 logger.log("server is started")
 

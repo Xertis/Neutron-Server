@@ -312,7 +312,17 @@ function table.easy_concat(tbl)
 end
 
 function table.equals(tbl1, tbl2)
-    return table.easy_concat(tbl1) == table.easy_concat(tbl2)
+    if table.count_pairs(tbl1) ~= table.count_pairs(tbl2) then
+        return false
+    end
+
+    for key, value in pairs(tbl1) do
+        if value ~= tbl2[key] then
+            return false
+        end
+    end
+
+    return true
 end
 
 function table.deep_equals(tbl1, tbl2)
@@ -346,6 +356,33 @@ function table.deep_equals(tbl1, tbl2)
     return true
 end
 
+function table.diff(tbl1, tbl2)
+    local set1 = {}
+    local set2 = {}
+    for _, v in ipairs(tbl1) do
+        set1[v] = true
+    end
+    for _, v in ipairs(tbl2) do
+        set2[v] = true
+    end
+
+    local diff_tbl1 = {}
+    for _, v in ipairs(tbl1) do
+        if not set2[v] then
+            table.insert(diff_tbl1, v)
+        end
+    end
+
+    local diff_tbl2 = {}
+    for _, v in ipairs(tbl2) do
+        if not set1[v] then
+            table.insert(diff_tbl2, v)
+        end
+    end
+
+    return diff_tbl1, diff_tbl2
+end
+
 --- MATH
 
 function math.euclidian3D(x1, y1, z1, x2, y2, z2)
@@ -367,6 +404,14 @@ function functions.watch_dog(func) -- Считает и выводит коли�
         calls = calls + 1
         logger.log(string.format("%s calling from %s", calls, debug.getinfo(2).source), "T")
         return func(...)
+    end
+end
+
+function functions.args_check(name, args)
+    for key, v in pairs(args) do
+        if not v then
+            error(string.format("type error: expected %s, got none in function '%s'", key, name))
+        end
     end
 end
 
@@ -629,4 +674,8 @@ function start_require(path)
     end
 
     return _G["/$p"][path]
+end
+
+function tohex(num)
+    return string.format("%x", num)
 end

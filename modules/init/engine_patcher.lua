@@ -22,6 +22,7 @@ for i = 1, math.huge do
 
     if name == "__vc_coroutines" then
         __vc_coroutines = value
+        break
     end
 end
 

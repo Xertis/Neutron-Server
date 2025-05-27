@@ -4,6 +4,7 @@ local protect = require "lib/private/protect"
 local sandbox = require "lib/private/sandbox/sandbox"
 local entities_manager = require "lib/private/entities/entities_manager"
 local weather_manager = require "lib/private/weather/weather_manager"
+local particles_manager = require "lib/private/particles/particles_manager"
 local matches = require "multiplayer/server/server_matches"
 
 local ClientPipe = Pipeline.new()
@@ -112,22 +113,23 @@ ClientPipe:add_middleware(function(client)
     end
 
     local cplayer = client.player
+    local cur_weather = table.set_default(cplayer.temp, "current-weather", {})
     local pos = {player.get_pos(cplayer.pid)}
 
     local weather = weather_manager.get_by_pos(pos[1], pos[3])
     local DATA = nil
 
     if not weather then
-        if cplayer.current_weather == nil then
+        if cur_weather == nil then
             return client
         end
 
         DATA = {{}, 1, "clear"}
-        cplayer.current_weather = nil
+        cur_weather = nil
     end
 
     if weather then
-        if table.deep_equals(cplayer.current_weather or {}, weather.weather) then
+        if table.deep_equals(cur_weather or {}, weather.weather) then
             return client
         end
 
@@ -142,12 +144,98 @@ ClientPipe:add_middleware(function(client)
             weather.name
         }
 
-        cplayer.current_weather = weather.weather
+        cur_weather = weather.weather
     end
 
     local buffer = protocol.create_databuffer()
     buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.WeatherChanged, unpack(DATA)))
     client.network:send(buffer.bytes)
+    return client
+end)
+
+-- Обновляем партиклы
+ClientPipe:add_middleware(function(client)
+    if not client.account.is_logged then
+        return client
+    end
+
+    local cplayer = client.player
+    local pos = {player.get_pos(cplayer.pid)}
+
+    local cur_particles = table.set_default(cplayer.temp, "current-particles", {})
+    local particles = particles_manager.get_in_radius(pos[1], pos[3], RENDER_DISTANCE)
+    local particles_with_pid = {}
+    local dirty_particles = {}
+    local changed_origin_particles = {}
+
+    local function compare_origins(origin1, origin2)
+        if type(origin1) == "table" and type(origin2) == "table" then
+            return table.equals(origin1, origin2)
+        end
+        return origin1 == origin2
+    end
+
+    for _, particle in ipairs(particles) do
+        local pid = particle.pid
+        local current_particle = nil
+        for _, cp in ipairs(cur_particles) do
+            if cp.pid == pid then
+                current_particle = cp
+                break
+            end
+        end
+
+        if not current_particle then
+            particles_with_pid[pid] = particle
+            table.insert(cur_particles, {pid = pid, origin = particle.origin})
+            table.insert(dirty_particles, pid)
+        elseif not compare_origins(current_particle.origin, particle.origin) then
+            particles_with_pid[pid] = particle
+            current_particle.origin = particle.origin
+            table.insert(changed_origin_particles, pid)
+        end
+    end
+
+    local to_stop = {}
+    for _, cp in ipairs(cur_particles) do
+        local found = false
+        for _, particle in ipairs(particles) do
+            if particle.pid == cp.pid then
+                found = true
+                break
+            end
+        end
+        if not found then
+            table.insert(to_stop, cp.pid)
+        end
+    end
+
+    for _, pid in ipairs(to_stop) do
+        for i, cp in ipairs(cur_particles) do
+            if cp.pid == pid then
+                table.remove(cur_particles, i)
+                break
+            end
+        end
+        local buffer = protocol.create_databuffer()
+        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.ParticleStop, pid))
+        client.network:send(buffer.bytes)
+    end
+
+    for _, pid in ipairs(dirty_particles) do
+        local particle = particles_with_pid[pid]
+        local buffer = protocol.create_databuffer()
+        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.ParticleEmit, particle))
+        client.network:send(buffer.bytes)
+    end
+
+    for _, pid in ipairs(changed_origin_particles) do
+        local particle = particles_with_pid[pid]
+        local buffer = protocol.create_databuffer()
+        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.ParticleOrigin, particle))
+        client.network:send(buffer.bytes)
+    end
+
     return client
 end)
 

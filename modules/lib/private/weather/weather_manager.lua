@@ -8,8 +8,8 @@ local module = {}
 
 local WEATHERS = {}
 local MAX_WID = 1
-local READ_PATH = string.format("user:worlds/%s/weather.bson", CONFIG.game.main_world)
-local WRITE_PATH = "world:weather.bson"
+local READ_PATH = string.format("user:worlds/%s/server_resources/weather.bson", CONFIG.game.main_world)
+local WRITE_PATH = "world:server_resources/weather.bson"
 
 local WEATHER_SEED_START = nil
 local WEATHER_SEED_END = nil
@@ -51,12 +51,8 @@ local function get_weather_map(x, z, gen_map)
     return start_map
 end
 
-local function tohex(num)
-    return string.format("%x", num)
-end
-
 events.on("server:save", function ()
-    file.write_bytes(
+    file.mktree(
         WRITE_PATH,
         bson.serialize({
             max_wid = MAX_WID,

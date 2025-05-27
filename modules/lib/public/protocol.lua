@@ -278,6 +278,93 @@ local DATA_DECODE = {
     end
 }
 
+STATIC_ENCODE = {
+    ["$particle"] = function(buffer, value)
+        local config = (type(value.origin) == "number" and 1 or 0) + value.extension and 2 or 0
+
+        -- 0: origin - позиция, ext нету
+        -- 1: origin - uid, ext нету
+        -- 2: origin - позиция, ext есть
+        -- 3: origin - uid, ext есть
+
+        buffer:put_uint32(value.pid)
+        buffer:put_byte(config)
+
+        --ORIGIN
+        if config == 0 or config == 3 then
+            buffer:put_float32(value.origin[1])
+            buffer:put_float32(value.origin[2])
+            buffer:put_float32(value.origin[3])
+        else
+            buffer:put_uint32(value.origin)
+        end
+
+        --COUNT
+        buffer:put_uint16(math.clamp(value.count + 1, 0, MAX_UINT16))
+
+        --PRESET
+        bson.encode(buffer, value.preset)
+
+        if config == 2 or config == 3 then
+            bson.encode(buffer, value.extension)
+        end
+    end,
+    ["$particle_origin"] = function (buffer, value)
+        buffer:put_uint32(value.pid)
+        if type(value.origin) == "number" then
+            buffer:put_bool(false)
+            buffer:put_uint32(value.origin)
+        else
+            local x, y, z = unpack(value.origin)
+            buffer:put_bool(true)
+            buffer:put_float32(x)
+            buffer:put_float32(y)
+            buffer:put_float32(z)
+        end
+    end
+}
+
+STATIC_DECODE = {
+    ["$particle"] = function (buffer)
+        local value = {}
+
+        value.pid = buffer:get_uint32()
+        local config = buffer:get_byte()
+
+        if config == 0 or config == 3 then
+            value.origin = {}
+            value.origin[1] = buffer:get_float32()
+            value.origin[2] = buffer:get_float32()
+            value.origin[3] = buffer:get_float32()
+        else
+            value.origin = buffer:get_uint32()
+        end
+
+        value.count = buffer:get_uint16() - 1
+        value.preset = bson.decode(buffer)
+        if config == 2 or config == 3 then
+            value.extension = bson.decode(buffer)
+        end
+
+        return value
+    end,
+    ["$particle_origin"] = function (buffer)
+        local value = {}
+
+        value.pid = buffer:get_uint32()
+        if not buffer:get_bool() then
+            value.origin = buffer:get_uint32()
+        else
+            value.origin = {buffer:get_float32(), buffer:get_float32(), buffer:get_float32()}
+        end
+
+        return value
+    end
+}
+
+table.merge(DATA_ENCODE, STATIC_ENCODE)
+table.merge(DATA_DECODE, STATIC_DECODE)
+
 ---Помощник для DATA_DECODE[array].
 ---Создан для доступа к своим же элементам. Объявлен выше ↑
 ---@param data_type string Строка, в которой закодирован тип данных

@@ -52,11 +52,18 @@
         ["ChunksData", "list:structure|Chunk"],
         ["ChatMessage", "message:string"],
         ["BlockChanged", "x:int32", "y:uint8", "z:int32", "block_state:uint16", "block_id:uint16", "pid:uint32"],
+
         ["PacksList", "packs:array|string"],
         ["PackEvent", "pack:string", "event:string", "bytes:array|uint8"],
         ["PackEnv", "pack:string", "env:string", "key:string", "value:any"],
+
         ["EntityUpdate", "uid:uint32", "entity_def:uint16", "dirty:bson"],
         ["EntityDespawn", "uid:uint32"],
+
+        ["ParticleEmit", "particle:$particle"],
+        ["ParticleOrigin", "origin:$particle_origin"],
+        ["ParticleStop", "pid:uint32"],
+
         ["WeatherChanged", "weather:bson", "time:uint16", "name:string"],
         ["Disconnect", "reason:string"]
     ],
