@@ -24,10 +24,10 @@ jobs:
         rm -rf server-src/.git
         rm -rf client-src/.git
 
-        mkdir -p VoxelOnline-LuaServer
-        cp -r server-src/* VoxelOnline-LuaServer/
-        zip -r server.zip VoxelOnline-LuaServer
-        rm -rf VoxelOnline-LuaServer
+        mkdir -p Neutron-Server-main
+        cp -r server-src/* Neutron-Server-main/
+        zip -r server.zip Neutron-Server-main
+        rm -rf Neutron-Server-main
 
         mkdir -p voxelonline
         cp -r client-src/* voxelonline/
