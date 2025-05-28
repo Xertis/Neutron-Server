@@ -280,7 +280,7 @@ local DATA_DECODE = {
 
 STATIC_ENCODE = {
     ["$particle"] = function(buffer, value)
-        local config = (type(value.origin) == "number" and 1 or 0) + value.extension and 2 or 0
+        local config = (type(value.origin) == "number" and 1 or 0) + (value.extension and 2 or 0)
 
         -- 0: origin - позиция, ext нету
         -- 1: origin - uid, ext нету
@@ -485,13 +485,14 @@ function protocol.build_packet(client_or_server, packet_type, ...)
         logger.log("Packet encoding crash, additional information in server.log", 'E')
 
         logger.log("Traceback:", 'E', true)
+        logger.log(res, 'E', true)
         logger.log(debug.traceback(), 'E', true)
 
         logger.log("Packet:", 'E', true)
         logger.log(table.tostring({client_or_server, packet_type}), 'E', true)
 
         logger.log("Data:", 'E', true)
-        logger.log(table.tostring({...}), 'E', true)
+        logger.log(json.tostring(...), 'E', true)
     end
 
     return buffer.bytes

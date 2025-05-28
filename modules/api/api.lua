@@ -10,6 +10,7 @@ local middlewares = require "api/middlewares"
 local entities = require "api/entities"
 local protocol = require "api/protocol"
 local weather = require "api/weather"
+local particles = require "api/particles"
 
 local api = {
     events = events,
@@ -23,7 +24,8 @@ local api = {
     middlewares = middlewares,
     protocol = protocol,
     entities = entities,
-    weather = weather
+    weather = weather,
+    particles = particles
 }
 
 return {server = api}

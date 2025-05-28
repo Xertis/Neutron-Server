@@ -1,6 +1,10 @@
 local particles_manager = start_require("lib/private/particles/particles_manager")
 local module = {}
 
+local function stop(id)
+    particles_manager.stop(id)
+end
+
 local Particles = {}
 Particles.__index = Particles
 
@@ -14,7 +18,7 @@ end
 
 function Particles:stop()
     if self.id then
-        module.stop(self.id)
+        stop(self.id)
         self.id = nil
     end
 end
@@ -51,12 +55,8 @@ function module.get(id)
 end
 
 function module.emit(origin, count, preset, extension)
-    local id = gfx.particles.emit(origin, count, preset, extension)
+    local id = particles_manager.emit(origin, count, preset, extension)
     return Particles.new(id)
-end
-
-function module.stop(id)
-    particles_manager.stop(id)
 end
 
 return module
