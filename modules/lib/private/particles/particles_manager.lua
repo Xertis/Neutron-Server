@@ -90,4 +90,6 @@ function module.get_in_radius(x, z, radius)
     return particles
 end
 
+module.load()
+
 return module
