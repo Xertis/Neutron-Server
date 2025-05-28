@@ -55,11 +55,6 @@ particle:set_origin(origin: table | uid)
 particle:get_pos() -> table
 ```
 
-6. **Получение позиции эммитера**
-```lua
-particle:get_pos() -> table
-```
-
 ### Пример использования
 
 ```lua
