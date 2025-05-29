@@ -18,6 +18,9 @@ function module.kick(account)
     end
 
     account_manager.leave(account)
+
+    local client = account_manager.get_client(account)
+    client.active = false
 end
 
 function module.roles.get(account)
