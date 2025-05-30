@@ -12,15 +12,13 @@ function module.get_client(account)
     return account_manager.get_client(account)
 end
 
-function module.kick(account)
+function module.kick(account, message)
     if not account.username then
         error("Invalid account")
     end
 
-    account_manager.leave(account)
-
     local client = account_manager.get_client(account)
-    client.active = false
+    client.network.socket = false
 end
 
 function module.roles.get(account)
