@@ -17,6 +17,7 @@ function Player.new(active, network, address, port, username)
     self.player = nil
     self.ping = {ping = 0, last_upd = 0}
     self.meta = {}
+    self.is_kicked = false
 
     self.response_queue = List.new()
     self.received_packets = List.new()
@@ -28,6 +29,10 @@ end
 
 function Player:is_active()
     return self.active
+end
+
+function Player:kick()
+    self.is_kicked = true
 end
 
 function Player:set_account(account)

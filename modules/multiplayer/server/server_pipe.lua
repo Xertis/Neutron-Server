@@ -67,11 +67,10 @@ ServerPipe:add_middleware(function(client)
 end)
 
 ServerPipe:add_middleware(function(client)
-    if not client.active then
-        return nil
+    if client.active then
+        ClientPipe:process(client)
     end
 
-    ClientPipe:process(client)
     while not List.is_empty(client.response_queue) do
         local packet = List.popleft(client.response_queue)
         local success, err = pcall(function()

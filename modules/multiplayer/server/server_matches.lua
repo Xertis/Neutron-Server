@@ -71,10 +71,14 @@ end
 
 
 function matches.actions.Disconnect(client, reason)
-    entities_manager.clear_pid(client.player.pid)
+    if client.player then
+        entities_manager.clear_pid(client.player.pid)
+    end
+
     local buffer = protocol.create_databuffer()
     buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.Disconnect, reason))
     client.network:send(buffer.bytes)
+    client:kick()
 end
 
 --- FSM

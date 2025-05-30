@@ -21,10 +21,10 @@ function module.kick(account, message)
     local client = account_manager.get_client(account)
 
     local buffer = protocol.create_databuffer()
-    buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.Disconnect, message))
+    buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.Disconnect, message or "No reason"))
     client.network:send(buffer.bytes)
 
-    client.network.socket = false
+    client:kick()
 end
 
 function module.roles.get(account)

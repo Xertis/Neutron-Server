@@ -35,6 +35,7 @@ function server:start()
             if mclient.address == client.address and not mclient.active then
                 self.clients[i].network = client.network
                 self.clients[i].port = client.port
+                self.clients[i].is_kicked = client.is_kicked
                 return
             end
         end
@@ -56,13 +57,22 @@ end
 function server:tick()
     for index, client in ipairs(self.clients) do
         local socket = client.network.socket
-        if not socket or not socket:is_alive() then
+        if not socket or not socket:is_alive() or client.is_kicked then
             if client.active then
                 client.active = false
             end
+
+            if socket and socket:is_alive() then
+                socket:close()
+            end
+
             table.remove_value(self.clients, client)
 
-            server_matches.client_online_handler:switch(protocol.ClientMsg.Disconnect, {}, client)
+            server_matches.client_online_handler:switch(
+                protocol.ClientMsg.Disconnect,
+                {packet_type = protocol.ClientMsg.Disconnect},
+                client
+            )
         end
     end
 
