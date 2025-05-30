@@ -1,4 +1,5 @@
-local account_manager = start_require("server:lib/private/accounts/account_manager")
+local account_manager = start_require "server:lib/private/accounts/account_manager"
+local protocol = start_require "server:lib/public/protocol"
 local lib = require "lib/private/min"
 local module = {
     roles = {}
@@ -18,6 +19,11 @@ function module.kick(account, message)
     end
 
     local client = account_manager.get_client(account)
+
+    local buffer = protocol.create_databuffer()
+    buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.Disconnect, message))
+    client.network:send(buffer.bytes)
+
     client.network.socket = false
 end
 
