@@ -21,8 +21,8 @@ local function generate_weather_seeds()
     local current_cycle = math.floor(world.get_total_time() / WEATHER_CYCLE_DURATION)
     local combined_seed = bit.bxor(world.get_seed(), current_cycle)
 
-    WEATHER_SEED_START = bit.band(combined_seed, 0xA17D1A1F9)
-    WEATHER_SEED_END = bit.band(combined_seed, 0xFF05C1A83)
+    WEATHER_SEED_START = bit.band(combined_seed, 0x598CC129D23)
+    WEATHER_SEED_END = bit.band(combined_seed,   0x6D82EDA8C33)
     LAST_CYCLE_UPDATE = current_cycle * WEATHER_CYCLE_DURATION
 end
 
