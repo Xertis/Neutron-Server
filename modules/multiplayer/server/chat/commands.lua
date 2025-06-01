@@ -66,36 +66,6 @@ console.set_command("login: password=<string> -> Logging", {}, function (args, c
     console.tell(string.format("%s You have successfully logged in!", console.colors.yellow), client)
 end, true)
 
-console.set_command("kick: username=<string>, reason=[string] -> Kicks the user", {server={"kick"}}, function (args, client)
-    local account = client.account
-    local kick_username = args.username or ''
-    local reason = args.reason or "No reason"
-    local kick_account = account_manager.by_username.get_account(kick_username)
-
-    local client_role = account_manager.get_role(account)
-    local kick_role = account_manager.get_role(kick_account)
-
-    if not kick_role or not sandbox.by_username.is_online(kick_username) then
-        console.tell(string.format('%s The player "%s" is currently offline!', console.colors.red, kick_username), client)
-        return
-    elseif kick_username == client.player.username then
-        console.tell(string.format("%s You cannot kick yourself!", console.colors.red), client)
-        return
-    elseif not lib.roles.is_higher(client_role, kick_role) then
-        console.tell(string.format("%s You cannot interact with this player because their role has a higher or equal priority!", console.colors.red), client)
-        return
-    end
-
-    local kick_client = account_manager.get_client(kick_account)
-
-    local buffer = protocol.create_databuffer()
-    buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.Disconnect, reason))
-    kick_client.network:send(buffer.bytes)
-
-    console.echo(string.format("%s [%s] Player **%s** has been kicked with reason: %s", console.colors.red, account.username, kick_username, reason))
-    kick_client.active = false
-end)
-
 console.set_command("role: username=[string] -> Returns the role of the user", {}, function (args, client)
     local username = args.username or client.account.username
     local account = account_manager.by_username.get_account(username)
