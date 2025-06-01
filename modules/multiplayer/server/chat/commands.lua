@@ -4,6 +4,25 @@ local account_manager = require "lib/private/accounts/account_manager"
 local lib = require "lib/private/min"
 local console = require "api/console"
 
+console.set_command("tell: username=<string> message=<string> -> Sends a private message to a specific player", {},
+function (args, client)
+    local username = args.username
+    local sender_username = client.account.username
+    local message = args.message
+
+    local receiver_account = account_manager.by_username.get_account(username)
+
+    if not receiver_account or not sandbox.by_username.is_online(username) then
+        console.tell(string.format('%s The player "%s" is currently offline!', console.colors.red, username), client)
+        return
+    end
+
+    local receiver_client = account_manager.get_client(receiver_account)
+    local blue, red = console.colors.blue, console.colors.red
+
+    console.tell(string.format("%s[you%s -> %s%s] %s", blue, red, blue, username, message), client)
+    console.tell(string.format("%s[%s%s -> %syou] %s", blue, sender_username, red, blue, message), receiver_client)
+end)
 
 console.set_command("list: -> Shows a list of online players", {}, function (args, client)
     local players = table.keys(sandbox.get_players())

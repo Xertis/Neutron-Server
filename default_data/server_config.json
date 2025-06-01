@@ -41,7 +41,6 @@
       },
 
       "server_rules": {
-        "kick": true,
         "role_management": true,
         "time_management": true
       }

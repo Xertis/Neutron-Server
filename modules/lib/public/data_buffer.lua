@@ -57,7 +57,7 @@ local data_buffer =
 	end
 }
 
-function data_buffer:new(bytes, order, useBytearray)
+function data_buffer:new(bytes, order, useBytearray, co)
 	bytes = bytes or { }
 
 	if order then bit_converter.validate_order(order)
@@ -67,7 +67,8 @@ function data_buffer:new(bytes, order, useBytearray)
         pos = 1,
         order = order,
         useBytearray = useBytearray or false,
-        bytes = useBytearray and Bytearray(bytes) or bytes
+        bytes = useBytearray and Bytearray(bytes) or bytes,
+		co = co
     }
 
     self.__index = self
@@ -253,6 +254,10 @@ function data_buffer:get_any()
 end
 
 function data_buffer:get_byte()
+	if self.bytes[self.pos] == nil and self.co then
+		coroutine.yield()
+		return self:get_byte()
+	end
 	local byte = self.bytes[self.pos]
 	self.pos = self.pos + 1
 	return byte
