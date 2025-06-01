@@ -14,9 +14,9 @@ api.accounts.get_client(account: Account) -> Client
 
 3. **Кик аккаунта:**
 ```lua
-api.accounts.kick(account: Account)
+api.accounts.kick(account: Account, [опционально] reason: string)
 ```
-   - Кикает аккаунт **account** с сервера
+   - Кикает аккаунт **account** с сервера с причиной **reason**
 
 4. **Получение роли:**
 ```lua
