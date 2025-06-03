@@ -1,0 +1,8 @@
+[Server.HandShake]
+size = -1
+static = true
+fields = [
+    "version:string",
+    "protocol_version:uint8",
+    "&next_state:uint8" # & - обозначает зацикливание, т.е. массив
+]
