@@ -30,7 +30,7 @@ ClientPipe:add_middleware(function(client)
 
     local buffer = protocol.create_databuffer()
 
-    buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.KeepAlive, math.random(0, 1000)))
+    buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.KeepAlive, math.random(0, 200)))
     client.network:send(buffer.bytes)
     client.ping.last_upd = cur_time
     return client
