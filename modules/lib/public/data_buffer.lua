@@ -288,8 +288,18 @@ function data_buffer:get_float64()
 end
 
 function data_buffer:get_string()
-	local str = bit_converter.bytes_to_string(self.bytes, self.pos)
-	self.pos = self.pos + #str + 1
+	local bytes = {}
+
+	while true do
+		local byte = self:get_byte()
+		if byte ~= 255 then
+			table.insert(bytes, byte)
+		else
+			break
+		end
+	end
+
+	local str = utf8.tostring(bytes)
 	return str
 end
 

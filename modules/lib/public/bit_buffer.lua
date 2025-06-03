@@ -23,7 +23,7 @@ function bit_buffer:new(bytes, order)
 	        	elseif bit_buffer[key] ~= nil then
 	        		return bit_buffer[key]
 	        	else
-	        		local func = data_buffer[key]
+	        		local func = buf.ownDb[key]
 
 	        		if type(func) == 'function' then
 						if key:find('put') then
@@ -34,7 +34,7 @@ function bit_buffer:new(bytes, order)
 						elseif key:find('get') then
 							return function(buf, ...)
 								buf.ownDb.pos = 1
-								
+
 								local result = { func(buf.ownDb, ...) }
 
 								return unpack(result)
@@ -50,6 +50,7 @@ function bit_buffer:new(bytes, order)
     obj.current = 0
     obj.bytes = Bytearray(bytes or {})
     obj.ownDb = data_buffer(nil, order or bit_converter.default_order)
+
 	obj.ownDb.put_byte = function(db, n) obj:put_uint(n, 8) end
 	obj.ownDb.get_byte = function(db) return obj:get_uint(8) end
 

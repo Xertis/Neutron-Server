@@ -64,3 +64,16 @@ end
 events.on("server:block_interact", function (...)
     upd(...)
 end)
+
+function on_world_open()
+    local function a()
+        local bb = require "server:lib/public/bit_buffer"
+
+        local buffer = bb:new()
+
+        buffer:put_byte(127)
+
+        print(table.tostring(buffer:get_bytes()))
+    end
+    print(pcall(a))
+end
