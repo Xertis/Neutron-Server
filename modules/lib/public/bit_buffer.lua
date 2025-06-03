@@ -132,8 +132,7 @@ function bit_buffer:get_bytes(count)
 	local bs = Bytearray()
 
 	bs:append(self.bytes)
-
-	if self.current ~= 0 then bs:append(self.current) end
+	bs:append(self.current)
 
 	if not count then
 		return bs
