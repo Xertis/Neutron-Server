@@ -57,6 +57,10 @@ local data_buffer =
 	end
 }
 
+data_buffer.__index = function(buf,key)
+	return rawget(data_buffer, key) or rawget(buf, key)
+end
+
 function data_buffer:new(bytes, order, useBytearray, co)
 	bytes = bytes or { }
 
@@ -71,7 +75,6 @@ function data_buffer:new(bytes, order, useBytearray, co)
 		co = co
     }
 
-    self.__index = self
     setmetatable(obj, self)
 
     return obj
@@ -334,6 +337,10 @@ end
 
 function data_buffer:set_position(pos)
 	self.pos = pos
+end
+
+function data_buffer:reset()
+	self.pos = 1
 end
 
 function data_buffer:move_position(step)

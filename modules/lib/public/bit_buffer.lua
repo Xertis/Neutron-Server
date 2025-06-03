@@ -1,3 +1,6 @@
+local bit_converter = require "lib/public/common/bit_converter"
+local data_buffer = require "lib/public/data_buffer"
+
 local bit_buffer =
 {
 	__call =
@@ -9,24 +12,55 @@ local bit_buffer =
 local putExp = bit.compile("a | b << c")
 local getExp = bit.compile("a & 1 << b")
 
-function bit_buffer:new(bytes)
-    local obj = {
-        pos = 1,
-        current = 0,
-        bytes = Bytearray(bytes or {})
-    }
+function bit_buffer:new(bytes, order)
+    local obj = setmetatable({},
+	    	{
+	        __index = function(buf, key)
+	        	local v = rawget(buf, key)
 
-    self.__index = self
-    setmetatable(obj, self)
+	        	if v ~= nil then
+	        		return v
+	        	elseif bit_buffer[key] ~= nil then
+	        		return bit_buffer[key]
+	        	else
+	        		local func = data_buffer[key]
+
+	        		if type(func) == 'function' then
+						if key:find('put') then
+							return function(buf, ...)
+								buf.ownDb.pos = 1
+								func(buf.ownDb, ...)
+							end
+						elseif key:find('get') then
+							return function(buf, ...)
+								buf.ownDb.pos = 1
+								
+								local result = { func(buf.ownDb, ...) }
+
+								return unpack(result)
+							end
+						end
+	        		end
+	        	end
+	        end
+	    }
+    )
+
+    obj.pos = 1
+    obj.current = 0
+    obj.bytes = Bytearray(bytes or {})
+    obj.ownDb = data_buffer(nil, order or bit_converter.default_order)
+	obj.ownDb.put_byte = function(db, n) obj:put_uint(n, 8) end
+	obj.ownDb.get_byte = function(db) return obj:get_uint(8) end
 
     return obj
 end
 
 function bit_buffer:put_bit(bit)
-	self.current = putExp(self.current, bit, (self.pos - 1) % 8)
+	self.current = putExp(self.current, bit and 1 or 0, (self.pos - 1) % 8)
 
-	if bitIndex == 7 then
-		bytes:append(self.current)
+	if self.pos % 8 == 0 then
+		self.bytes:append(self.current)
 		self.current = 0
 	end
 
@@ -43,7 +77,7 @@ end
 
 function bit_buffer:put_uint(num, width)
 	for i = 1, width do
-		self:put_bit(getExp(num, i - 1) == 1)
+		self:put_bit(getExp(num, i - 1) ~= 0)
 	end
 end
 
@@ -65,6 +99,14 @@ function bit_buffer:set_position(pos)
 	self.pos = pos
 end
 
+function bit_buffer:move_position(step)
+	self.pos = self.pos + step
+end
+
+function bit_buffer:reset()
+	self.pos = 1
+end
+
 function bit_buffer:size()
 	return self.pos
 end
@@ -75,18 +117,31 @@ function bit_buffer:put_bytes(bytes)
 	end
 end
 
-function bit_buffer:put_data_buffer(buf)
+function bit_buffer:put_buffer(buf)
 	self:put_bytes(buf:get_bytes())
 end
 
+function bit_buffer:flush()
+	self.bytes:append(self.current)
+	self.current = 0
+
+	self.pos = 8 - (self.pos % 8 + 1) + self.pos
+end
+
 function bit_buffer:get_bytes(count)
+	local bs = Bytearray()
+
+	bs:append(self.bytes)
+
+	if self.current ~= 0 then bs:append(self.current) end
+
 	if not count then
-		return self.bytes
+		return bs
 	else
 		local bytes = Bytearray()
 
 		for i = 1, count do
-			bytes:append(self.bytes[i])
+			bytes:append(bs[i])
 		end
 
 		return bytes
