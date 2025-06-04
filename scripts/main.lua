@@ -1,3 +1,9 @@
+app.config_packs({"server"})
+app.load_content()
+require "server:std/stdboot"
+
+LAUNCH_ATTEMPTS = 1
+
 local function main()
     app.config_packs({"server"})
     app.load_content()
@@ -86,7 +92,17 @@ local function main()
     world.close_main()
 end
 
-local status, err = pcall(main)
-if not status then
-    print("Launch failed with an error: ", err)
+local PROCESS_NAME = "KERNEL-BOOTLOADER"
+while LAUNCH_ATTEMPTS <= 1 do
+    logger.log(string.format("Launch attempt number: %s", LAUNCH_ATTEMPTS), nil, nil, PROCESS_NAME)
+    LAUNCH_ATTEMPTS = LAUNCH_ATTEMPTS + 1
+
+    local status, err = pcall(main)
+
+    if not status then
+        logger.log(string.format("Launch failed with an error: %s", err), nil, nil, PROCESS_NAME)
+    else
+        logger.log(string.format("Shutdown successfully", PROCESS_NAME), nil, nil, PROCESS_NAME)
+        break
+    end
 end
