@@ -22,6 +22,7 @@ ServerPipe:add_middleware(function(client)
                         local buffer = protocol.create_databuffer(length_bytes)
                         return buffer:get_uint16()
                     end)
+
                     if not success or not length then
                         break
                     end
@@ -29,9 +30,11 @@ ServerPipe:add_middleware(function(client)
                     if not data_bytes or #data_bytes < length then
                         break
                     end
+
                     local success, packet = pcall(function()
                         return protocol.parse_packet("client", data_bytes)
                     end)
+
                     if success and packet then
                         List.pushright(client.received_packets, packet)
                         received_any = true
@@ -62,6 +65,10 @@ ServerPipe:add_middleware(function(client)
             matches.client_online_handler:switch(packet.packet_type, packet, client)
         end
     end)
+
+    if not success then
+        logger.log("Error while reading packet: " .. err, 'E')
+    end
 
     return client, not List.is_empty(client.received_packets)
 end)
