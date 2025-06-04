@@ -48,7 +48,17 @@ function bit_buffer:new(bytes, order)
 
     obj.pos = 1
     obj.current = 0
-    obj.bytes = Bytearray(bytes or {})
+	obj.current_is_zero = true
+
+	if type(bytes) ~= "cdata" then
+    	obj.bytes = Bytearray()
+		for _, byte in ipairs(bytes or {}) do
+			obj.bytes:append(byte)
+		end
+	else
+		obj.bytes = bytes
+	end
+
     obj.ownDb = data_buffer(nil, order or bit_converter.default_order)
 
 	obj.ownDb.put_byte = function(db, n) obj:put_uint(n, 8) end
@@ -62,7 +72,10 @@ function bit_buffer:put_bit(bit)
 
 	if self.pos % 8 == 0 then
 		self.bytes:append(self.current)
+		self.current_is_zero = true
 		self.current = 0
+	else
+		self.current_is_zero = false
 	end
 
 	self.pos = self.pos + 1
@@ -109,7 +122,7 @@ function bit_buffer:reset()
 end
 
 function bit_buffer:size()
-	return self.pos
+	return math.floor(self.pos / 8)
 end
 
 function bit_buffer:put_bytes(bytes)
@@ -123,25 +136,30 @@ function bit_buffer:put_buffer(buf)
 end
 
 function bit_buffer:flush()
-	self.bytes:append(self.current)
-	self.current = 0
+	if not self.current_is_zero then
+		self.bytes:append(self.current)
+		self.current = 0
+		self.current_is_zero = true
 
-	self.pos = 8 - (self.pos % 8 + 1) + self.pos
+		self.pos = 8 - (self.pos % 8 + 1) + self.pos
+	end
 end
 
 function bit_buffer:get_bytes(count)
-	local bs = Bytearray()
-
-	bs:append(self.bytes)
-	bs:append(self.current)
-
 	if not count then
+		local bs = Bytearray()
+
+		bs:append(self.bytes)
+		if not self.current_is_zero then
+			bs:append(self.current)
+		end
+
 		return bs
 	else
 		local bytes = Bytearray()
 
-		for i = 1, count do
-			bytes:append(bs[i])
+		for _ = 1, count do
+			bytes:append(self:get_uint(8))
 		end
 
 		return bytes

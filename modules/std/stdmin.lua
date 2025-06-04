@@ -1,4 +1,4 @@
-local data_buffer = require "lib/public/data_buffer"
+local data_buffer = require "lib/public/bit_buffer"
 
 _G['$Neutron'] = "server"
 
@@ -383,6 +383,16 @@ function table.diff(tbl1, tbl2)
     return diff_tbl1, diff_tbl2
 end
 
+function table.from_bytearray(bytearray)
+    local bytes = {}
+
+    for index, byte in ipairs(bytearray) do
+        bytes[index] = tonumber(byte)
+    end
+
+    return bytes
+end
+
 --- MATH
 
 function math.euclidian3D(x1, y1, z1, x2, y2, z2)
@@ -422,9 +432,9 @@ function bjson.archive_tobytes(tbls, gzip)
     db:put_uint16(#tbls)
 
     for _, tbl in ipairs(tbls) do
-        local db2 = data_buffer:new(bjson.tobytes(tbl, gzip))
-        db:put_int64(db2:size())
-        db:put_bytes(db2.bytes)
+        local bytes = bjson.tobytes(tbl, gzip)
+        db:put_int64(#bytes)
+        db:put_bytes(bytes)
     end
 
     return db.bytes
@@ -437,6 +447,7 @@ function bjson.archive_frombytes(bytes)
 
     for _=1, len do
         local size = db:get_int64()
+
         table.insert(res, bjson.frombytes(db:get_bytes(size)))
     end
 
