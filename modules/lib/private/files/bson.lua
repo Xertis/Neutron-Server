@@ -1,4 +1,6 @@
-local db = require "lib/public/bit_buffer"
+local bb = require "lib/public/bit_buffer"
+
+
 
 local MAX_UINT16 = 65535
 local MIN_UINT16 = 0
@@ -42,7 +44,7 @@ function module.return_type_number(num)
             return TYPES_STRUCTURE.int16
         elseif num >= MIN_INT32 then
             return TYPES_STRUCTURE.int32
-        elseif num >= MAX_INT64 then
+        elseif num >= MIN_INT64 then
             return TYPES_STRUCTURE.int64
         end
     else
@@ -60,24 +62,20 @@ end
 
 function module.put_num(buf, num)
     local item_type = module.return_type_number(num)
-    buf:put_byte(item_type)
+    buf:put_uint(item_type, 4)
 
-    if num < 0 then
-        if num >= MIN_INT16 then
-            buf:put_sint16(num)
-        elseif num >= MIN_INT32 then
-            buf:put_sint32(num)
-        elseif num >= MAX_INT64 then
-            buf:put_int64(num)
-        end
-    else
-        if num <= MAX_BYTE then
-            buf:put_byte(num)
-        elseif num <= MAX_UINT16 then
-            buf:put_uint16(num)
-        elseif num <= MAX_UINT32 then
-            buf:put_uint32(num)
-        end
+    if item_type == TYPES_STRUCTURE.int16 then
+        buf:put_sint16(num)
+    elseif item_type == TYPES_STRUCTURE.int32 then
+        buf:put_sint32(num)
+    elseif item_type == TYPES_STRUCTURE.int64 then
+        buf:put_int64(num)
+    elseif item_type == TYPES_STRUCTURE.byte then
+        buf:put_byte(num)
+    elseif item_type == TYPES_STRUCTURE.uint16 then
+        buf:put_uint16(num)
+    elseif item_type == TYPES_STRUCTURE.uint32 then
+        buf:put_uint32(num)
     end
 end
 
@@ -85,21 +83,21 @@ function module.put_float(buf, num)
     local decimal_places = string.len(tostring(num) - string.len(tostring(math.floor(num))) - 1)
 
     if decimal_places <= 7 then
-        buf:put_byte(TYPES_STRUCTURE.float32)
+        buf:put_uint(TYPES_STRUCTURE.float32, 4)
         buf:put_float32(num)
     else
-        buf:put_byte(TYPES_STRUCTURE.float64)
+        buf:put_uint(TYPES_STRUCTURE.float64, 4)
         buf:put_float64(num)
     end
 end
 
 function module.put_item(buf, item)
     if type(item) == 'string' then
-        buf:put_byte(TYPES_STRUCTURE.string)
+        buf:put_uint(TYPES_STRUCTURE.string, 4)
         buf:put_string(item)
     elseif type(item) == 'boolean' then
-        buf:put_byte(TYPES_STRUCTURE.bool)
-        buf:put_bool(item)
+        buf:put_uint(TYPES_STRUCTURE.bool, 4)
+        buf:put_bit(item)
     elseif type(item) == 'number' and item % 1 == 0 then
         module.put_num(buf, item)
     elseif type(item) == 'number' and item % 1 ~= 0 then
@@ -110,27 +108,27 @@ function module.put_item(buf, item)
 end
 
 function module.get_item(buf)
-    local type_item = buf:get_byte()
+    local type_item = buf:get_uint(4)
     if type_item == TYPES_STRUCTURE.string then
         return buf:get_string()
     elseif type_item == TYPES_STRUCTURE.byte then
-        return buf:get_byte(buf)
+        return buf:get_byte()
     elseif type_item == TYPES_STRUCTURE.bool then
-        return buf:get_bool(buf)
+        return buf:get_bit()
     elseif type_item == TYPES_STRUCTURE.int16 then
-        return buf:get_sint16(buf)
+        return buf:get_sint16()
     elseif type_item == TYPES_STRUCTURE.int32 then
-        return buf:get_sint32(buf)
+        return buf:get_sint32()
     elseif type_item == TYPES_STRUCTURE.int64 then
-        return buf:get_int64(buf)
+        return buf:get_int64()
     elseif type_item == TYPES_STRUCTURE.uint16 then
-        return buf:get_uint16(buf)
+        return buf:get_uint16()
     elseif type_item == TYPES_STRUCTURE.uint32 then
-        return buf:get_uint32(buf)
+        return buf:get_uint32()
     elseif type_item == TYPES_STRUCTURE.float32 then
-        return buf:get_float32(buf)
+        return buf:get_float32()
     elseif type_item == TYPES_STRUCTURE.float64 then
-        return buf:get_float64(buf)
+        return buf:get_float64()
     else
         return module.decode_array(buf)
     end
@@ -140,7 +138,7 @@ function module.decode_array(buf)
     local len = buf:get_uint32()
     local res = {}
     for i = 1, len do
-        local type_item = buf:get_byte()
+        local type_item = buf:get_uint(4)
         if type_item == TYPES_STRUCTURE.array then
             table.insert(res, module.get_item(buf))
         else
@@ -160,14 +158,14 @@ function module.get_len_table(arr)
 end
 
 function module.encode_array(buf, arr)
-    buf:put_byte(TYPES_STRUCTURE.table)
+    buf:put_uint(TYPES_STRUCTURE.table, 4)
     buf:put_uint32(module.get_len_table(arr))
     for i, item in pairs(arr) do
         if type(i) == 'number' then
-            buf:put_byte(TYPES_STRUCTURE.array)
+            buf:put_uint(TYPES_STRUCTURE.array, 4)
             module.put_item(buf, item)
         else
-            buf:put_byte(TYPES_STRUCTURE.hashmap)
+            buf:put_uint(TYPES_STRUCTURE.hashmap, 4)
             buf:put_string(i)
             module.put_item(buf, item)
         end
@@ -179,20 +177,21 @@ function bson.encode(buf, array)
 end
 
 function bson.decode(buf)
-    local is_tbl = buf:get_byte()
+    local is_tbl = buf:get_uint(4)
     local data = module.decode_array(buf)
     return data
 end
 
 function bson.serialize(array)
-    local buf = db:new()
+    local buf = bb:new()
     bson.encode(buf, array)
+    buf:flush()
 
-    return buf:get_bytes()
+    return buf.bytes
 end
 
 function bson.deserialize(bytes)
-    local buf = db:new(bytes)
+    local buf = bb:new(bytes)
     return bson.decode(buf)
 end
 

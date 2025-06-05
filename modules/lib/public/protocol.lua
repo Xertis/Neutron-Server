@@ -494,7 +494,7 @@ function protocol.build_packet(client_or_server, packet_type, ...)
         logger.log("Data:", 'E', true)
         logger.log(json.tostring(...), 'E', true)
     end
-
+    buffer:flush()
     return buffer.bytes
 end
 
