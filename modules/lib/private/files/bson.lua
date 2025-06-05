@@ -57,7 +57,13 @@ local function __return_type_number(num)
 end
 
 local function __return_type_float(num)
-    return TYPES.float64
+    local mantissa = math.frexp(num)
+
+    if mantissa * 2^7 % 1 ~= 0 then
+        return TYPES.float64
+    end
+
+    return TYPES.float32
 end
 
 local function __put_num(buf, num)
