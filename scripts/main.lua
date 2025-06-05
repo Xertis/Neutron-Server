@@ -92,6 +92,13 @@ local function main()
     world.close_main()
 end
 
+do
+    local bson = require "server:lib/private/files/bson"
+    local bytes = bson.serialize({lox = true, name = "Саша", count = 100, "UGAGA", "PARIS", 23423, false})
+    print(table.tostring(bytes))
+    print(#bytes)
+end
+
 local PROCESS_NAME = "KERNEL-BOOTLOADER"
 while LAUNCH_ATTEMPTS <= 1 do
     logger.log(string.format("Launch attempt number: %s", LAUNCH_ATTEMPTS), nil, nil, PROCESS_NAME)

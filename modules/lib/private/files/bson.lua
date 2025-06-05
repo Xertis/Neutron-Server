@@ -38,6 +38,11 @@ TYPES_STRUCTURE = {
     table = 13
 }
 
+KEYS_TYPES = {
+    index = false,
+    key = true,
+}
+
 function module.return_type_number(num)
     if num < 0 then
         if num >= MIN_INT16 then
@@ -138,8 +143,8 @@ function module.decode_array(buf)
     local len = buf:get_uint32()
     local res = {}
     for i = 1, len do
-        local type_item = buf:get_uint(4)
-        if type_item == TYPES_STRUCTURE.array then
+        local type_item = buf:get_bit()
+        if type_item == KEYS_TYPES.index then
             table.insert(res, module.get_item(buf))
         else
             local key = buf:get_string()
@@ -162,10 +167,10 @@ function module.encode_array(buf, arr)
     buf:put_uint32(module.get_len_table(arr))
     for i, item in pairs(arr) do
         if type(i) == 'number' then
-            buf:put_uint(TYPES_STRUCTURE.array, 4)
+            buf:put_bit(KEYS_TYPES.index)
             module.put_item(buf, item)
         else
-            buf:put_uint(TYPES_STRUCTURE.hashmap, 4)
+            buf:put_bit(KEYS_TYPES.key)
             buf:put_string(i)
             module.put_item(buf, item)
         end
