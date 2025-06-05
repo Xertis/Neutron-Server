@@ -57,9 +57,9 @@ local function __return_type_number(num)
 end
 
 local function __return_type_float(num)
-    local mantissa = math.frexp(num)
+    local decimal_places = string.len(tostring(num) - string.len(tostring(math.floor(num))) - 1)
 
-    if mantissa * 2^7 % 1 ~= 0 then
+    if decimal_places > 7 then
         return TYPES.float64
     end
 
