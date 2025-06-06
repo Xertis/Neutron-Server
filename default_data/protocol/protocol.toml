@@ -1,6 +1,4 @@
 [Server.HandShake]
-size = -1
-static = true
 fields = [
     "version:string",
     "protocol_version:uint8",
