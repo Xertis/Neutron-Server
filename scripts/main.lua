@@ -92,14 +92,12 @@ local function main()
     world.close_main()
 end
 
-do
-    local compiler = require "server:multiplayer/protocol-kernel/compiler"
-    local code = compiler.compile_encoder({"degree", "degree"})
-    local func = compiler.load(code)
-    local buf = require "server:lib/public/bit_buffer":new()
-    func(buf, 15.5, 90)
-    print(table.tostring(buf.bytes))
-end
+-- do
+--     local compiler = require "server:multiplayer/protocol-kernel/compiler"
+
+--     local code = compiler.compile_decoder({"degree", "array<uint8>"})
+--     print(code)
+-- end
 
 local PROCESS_NAME = "KERNEL-BOOTLOADER"
 while LAUNCH_ATTEMPTS <= 1 do

@@ -59,8 +59,8 @@
         ["EntityUpdate", "uid:uint32", "entity_def:uint16", "dirty:bson"],
         ["EntityDespawn", "uid:uint32"],
 
-        ["ParticleEmit", "particle:$particle"],
-        ["ParticleOrigin", "origin:$particle_origin"],
+        ["ParticleEmit", "particle:particle"],
+        ["ParticleOrigin", "origin:particle_origin"],
         ["ParticleStop", "pid:uint32"],
 
         ["WeatherChanged", "weather:bson", "time:uint16", "name:string"],

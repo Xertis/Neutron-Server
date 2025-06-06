@@ -3,7 +3,7 @@ local server_echo = start_require "server:multiplayer/server/server_echo"
 
 local module = {
     ServerMsg = protocol.ServerMsg,
-    protocol = json.parse(file.read("server:default_data/protocol.json"))
+    protocol = json.parse(file.read("server:default_data/protocol/protocol.json"))
 }
 
 function module.tell(client, packet_type, data)

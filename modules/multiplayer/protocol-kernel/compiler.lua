@@ -16,7 +16,7 @@ end
 local FUNCTION_PATTERN_DECODER = [[
 return function (buf) 
 %s
-    return %s
+    return {%s}
 end
 ]]
 
@@ -108,6 +108,10 @@ function module.compile_encoder(types)
     local cur_index = 0
     local sum_tokens = {}
 
+    if #types == 0 then
+        return "return function () end"
+    end
+
     for _, type in ipairs(types) do
         local outer, inner = parse_type(type)
         local type_info = PARSED_INFO.encode[outer]
@@ -144,6 +148,11 @@ function module.compile_decoder(types)
     local concated_code = ""
     local cur_index = 0
     local sum_tokens = {}
+
+    if #types == 0 then
+        return "return function () end"
+    end
+
     for _, type in ipairs(types) do
         local outer, inner = parse_type(type)
         local type_info = PARSED_INFO.decode[outer]

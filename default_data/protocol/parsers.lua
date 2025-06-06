@@ -73,21 +73,21 @@ do
 end--@
 
 -- @player_pos.write
--- VARIABLES x y z y_low y_high
+-- VARIABLES xx yy zz y_low y_high
 -- TO_SAVE val
 do
-    x, y, z = unpack(val)
-    y = math.clamp(y, 0, 262)
+    xz, yy, zz = unpack(val)
+    yy = math.clamp(y, 0, 262)
 
-    x = (x - (x - x % 32)) * 1000 + 0.5
-    y = math.floor(y * 1000 + 0.5)
-    z = (z - (z - z % 32)) * 1000 + 0.5
+    xx = (xx - (xx - xx % 32)) * 1000 + 0.5
+    yy = math.floor(yy * 1000 + 0.5)
+    zz = (zz - (zz - zz % 32)) * 1000 + 0.5
 
-    y_low = bit.band(y, 0x1FF)
-    y_high = bit.rshift(y, 9)
+    y_low = bit.band(yy, 0x1FF)
+    y_high = bit.rshift(yy, 9)
 
-    buf:put_uint24(bit.bor(bit.lshift(y_low, 15), x))
-    buf:put_uint24(bit.bor(bit.lshift(z, 9), y_high))
+    buf:put_uint24(bit.bor(bit.lshift(y_low, 15), xx))
+    buf:put_uint24(bit.bor(bit.lshift(zz, 9), y_high))
 end--@
 
 -- @player_pos.read
@@ -338,4 +338,101 @@ do
         buf:get_uint32(),
         buf:get_string()
     }
+end--@
+
+-- @particle.write
+-- VARIABLES config
+-- TO_SAVE value
+do
+    config = (type(value.origin) == "number" and 1 or 0) + (value.extension and 2 or 0)
+    -- 0: origin - позиция, ext нету
+    -- 1: origin - uid, ext нету
+    -- 2: origin - позиция, ext есть
+    -- 3: origin - uid, ext есть
+
+    buf:put_uint32(value.pid)
+    buf:put_byte(config)
+
+    --ORIGIN
+    if config == 0 or config == 3 then
+        buf:put_float32(value.origin[1])
+        buf:put_float32(value.origin[2])
+        buf:put_float32(value.origin[3])
+    else
+        buf:put_uint32(value.origin)
+    end
+
+    --COUNT
+    buf:put_uint16(math.clamp(value.count + 1, 0, MAX_UINT16))
+
+    --PRESET
+    bson.encode(buf, value.preset)
+
+    if config == 2 or config == 3 then
+        bson.encode(buf, value.extension)
+    end
+end--@
+
+-- @particle.read
+-- VARIABLES config
+-- TO_LOAD value
+do
+    value = {}
+    value.pid = buf:get_uint32()
+    config = buf:get_byte()
+
+    --ORIGIN
+    if config == 0 or config == 3 then
+        value.origin = {
+            buf:get_float32(),
+            buf:get_float32(),
+            buf:get_float32()
+        }
+    else
+        value.origin = buf:get_uint32()
+    end
+
+    --COUNT
+    value.count = buf:get_uint16() - 1
+
+    --PRESET
+    value.preset = bson.decode(buf)
+
+    --EXTENSION
+    if config == 2 or config == 3 then
+        value.extension = bson.decode(buf)
+    end
+end--@
+
+-- @particle_origin.write
+-- VARIABLES
+-- TO_SAVE value
+do
+    buf:put_uint32(value.pid)
+    if type(value.origin) == "number" then
+        buf:put_bool(false)
+        buf:put_uint32(value.origin)
+    else
+        buf:put_bool(true)
+        buf:put_float32(value.origin[1])
+        buf:put_float32(value.origin[2])
+        buf:put_float32(value.origin[3])
+    end
+end--@
+
+-- @particle_origin.read
+-- VARIABLES
+-- TO_LOAD value
+do
+    value = {}
+    value.pid = buf:get_uint32()
+    if not buf:get_bool() then
+        value.origin = buf:get_uint32()
+    else
+        value.origin = {
+            buf:get_float32(),
+            buf:get_float32(),
+            buf:get_float32()
+        }
+    end
 end--@
