@@ -1,85 +1,116 @@
 app.config_packs({"server"})
 app.load_content()
+require "server:std/stdboot"
 
-require "server:constants"
-require "server:std/stdmin"
+LAUNCH_ATTEMPTS = 1
 
-local protect = require "server:lib/private/protect"
-if protect.protect_require() then return end
+local function main()
+    app.config_packs({"server"})
+    app.load_content()
+
+    require "server:constants"
+    require "server:std/stdmin"
+
+    local protect = require "server:lib/private/protect"
+    if protect.protect_require() then return end
 
 
-if IS_RELEASE then
-    logger.log(LOGO)
-else
-    logger.log(string.multiline_concat(LOGO, DEV))
+    if IS_RELEASE then
+        logger.log(LOGO)
+    else
+        logger.log(string.multiline_concat(LOGO, DEV))
+    end
+
+    logger.log(string.format("Welcome to %s! Starting...", PROJECT_NAME))
+    logger.log(string.format([[
+
+    %s status:
+        release: %s
+        version: %s
+    ]], PROJECT_NAME, IS_RELEASE, SERVER_VERSION))
+
+    local lib = require "server:lib/private/min"
+
+    require "server:init/server"
+    require "server:multiplayer/server/chat/commands"
+
+    if IS_FIRST_RUN then
+        logger.log("The first startup was detected, server has been stopped.")
+        logger.log("A configuration file was created on the config:server_config.json. Please configure the settings and restart.")
+        return
+    end
+
+    local timeout_executor = require "server:lib/private/common/timeout_executor"
+    local server = require "server:multiplayer/server/server"
+
+    local metadata = require "server:lib/private/files/metadata"
+    local world = lib.world
+
+    _G["/$p"] = table.copy(package.loaded)
+    local events_handlers = table.copy(events.handlers)
+
+    require "server:init/engine_patcher"
+
+    IS_RUNNING = true
+    world.open_main()
+    logger.log("world loop is started")
+
+    events.handlers["server:save"] = events_handlers["server:save"]
+    events.handlers["server:client_connected"] = events_handlers["server:client_connected"]
+    events.handlers["server:client_disconnected"] = events_handlers["server:client_disconnected"]
+
+    local save_interval = CONFIG.server.auto_save_interval * 60
+    local last_time_save = 0
+
+    metadata.load()
+
+    server = server.new(CONFIG.server.port)
+    server:start()
+
+
+
+    logger.log("server is started")
+
+    while IS_RUNNING do
+        app.tick()
+        timeout_executor.process()
+        server:tick()
+
+        local ctime = math.round(time.uptime())
+        if ctime % save_interval == 0 and ctime - last_time_save > 1 then
+            logger.log("Saving world...")
+            last_time_save = ctime
+            events.emit("server:save")
+            metadata.save()
+            app.save_world()
+        end
+    end
+
+    server:stop()
+    logger.log("world loop is stoped. Server is now offline.")
+    logger.log("Saving and closing the world...")
+    world.close_main()
 end
 
-logger.log(string.format("Welcome to %s! Starting...", PROJECT_NAME))
-logger.log(string.format([[
+-- do
+--     local bson = require "server:lib/private/files/bson"
+--     local bytes = bson.serialize({lox = true, name = "Саша", count = 100, "UGAGA", "PARIS", 23423, false})
+--     local res = table.deep_copy(bson.deserialize(bytes))
 
-%s status:
-    release: %s
-    version: %s
-]], PROJECT_NAME, IS_RELEASE, SERVER_VERSION))
+--     print(json.tostring(res))
+-- end
 
-local lib = require "server:lib/private/min"
+local PROCESS_NAME = "KERNEL-BOOTLOADER"
+while LAUNCH_ATTEMPTS <= 1 do
+    logger.log(string.format("Launch attempt number: %s", LAUNCH_ATTEMPTS), nil, nil, PROCESS_NAME)
+    LAUNCH_ATTEMPTS = LAUNCH_ATTEMPTS + 1
 
-require "server:init/server"
-require "server:multiplayer/server/chat/commands"
+    local status, err = pcall(main)
 
-if IS_FIRST_RUN then
-    logger.log("The first startup was detected, server has been stopped.")
-    logger.log("A configuration file was created on the config:server_config.json. Please configure the settings and restart.")
-    return
-end
-
-local timeout_executor = require "server:lib/private/common/timeout_executor"
-local server = require "server:multiplayer/server/server"
-local metadata = require "server:lib/private/files/metadata"
-local world = lib.world
-
-_G["/$p"] = table.copy(package.loaded)
-local events_handlers = table.copy(events.handlers)
-
-require "server:init/engine_patcher"
-
-IS_RUNNING = true
-world.open_main()
-logger.log("world loop is started")
-
-events.handlers["server:save"] = events_handlers["server:save"]
-events.handlers["server:client_connected"] = events_handlers["server:client_connected"]
-events.handlers["server:client_disconnected"] = events_handlers["server:client_disconnected"]
-
-local save_interval = CONFIG.server.auto_save_interval * 60
-local last_time_save = 0
-
-
-metadata.load()
-
-server = server.new(CONFIG.server.port)
-server:start()
-
-
-
-logger.log("server is started")
-
-while IS_RUNNING do
-    app.tick()
-    timeout_executor.process()
-    server:tick()
-
-    local ctime = math.round(time.uptime())
-    if ctime % save_interval == 0 and ctime - last_time_save > 1 then
-        logger.log("Saving world...")
-        last_time_save = ctime
-        events.emit("server:save")
-        metadata.save()
-        app.save_world()
+    if not status then
+        logger.log(string.format("Launch failed with an error: %s", err), nil, nil, PROCESS_NAME)
+    else
+        logger.log(string.format("Shutdown successfully", PROCESS_NAME), nil, nil, PROCESS_NAME)
+        break
     end
 end
-
-server:stop()
-logger.log("world loop is stoped. Server is now offline.")
-logger.log("Saving and closing the world...")
-world.close_main()
