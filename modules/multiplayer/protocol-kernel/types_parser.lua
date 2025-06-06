@@ -12,32 +12,39 @@ function module.parse_content(content)
 
     local remaining_content = content:sub(read_start_pos + #"--@READ_START")
 
-    local block_pattern = "%-%-%s*@([%w_]+)%.([%w]+)([%s%S]-)do([%s%S]-)end"
+    local block_pattern = "%-%-%s*@([%w_]+)%.([%w]+)([%s%S]-)do([%s%S]-)end%-%-@"
+
+    remaining_content = remaining_content .. "\n--@"
 
     for block_type, operation, header, code in remaining_content:gmatch(block_pattern) do
         local variables = {}
         local vars_part = header:match("VARIABLES%s+([^\n]*)")
         if vars_part then
-            vars_part = vars_part:gsub("%-%-.*", ""):gsub("%s+$", "")
-            for var in vars_part:gmatch("%S+") do
-                table.insert(variables, var)
+            vars_part = vars_part:gsub("%-%-.*", ""):gsub("^%s*(.-)%s*$", "%1")
+            if vars_part ~= "" then
+                for var in vars_part:gmatch("%S+") do
+                    table.insert(variables, var)
+                end
             end
         end
 
         local to_action, to_var = header:match("TO_([%w_]+)%s+([%w_]+)")
 
+        local to_looped = header:match("TO_LOOPED%s+([%w_]+)") or nil
+
+        local entry = {
+            VARIABLES = variables,
+            code = code
+        }
+
         if operation == "write" then
-            ENCODE[block_type] = {
-                VARIABLES = variables,
-                TO_SAVE = to_var or "",
-                code = code
-            }
+            entry.TO_SAVE = to_var or ""
+            if to_looped then entry.TO_LOOPED = to_looped end
+            ENCODE[block_type] = entry
         elseif operation == "read" then
-            DECODE[block_type] = {
-                VARIABLES = variables,
-                TO_LOAD = to_var or "",
-                code = code
-            }
+            entry.TO_LOAD = to_var or ""
+            if to_looped then entry.TO_LOOPED = to_looped end
+            DECODE[block_type] = entry
         end
     end
 

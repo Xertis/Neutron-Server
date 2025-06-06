@@ -1,28 +1,5 @@
-local bincode = require "lib/public/common/bincode"
-local bson = require "lib/private/files/bson"
 
-local MAX_UINT16 = 65535
-local MIN_UINT16 = 0
-local MAX_UINT32 = 4294967295
-local MIN_UINT32 = 0
-local MAX_UINT64 = 18446744073709551615
-local MIN_UINT64 = 0
-
-local MAX_BYTE = 255
-local MIN_BYTE = 0
-
-local MAX_INT8 = 127
-local MAX_INT16 = 32767
-local MAX_INT32 = 2147483647
-local MAX_INT64 = 9223372036854775807
-
-local MIN_INT8 = -127
-local MIN_INT16 = -32768
-local MIN_INT32 = -2147483648
-local MIN_INT64 = -9223372036854775808
-
-local protocol = {}
-local data_buffer = require "lib/public/bit_buffer"
+local bit_buffer = require "lib/public/bit_buffer"
 protocol.data = json.parse(file.read("server:default_data/protocol.json"))
 
 ---Кодирование строки
@@ -411,9 +388,9 @@ end
 
 ---Создаёт датабуфер с порядком Big Endian
 ---@param bytes table|nil [Опционально] Таблица с байтами
----@return table data_buffer Датабуфер
+---@return table bit_buffer Датабуфер
 function protocol.create_databuffer(bytes)
-    local buf = data_buffer:new(bytes, protocol.data.order)
+    local buf = bit_buffer:new(bytes, protocol.data.order)
     ---Записать LEB128
     ---@param number number
     function buf.ownDb:put_leb128(number)
@@ -550,7 +527,7 @@ end
 -- закомментировал лишнее. если что-нибудь без этого ёбнет, раскомментировать.
 -- function protocol.parse_array_of(structure, data)
 --     local elements = {}
---     local buffer = data_buffer()
+--     local buffer = bit_buffer()
 
 --     buffer:put_bytes(data)
 --     buffer:set_position(1)

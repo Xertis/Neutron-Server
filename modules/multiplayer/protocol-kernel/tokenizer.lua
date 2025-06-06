@@ -1,6 +1,10 @@
 local module = {}
 
 local function tokenize_index(indx)
+    if indx == 0 then
+        error("Tokenizer index is nil")
+    end
+
     local result = {}
     local base = 26
     local char_offset = string.byte('a') - 1
