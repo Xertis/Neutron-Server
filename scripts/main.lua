@@ -92,13 +92,14 @@ local function main()
     world.close_main()
 end
 
--- do
---     local bson = require "server:lib/private/files/bson"
---     local bytes = bson.serialize({lox = true, name = "Саша", count = 100, "UGAGA", "PARIS", 23423, false})
---     local res = table.deep_copy(bson.deserialize(bytes))
-
---     print(json.tostring(res))
--- end
+do
+    local compiler = require "server:multiplayer/protocol-kernel/compiler"
+    local code = compiler.compile_encoder({"degree", "degree"})
+    local func = compiler.load(code)
+    local buf = require "server:lib/public/bit_buffer":new()
+    func(buf, 15.5, 90)
+    print(table.tostring(buf.bytes))
+end
 
 local PROCESS_NAME = "KERNEL-BOOTLOADER"
 while LAUNCH_ATTEMPTS <= 1 do

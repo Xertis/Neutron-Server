@@ -10,6 +10,22 @@ local bit = {}
 
 --@READ_START
 
+-- @degree.write
+-- VARIABLES deg
+-- TO_SAVE val
+do
+    local deg = math.clamp(val, -180, 180)
+
+    buf:put_uint24(math.floor((deg + 180) / 360 * 16777215 + 0.5))
+end
+
+-- @degree.read
+-- VARIABLES
+-- TO_LOAD a
+do
+    local a = (buf:get_uint24() / 16777215) * 360 - 180
+end
+
 -- @boolean.write
 -- VARIABLES 
 -- TO_SAVE val

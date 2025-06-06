@@ -45,7 +45,7 @@ function module.get_tokens(cur_index, variables)
     local tokens = {}
     for indx, var in ipairs(variables) do
         local token = tokenize_index(cur_index + indx)
-        tokens[token] = var
+        tokens[var] = token
     end
 
     return tokens, cur_index + #variables
