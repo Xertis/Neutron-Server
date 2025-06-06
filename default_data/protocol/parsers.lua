@@ -76,8 +76,8 @@ end--@
 -- VARIABLES xx yy zz y_low y_high
 -- TO_SAVE val
 do
-    xz, yy, zz = unpack(val)
-    yy = math.clamp(y, 0, 262)
+    xx, yy, zz = unpack(val)
+    yy = math.clamp(yy, 0, 262)
 
     xx = (xx - (xx - xx % 32)) * 1000 + 0.5
     yy = math.floor(yy * 1000 + 0.5)
@@ -91,7 +91,7 @@ do
 end--@
 
 -- @player_pos.read
--- VARIABLES i ii xx y_low y_high yy zz
+-- VARIABLES i ii xx yy zz y_low y_high
 -- TO_LOAD result
 do
     i = buf:get_uint24()
@@ -290,6 +290,7 @@ end--@
 do
     buf:put_sint16(data[1])
     buf:put_sint16(data[2])
+    buf:put_uint16(#data[3])
     buf:put_bytes(data[3])
 end--@
 
@@ -298,9 +299,9 @@ end--@
 -- TO_LOAD chunk
 do
     chunk = {
-        buf:put_sint16(),
-        buf:put_sint16(),
-        buf:put_bytes(),
+        buf:get_sint16(),
+        buf:get_sint16(),
+        buf:get_bytes(buf:get_uint16()),
     }
 end--@
 

@@ -74,7 +74,7 @@ local function loop_encode(cur_index, outer, inner)
     inner_code = tokenizer.variables_replace(inner_code, tokens_inner)
     outer_code = string.replace_substr(outer_code, inner_code, foreign.start, foreign.finish)
 
-    return outer_code, tokens_outer[outer_info.TO_SAVE]
+    return outer_code, tokens_outer[outer_info.TO_SAVE], cur_index
 end
 
 local function loop_decode(cur_index, outer, inner)
@@ -100,7 +100,7 @@ local function loop_decode(cur_index, outer, inner)
     inner_code = tokenizer.variables_replace(inner_code, tokens_inner)
     outer_code = string.replace_substr(outer_code, inner_code, foreign.start, foreign.finish)
 
-    return outer_code, tokens_outer[outer_info.TO_LOAD]
+    return outer_code, tokens_outer[outer_info.TO_LOAD], cur_index
 end
 
 function module.compile_encoder(types)
@@ -117,7 +117,8 @@ function module.compile_encoder(types)
         local type_info = PARSED_INFO.encode[outer]
 
         if inner then
-            local code, to_save = loop_encode(cur_index, outer, inner)
+            local code, to_save, cur_indx = loop_encode(cur_index, outer, inner)
+            cur_index = cur_indx
             table.insert(sum_tokens, to_save)
 
             concated_code = string.format("%s%s ", concated_code, code)
@@ -158,7 +159,8 @@ function module.compile_decoder(types)
         local type_info = PARSED_INFO.decode[outer]
 
         if inner then
-            local code, to_load = loop_decode(cur_index, outer, inner)
+            local code, to_load, cur_indx = loop_decode(cur_index, outer, inner)
+            cur_index = cur_indx
             table.insert(sum_tokens, to_load)
 
             concated_code = string.format("%s%s ", concated_code, code)
@@ -193,7 +195,11 @@ function module.load(code)
     local env = {
         bson = bson,
         bincode = bincode,
-        math = math
+        math = math,
+        table = table,
+        string = string,
+        unpack = unpack,
+        bit = bit
     }
 
     local func = load(code)()

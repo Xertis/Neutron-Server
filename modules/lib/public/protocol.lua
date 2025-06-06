@@ -31,11 +31,6 @@ function protocol.create_databuffer(bytes)
     return buf
 end
 
----Создатель пакетов
----@param client_or_server string "client" или "server" - сторона, на которой создаётся пакет
----@parpackam et_type integer Тип пакета
----@param ... any Дополнительные параметры пакета
----@return table bytes Пакет
 function protocol.build_packet(client_or_server, packet_type, ...)
     local buffer = protocol.create_databuffer()
     buffer:put_byte(packet_type - 1)
@@ -46,8 +41,9 @@ function protocol.build_packet(client_or_server, packet_type, ...)
     if not state then
         logger.log("Packet encoding crash, additional information in server.log", 'E')
 
+        logger.log("Error: " .. res, 'E', true)
+
         logger.log("Traceback:", 'E', true)
-        logger.log(res, 'E', true)
         logger.log(debug.traceback(), 'E', true)
 
         logger.log("Packet:", 'E', true)
@@ -55,20 +51,17 @@ function protocol.build_packet(client_or_server, packet_type, ...)
 
         logger.log("Data:", 'E', true)
         logger.log(json.tostring(...), 'E', true)
+        return
     end
     buffer:flush()
     return buffer.bytes
 end
 
----Парсер пакетов
----@param client_or_server string "client" или "server" - сторона, откуда пришёл пакет
----@param data table Таблица с байтами (пакет)
----@return table parameters Список извлечённых параметров
 function protocol.parse_packet(client_or_server, data)
+    local result = {}
     local buffer = protocol.create_databuffer() -- для удобства создадим буфер
     buffer:put_bytes(data) -- запихаем в буфер все байты полученного пакета
     buffer:reset() -- движок поставит позицию в конец буфера, возвращаем обратно в начало
-
     local packet_type = buffer:get_byte() + 1
     result.packet_type = packet_type
     local packet_parser_info = protocol[client_or_server .. "Parsers"][packet_type]
@@ -80,6 +73,8 @@ function protocol.parse_packet(client_or_server, data)
     if not state then
         logger.log("Packet parsing crash, additional information in server.log", 'E')
 
+        logger.log("Error: " .. res, 'E', true)
+
         logger.log("Traceback:", 'E', true)
         logger.log(debug.traceback(), 'E', true)
 
@@ -88,9 +83,9 @@ function protocol.parse_packet(client_or_server, data)
 
         logger.log("Data:", 'E', true)
         logger.log(table.tostring(data), 'E', true)
+        return
     end
 
-    local result = {}
     for indx, name in ipairs(names) do
         result[name] = res[indx]
     end

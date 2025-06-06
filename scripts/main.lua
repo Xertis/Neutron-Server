@@ -94,9 +94,15 @@ end
 
 -- do
 --     local compiler = require "server:multiplayer/protocol-kernel/compiler"
+--     local bb = require "server:lib/public/bit_buffer":new()
 
---     local code = compiler.compile_decoder({"degree", "array<uint8>"})
---     print(code)
+--     local decoder = compiler.load(compiler.compile_decoder({"player_pos"}))
+--     local encoder = compiler.load(compiler.compile_encoder({"player_pos"}))
+
+--     encoder(bb, {30, 155, 15.5})
+--     print(bb.bytes)
+--     bb:reset()
+--     print(json.tostring(decoder(bb)))
 -- end
 
 local PROCESS_NAME = "KERNEL-BOOTLOADER"
