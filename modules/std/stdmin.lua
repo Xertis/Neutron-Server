@@ -1,4 +1,4 @@
-local data_buffer = require "lib/public/data_buffer"
+local data_buffer = require "lib/public/bit_buffer"
 
 _G['$Neutron'] = "server"
 
@@ -17,14 +17,6 @@ function player.get_dir(pid)
 end
 
 --- STRING
-
-function string.first_up(str)
-    return (str:gsub("^%l", string.upper))
-end
-
-function string.first_low(str)
-    return (str:gsub("^%u", string.lower))
-end
 
 function string.type(str)
     if not str then
@@ -139,61 +131,8 @@ end
 
 -- TIME
 
-function time.formatted_time()
-    local time_table = os.date("*t")
-
-    local date = string.format("%04d/%02d/%02d", time_table.year, time_table.month, time_table.day)
-    local time = string.format("%02d:%02d:%02d", time_table.hour, time_table.min, time_table.sec)
-
-    local milliseconds = string.format("%03d", math.floor((os.clock() % 1) * 1000))
-
-    local utc_offset = os.date("%z")
-    if not utc_offset then
-        utc_offset = "+0000"
-    end
-
-    return string.format("%s %s.%s%s", date, time, milliseconds, utc_offset)
-end
-
 function time.day_time_to_uint16(time)
     return math.floor(time * 65535 + 0.5)
-end
-
---- LOGGER
-
-logger = {}
-
-function logger.log(text, type, only_save)
-    type = type or 'I'
-    type = type:upper()
-
-    text = string.first_low(text)
-
-    local source = file.name(debug.getinfo(2).source)
-    local out = '[' .. string.left_pad(source, 20) .. '] ' .. text
-
-    local uptime = time.formatted_time()
-
-    local timestamp = string.format("[%s] %s", type, uptime)
-
-    local path = "export:server.log"
-    local message = timestamp .. string.left_pad(out, #out+33-#timestamp)
-
-    if not only_save then
-        print(message)
-    end
-
-    if not file.exists(path) then
-        file.write(path, "")
-    end
-
-    local content = file.read(path)
-
-    if #content > 600000 then
-        content = ''
-    end
-
-    file.write(path, content .. message .. '\n')
 end
 
 --- TABLE
@@ -383,6 +322,16 @@ function table.diff(tbl1, tbl2)
     return diff_tbl1, diff_tbl2
 end
 
+function table.from_bytearray(bytearray)
+    local bytes = {}
+
+    for index, byte in ipairs(bytearray) do
+        bytes[index] = tonumber(byte)
+    end
+
+    return bytes
+end
+
 --- MATH
 
 function math.euclidian3D(x1, y1, z1, x2, y2, z2)
@@ -422,9 +371,9 @@ function bjson.archive_tobytes(tbls, gzip)
     db:put_uint16(#tbls)
 
     for _, tbl in ipairs(tbls) do
-        local db2 = data_buffer:new(bjson.tobytes(tbl, gzip))
-        db:put_int64(db2:size())
-        db:put_bytes(db2.bytes)
+        local bytes = bjson.tobytes(tbl, gzip)
+        db:put_int64(#bytes)
+        db:put_bytes(bytes)
     end
 
     return db.bytes
@@ -437,6 +386,7 @@ function bjson.archive_frombytes(bytes)
 
     for _=1, len do
         local size = db:get_int64()
+
         table.insert(res, bjson.frombytes(db:get_bytes(size)))
     end
 
