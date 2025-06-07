@@ -290,7 +290,7 @@ end--@
 do
     buf:put_sint16(data[1])
     buf:put_sint16(data[2])
-    buf:put_uint16(#data[3])
+    buf:put_bytes(bincode.encode_varint(#data[3]))
     buf:put_bytes(data[3])
 end--@
 
@@ -301,7 +301,7 @@ do
     chunk = {
         buf:get_sint16(),
         buf:get_sint16(),
-        buf:get_bytes(buf:get_uint16()),
+        buf:get_bytes(bincode.decode_varint(buf)),
     }
 end--@
 
