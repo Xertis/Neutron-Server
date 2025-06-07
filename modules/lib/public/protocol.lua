@@ -51,7 +51,7 @@ function protocol.build_packet(client_or_server, packet_type, ...)
 
         logger.log("Data:", 'E', true)
         logger.log(json.tostring(...), 'E', true)
-        return
+        return {}
     end
     buffer:flush()
     return buffer.bytes
@@ -64,6 +64,7 @@ function protocol.parse_packet(client_or_server, data)
     buffer:reset() -- движок поставит позицию в конец буфера, возвращаем обратно в начало
     local packet_type = buffer:get_byte() + 1
     result.packet_type = packet_type
+    --print(packet_type)
     local packet_parser_info = protocol[client_or_server .. "Parsers"][packet_type]
     local decoder = packet_parser_info.decoder
     local names = packet_parser_info.names
@@ -83,7 +84,7 @@ function protocol.parse_packet(client_or_server, data)
 
         logger.log("Data:", 'E', true)
         logger.log(table.tostring(data), 'E', true)
-        return
+        return {}
     end
 
     for indx, name in ipairs(names) do

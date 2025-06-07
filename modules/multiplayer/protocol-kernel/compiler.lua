@@ -199,7 +199,28 @@ function module.load(code)
         table = table,
         string = string,
         unpack = unpack,
-        bit = bit
+        type = type,
+        bit = bit,
+
+        MAX_UINT16 = 65535,
+        MIN_UINT16 = 0,
+        MAX_UINT32 = 4294967295,
+        MIN_UINT32 = 0,
+        MAX_UINT64 = 18446744073709551615,
+        MIN_UINT64 = 0,
+
+        MAX_BYTE = 255,
+        MIN_BYTE = 0,
+
+        MAX_INT8 = 127,
+        MAX_INT16 = 32767,
+        MAX_INT32 = 2147483647,
+        MAX_INT64 = 9223372036854775807,
+
+        MIN_INT8 = -127,
+        MIN_INT16 = -32768,
+        MIN_INT32 = -2147483648,
+        MIN_INT64 = -9223372036854775808
     }
 
     local func = load(code)()

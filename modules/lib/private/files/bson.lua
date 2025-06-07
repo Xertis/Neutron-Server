@@ -35,7 +35,7 @@ local TYPES = {
 local function __return_type_number(num)
     if num < 0 then
         if num >= MIN_NBYTE then
-            return TYPES.nint8
+            return TYPES.nbyte
         elseif num >= MIN_NINT16 then
             return TYPES.nint16
         elseif num >= MIN_NINT32 then
