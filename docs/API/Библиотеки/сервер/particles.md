@@ -81,3 +81,4 @@ function on_world_tick( ... )
         particle:stop() -- Через 30 сек удаляет частицы
     end
 end
+```

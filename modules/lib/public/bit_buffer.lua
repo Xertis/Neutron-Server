@@ -117,6 +117,10 @@ function bit_buffer:move_position(step)
 	self.pos = self.pos + step
 end
 
+function bit_buffer:next()
+	self:move_position(8 - self.pos % 8)
+end
+
 function bit_buffer:reset()
 	self.pos = 1
 end

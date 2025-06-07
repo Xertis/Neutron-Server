@@ -93,11 +93,14 @@ local function main()
 end
 
 -- do
---     local bson = require "server:lib/private/files/bson"
---     local bytes = bson.serialize({lox = true, name = "Саша", count = 100, "UGAGA", "PARIS", 23423, false})
---     local res = table.deep_copy(bson.deserialize(bytes))
+--     local compiler = require "server:multiplayer/protocol-kernel/compiler"
+--     local bb = require "server:lib/public/bit_buffer":new()
 
---     print(json.tostring(res))
+--     local decoder = compiler.compile_decoder({"particle"})
+--     local encoder = compiler.compile_encoder({"particle"})
+
+--     print(encoder)
+--     print(decoder)
 -- end
 
 local PROCESS_NAME = "KERNEL-BOOTLOADER"

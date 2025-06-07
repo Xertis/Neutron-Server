@@ -13,7 +13,7 @@
         ["PlayerInventory", "inventory:bson"],
         ["PlayerHandSlot", "slot:uint8"],
         ["RequestChunk", "x:int16", "z:int16"],
-        ["RequestChunks", "chunks:array|int16"],
+        ["RequestChunks", "chunks:array<int16>"],
         ["ChatMessage", "message:string"],
         ["CommandMessage", "message:string"],
 
@@ -25,54 +25,46 @@
         ["BlockRegionInteract", "x:int8", "y:uint8", "z:int8"],
         ["BlockRegionDestroy", "x:int8", "y:uint8", "z:int8"],
 
-        ["PacksHashes", "packs:array|string"],
-        ["PackEvent", "pack:string", "event:string", "bytes:array|uint8"],
+        ["PacksHashes", "packs:array<string>"],
+        ["PackEvent", "pack:string", "event:string", "bytes:array<uint8>"],
         ["PlayerRegion", "x:int16", "z:int16"],
         ["PackEnv", "pack:string", "env:string", "key:string", "value:any"],
         ["EntitySpawnTry", "entity_def:uint16", "args:bson"],
         ["Disconnect"]
     ],
     "server": [
-        ["JoinSuccess", "entity_id:uint32", "game_time:uint16", "rules:structure|Rule", "chunks_loading_distance:uint8"],
-        ["WorldData", "data:structure|Block", "progress:uint16", "max_progress:uint16"],
+        ["JoinSuccess", "entity_id:uint32", "game_time:uint16", "rules:array<Rule>", "chunks_loading_distance:uint8"],
         ["SynchronizePlayerPosition", "x:f32", "y:f32", "z:f32", "yaw:degree", "pitch:degree", "noclip:boolean", "flight:boolean"],
         ["SetPlayerAbilities", "flags:uint8"],
         ["TimeUpdate", "game_time:uint16"],
-        ["StatusResponse", "name:string", "favicon:array|uint8", "version:string", "protocol:uint16", "players:array|string", "seed:string", "max:uint16", "online:uint16"],
+        ["StatusResponse", "name:string", "favicon:array<uint8>", "version:string", "protocol:uint16", "players:array<string>", "seed:string", "max:uint16", "online:uint16"],
         ["PongResponse", "payload:uint32"],
         ["KeepAlive", "challenge:uint8"],
         ["PlayerJoined", "entity_id:uint32", "username:string", "x:f32", "y:f32", "z:f32", "noclip:boolean", "flight:boolean"],
         ["PlayerMoved", "entity_id:uint32", "x:f32", "y:f32", "z:f32", "yaw:degree", "pitch:degree", "noclip:boolean", "flight:boolean"],
-        ["PlayerList", "list:structure|Player"],
+        ["PlayerList", "list:array<Player>"],
         ["PlayerListAdd", "username:string", "entity_id:uint32"],
         ["PlayerListRemove", "username:string", "entity_id:uint32"],
         ["PlayerInventory", "inventory:bson"],
         ["PlayerHandSlot", "slot:uint8"],
-        ["ChunkData", "x:int16", "z:int16", "data:array|uint8"],
-        ["ChunksData", "list:structure|Chunk"],
+        ["ChunkData", "x:int16", "z:int16", "data:array<uint8>"],
+        ["ChunksData", "list:array<Chunk>"],
         ["ChatMessage", "message:string"],
         ["BlockChanged", "x:int32", "y:uint8", "z:int32", "block_state:uint16", "block_id:uint16", "pid:uint32"],
 
-        ["PacksList", "packs:array|string"],
-        ["PackEvent", "pack:string", "event:string", "bytes:array|uint8"],
+        ["PacksList", "packs:array<string>"],
+        ["PackEvent", "pack:string", "event:string", "bytes:array<uint8>"],
         ["PackEnv", "pack:string", "env:string", "key:string", "value:any"],
 
         ["EntityUpdate", "uid:uint32", "entity_def:uint16", "dirty:bson"],
         ["EntityDespawn", "uid:uint32"],
 
-        ["ParticleEmit", "particle:$particle"],
-        ["ParticleOrigin", "origin:$particle_origin"],
+        ["ParticleEmit", "particle:particle"],
+        ["ParticleOrigin", "origin:particle_origin"],
         ["ParticleStop", "pid:uint32"],
 
         ["WeatherChanged", "weather:bson", "time:uint16", "name:string"],
         ["Disconnect", "reason:string"]
     ],
-    "states": ["Status", "Login", "Active"],
-    "structures": [
-        ["Block", "x:int32", "y:uint8", "z:int32", "block_state:uint16", "block_id:string"],
-        ["Player", "entity_id:uint32", "username:string"],
-        ["Chunk", "x:int16", "z:int16", "data:array|uint8"],
-        ["Rule", "rule:string", "value:boolean"],
-        ["Item", "item_id:uint16", "count:uint16", "data:bson"]
-    ]
+    "states": ["Status", "Login", "Active"]
 }

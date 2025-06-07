@@ -1,5 +1,16 @@
 -- STRING
 
+function string.replace_substr(str1, str2, start, finish)
+    if start < 1 or finish > #str1 or start > finish then
+        return nil
+    end
+
+    local before = str1:sub(1, start - 1)
+    local after = str1:sub(finish + 1)
+
+    return before .. str2 .. after
+end
+
 function string.first_up(str)
     return (str:gsub("^%l", string.upper))
 end
