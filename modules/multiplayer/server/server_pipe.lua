@@ -1,5 +1,5 @@
 local Pipeline = require "lib/public/async_pipeline"
-local protocol = require "lib/public/protocol"
+local protocol = require "multiplayer/protocol-kernel/protocol"
 local protect = require "lib/private/protect"
 local matches = require "multiplayer/server/server_matches"
 local ClientPipe = require "multiplayer/server/client_pipe"

@@ -1,4 +1,4 @@
-local protocol = start_require "server:lib/public/protocol"
+local protocol = start_require "server:multiplayer/protocol-kernel/protocol"
 local server_echo = start_require "server:multiplayer/server/server_echo"
 
 local module = {

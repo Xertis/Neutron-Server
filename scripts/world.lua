@@ -15,7 +15,7 @@ function start_require(path)
 end
 
 local server_echo = start_require("server:multiplayer/server/server_echo")
-local protocol = start_require("server:lib/public/protocol")
+local protocol = start_require("server:multiplayer/protocol-kernel/protocol")
 local sandbox = start_require("server:lib/private/sandbox/sandbox")
 
 local function upd(blockid, x, y, z, playerid)

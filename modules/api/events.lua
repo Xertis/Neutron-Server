@@ -1,4 +1,4 @@
-local protocol = require "lib/public/protocol"
+local protocol = require "multiplayer/protocol-kernel/protocol"
 local server_echo = start_require("multiplayer/server/server_echo")
 
 local module = {}

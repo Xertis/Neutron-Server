@@ -1,4 +1,4 @@
-local protocol = require "lib/public/protocol"
+local protocol = require "multiplayer/protocol-kernel/protocol"
 
 local server_matches = start_require("multiplayer/server/server_matches")
 local switcher = server_matches.client_online_handler

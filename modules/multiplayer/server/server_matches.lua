@@ -1,4 +1,4 @@
-local protocol = require "lib/public/protocol"
+local protocol = require "multiplayer/protocol-kernel/protocol"
 local switcher = require "lib/public/common/switcher"
 local protect = require "lib/private/protect"
 local sandbox = require "lib/private/sandbox/sandbox"

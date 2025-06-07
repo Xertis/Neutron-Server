@@ -1,5 +1,5 @@
 local Pipeline = require "lib/public/pipeline"
-local protocol = require "lib/public/protocol"
+local protocol = require "multiplayer/protocol-kernel/protocol"
 local protect = require "lib/private/protect"
 local sandbox = require "lib/private/sandbox/sandbox"
 local entities_manager = require "lib/private/entities/entities_manager"

@@ -1,5 +1,5 @@
 local protect = require "lib/private/protect"
-local protocol = require "lib/public/protocol"
+local protocol = require "multiplayer/protocol-kernel/protocol"
 local server_echo = require "multiplayer/server/server_echo"
 local states = require "multiplayer/server/chat/chat_states"
 local module = {}

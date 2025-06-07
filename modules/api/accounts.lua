@@ -1,5 +1,5 @@
 local account_manager = start_require "server:lib/private/accounts/account_manager"
-local protocol = start_require "server:lib/public/protocol"
+local protocol = start_require "server:multiplayer/protocol-kernel/protocol"
 local lib = require "lib/private/min"
 local module = {
     roles = {}
