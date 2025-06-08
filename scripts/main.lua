@@ -111,7 +111,7 @@ while LAUNCH_ATTEMPTS <= 1 do
     local status, err = pcall(main)
 
     if not status then
-        logger.log(string.format("Launch failed with an error: %s", err), nil, nil, PROCESS_NAME)
+        logger.log(string.format("Failed with an error: %s", err), nil, nil, PROCESS_NAME)
     else
         logger.log(string.format("Shutdown successfully", PROCESS_NAME), nil, nil, PROCESS_NAME)
         break
