@@ -2,10 +2,12 @@ local Pipeline = require "lib/public/pipeline"
 local protocol = require "multiplayer/protocol-kernel/protocol"
 local protect = require "lib/private/protect"
 local sandbox = require "lib/private/sandbox/sandbox"
-local entities_manager = require "lib/private/entities/entities_manager"
-local weather_manager = require "lib/private/weather/weather_manager"
-local particles_manager = require "lib/private/particles/particles_manager"
 local matches = require "multiplayer/server/server_matches"
+
+local entities_manager = require "lib/private/entities/entities_manager"
+local weather_manager = require "lib/private/gfx/weather_manager"
+local particles_manager = require "lib/private/gfx/particles_manager"
+local audio_manager = require "lib/private/gfx/audio_manager"
 
 local ClientPipe = Pipeline.new()
 
@@ -233,6 +235,67 @@ ClientPipe:add_middleware(function(client)
         local particle = particles_with_pid[pid]
         local buffer = protocol.create_databuffer()
         buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.ParticleOrigin, particle))
+        client.network:send(buffer.bytes)
+    end
+
+    return client
+end)
+
+--Обновляем аудио
+ClientPipe:add_middleware(function(client)
+    if not client.account.is_logged then
+        return client
+    end
+
+    local cplayer = client.player
+    local pos = {player.get_pos(cplayer.pid)}
+
+    local client_speakers = table.set_default(cplayer.temp, "current-speakers", {})
+    local speakers = audio_manager.get_in_radius(pos[1], pos[2], pos[3], RENDER_DISTANCE)
+
+    local stopped_speakers = {}
+    local spawned_speakers = {}
+    local changed_speakers = {}
+
+    local server_speakers_ids = {}
+    for _, speaker in ipairs(speakers) do
+        server_speakers_ids[speaker.id] = true
+    end
+
+    for id, client_speaker in pairs(client_speakers) do
+        if not server_speakers_ids[id] then
+            table.insert(stopped_speakers, {id = id})
+            client_speakers[id] = nil
+        end
+    end
+
+    for _, server_speaker in ipairs(speakers) do
+        local client_speaker = client_speakers[server_speaker.id]
+
+        if not client_speaker then
+            client_speakers[server_speaker.id] = table.copy(server_speaker)
+            table.insert(spawned_speakers, server_speaker)
+        elseif not table.deep_equals(server_speaker, client_speaker) then
+            client_speakers[server_speaker.id] = table.copy(server_speaker)
+            table.insert(changed_speakers, server_speaker)
+        end
+    end
+
+    for _, stopped in ipairs(stopped_speakers) do
+        local buffer = protocol.create_databuffer()
+        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.AudioStop, stopped.id))
+        client.network:send(buffer.bytes)
+    end
+
+    for _, spawned in ipairs(spawned_speakers) do
+        local buffer = protocol.create_databuffer()
+        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.AudioEmit, spawned))
+        client.network:send(buffer.bytes)
+    end
+
+    for _, changed in ipairs(changed_speakers) do
+        local buffer = protocol.create_databuffer()
+        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.AudioState, changed))
         client.network:send(buffer.bytes)
     end
 

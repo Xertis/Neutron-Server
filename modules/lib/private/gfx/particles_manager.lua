@@ -2,32 +2,10 @@ local protect = require "lib/private/protect"
 
 if protect.protect_require() then return end
 
-local bson = require "lib/private/files/bson"
-
 local module = {}
 
 local PARTICLES = {}
-local READ_PATH = string.format("user:worlds/%s/server_resources/particles.bson", CONFIG.game.main_world)
-local WRITE_PATH = "world:server_resources/particles.bson"
 local MAX_PID = 0
-
-events.on("server:save", function ()
-    file.mktree(
-        WRITE_PATH,
-        bson.serialize({
-            max_pid = MAX_PID,
-            ["particles"] = table.to_serializable(PARTICLES)
-        })
-    )
-end)
-
-function module.load()
-    if file.exists(READ_PATH) then
-        local data = bson.deserialize(file.read_bytes(READ_PATH))
-        MAX_PID = data.max_pid
-        PARTICLES = data["particles"]
-    end
-end
 
 function module.emit(origin, count, preset, extension)
     local pid = MAX_PID
@@ -89,7 +67,5 @@ function module.get_in_radius(x, z, radius)
 
     return particles
 end
-
-module.load()
 
 return module

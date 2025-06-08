@@ -1,4 +1,4 @@
-local weather_manager = start_require "lib/private/weather/weather_manager"
+local weather_manager = start_require "server:lib/private/gfx/weather_manager"
 local module = {}
 
 local weather_mt = {

@@ -1,4 +1,4 @@
-local particles_manager = start_require("lib/private/particles/particles_manager")
+local particles_manager = start_require("server:lib/private/gfx/particles_manager")
 local module = {}
 
 local function stop(id)

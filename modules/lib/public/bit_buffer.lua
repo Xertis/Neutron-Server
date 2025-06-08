@@ -82,7 +82,15 @@ function bit_buffer:put_bit(bit)
 end
 
 function bit_buffer:get_bit()
-	local bit = getExp(self.bytes[math.ceil(self.pos / 8)], (self.pos - 1) % 8) ~= 0
+	local byte = self.bytes[math.ceil(self.pos / 8)]
+	local bit_pos = (self.pos - 1) % 8
+
+	if not byte then
+		coroutine.yield()
+		return self:get_bit()
+	end
+
+	local bit = getExp(byte, bit_pos) ~= 0
 
 	self.pos = self.pos + 1
 

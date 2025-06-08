@@ -437,3 +437,55 @@ do
         }
     end
 end--@
+
+-- @Audio.write
+-- VARIABLES
+-- TO_SAVE audio
+do
+    buf:put_uint32(audio.id)
+    buf:put_norm8(audio.volume)
+
+    if audio.x then
+        buf:put_bit(true)
+        buf:put_float32(audio.x)
+        buf:put_float32(audio.y)
+        buf:put_float32(audio.z)
+    else
+        buf:put_bit(false)
+    end
+
+    buf:put_float32(audio.velX)
+    buf:put_float32(audio.velY)
+    buf:put_float32(audio.velZ)
+
+    buf:put_byte(math.clamp(audio.pitch, 0, 255))
+    buf:put_string(audio.path)
+    buf:put_string(audio.channel)
+    buf:put_bit(audio.loop)
+    buf:put_bit(audio.isStream or false)
+end--@
+
+-- @Audio.read
+-- VARIABLES
+-- TO_LOAD audio
+do
+    audio = {}
+    audio.id = buf:get_uint32()
+    audio.volume = buf:get_norm8()
+
+    if buf:get_bit() then
+        audio.x = buf:get_float32()
+        audio.y = buf:get_float32()
+        audio.z = buf:get_float32()
+    end
+
+    audio.velX = buf:get_float32()
+    audio.velY = buf:get_float32()
+    audio.velZ = buf:get_float32()
+
+    audio.pitch = buf:get_byte()
+    audio.path = buf:get_string()
+    audio.channel = buf:get_string()
+    audio.loop = buf:get_bit()
+    audio.isStream = buf:get_bit()
+end--@

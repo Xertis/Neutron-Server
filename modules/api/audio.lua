@@ -1,4 +1,4 @@
-local audio_manager = start_require("lib/private/gfx/audio_manager")
+local audio_manager = start_require("server:lib/private/gfx/audio_manager")
 local module = {}
 
 local defFuncs = {
@@ -97,7 +97,7 @@ for _, name in ipairs(playFuncs) do
     module[name] = function(...)
         local id = func(...)
 
-        return id, Speaker:new(id)
+        return id, Speaker.new(id)
     end
 end
 

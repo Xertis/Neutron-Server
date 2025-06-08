@@ -63,6 +63,10 @@
         ["ParticleOrigin", "origin:particle_origin"],
         ["ParticleStop", "pid:uint32"],
 
+        ["AudioEmit", "audio:Audio"],
+        ["AudioState", "state:bson"],
+        ["AudioStop", "id:uint32"],
+
         ["WeatherChanged", "weather:bson", "time:uint16", "name:string"],
         ["Disconnect", "reason:string"]
     ],

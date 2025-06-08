@@ -16,7 +16,7 @@ local playingStreamsCount = 0
 local NEXT_ID = 1
 
 local function ensureSpeaker(id)
-    if not speakers[id] then
+    if not SPEAKERS[id] then
         error("undefined speaker with id '"..id.."'")
     end
 end
@@ -59,7 +59,7 @@ local function basePlay(name, x, y, z, volume, pitch, channel, loop)
     )
 
     channel = channel or 'regular'
-    
+
     if loop == nil then loop = false end
 
     local sound = {
@@ -69,7 +69,11 @@ local function basePlay(name, x, y, z, volume, pitch, channel, loop)
         pitch = pitch,
         channel = channel,
         loop = loop,
-        offsetTime = time.uptime()
+        offsetTime = time.uptime(),
+        id = NEXT_ID,
+        velX = 0,
+        velY = 0,
+        velZ = 0
     }
 
     local id = NEXT_ID
@@ -258,7 +262,7 @@ end
 
 function module.get_duration(speaker)
     ensureSpeaker(speaker)
-    
+
     logger.log("'audio.get_duration' function in the API always returns 0 for technical reasons", 'W')
 
     return 0
@@ -277,10 +281,12 @@ function module.get_in_radius(x, y, z, radius)
 
     for id, speaker in pairs(SPEAKERS) do
         local sx, sy, sz = speaker.x, speaker.y, speaker.z
-        if pos then
+        if sx then
             if math.euclidian3D(x, y, z, sx, sy, sz) <= radius then
-                table.insert(speakers, id)
+                table.insert(speakers, speaker)
             end
+        else
+            table.insert(speakers, speaker)
         end
     end
 
