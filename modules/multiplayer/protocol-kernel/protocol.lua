@@ -59,9 +59,17 @@ end
 
 function protocol.parse_packet(client_or_server, data)
     local result = {}
-    local buffer = protocol.create_databuffer() -- для удобства создадим буфер
-    buffer:put_bytes(data) -- запихаем в буфер все байты полученного пакета
-    buffer:reset() -- движок поставит позицию в конец буфера, возвращаем обратно в начало
+    local buffer = nil
+    if type(data) ~= "function" then
+        buffer = protocol.create_databuffer()
+        buffer:put_bytes(data)
+        buffer:reset()
+    else
+        buffer = protocol.create_databuffer()
+        buffer.receive_func = data
+        buffer:get_uint16()
+    end
+
     local packet_type = buffer:get_byte() + 1
     result.packet_type = packet_type
     --print(packet_type)
