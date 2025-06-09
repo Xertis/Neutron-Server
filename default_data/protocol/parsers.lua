@@ -16,6 +16,7 @@ ForeignDecode = function () end
 -- @degree.write
 -- VARIABLES deg
 -- TO_SAVE val
+-- LENBYTES 4
 do
     deg = math.clamp(val, -180, 180)
 
@@ -25,6 +26,7 @@ end--@
 -- @degree.read
 -- VARIABLES
 -- TO_LOAD a
+-- LENBYTES 4
 do
     a = (buf:get_uint24() / 16777215) * 360 - 180
 end--@
@@ -32,6 +34,7 @@ end--@
 -- @boolean.write
 -- VARIABLES 
 -- TO_SAVE val
+-- LENBITS 1
 do
     val = val and true or false
     buf:put_bit(val)
@@ -40,6 +43,7 @@ end--@
 -- @boolean.read
 -- VARIABLES 
 -- TO_LOAD result
+-- LENBITS 1
 do
     result = buf:get_bit()
 end--@
@@ -47,6 +51,7 @@ end--@
 -- @var.write
 -- VARIABLES 
 -- TO_SAVE val
+-- LENBYTES -1
 do
     buf:put_bytes(bincode.encode_varint(val))
 end--@
@@ -54,6 +59,7 @@ end--@
 -- @var.read
 -- VARIABLES 
 -- TO_LOAD result
+-- LENBYTES -1
 do
     result = bincode.decode_varint(buf)
 end--@
@@ -61,6 +67,7 @@ end--@
 -- @any.write
 -- VARIABLES 
 -- TO_SAVE val
+-- LENBYTES -1
 do
     buf:put_any(val)
 end--@
@@ -68,6 +75,7 @@ end--@
 -- @any.read
 -- VARIABLES 
 -- TO_LOAD result
+-- LENBYTES -1
 do
     result = buf:get_any()
 end--@
@@ -75,6 +83,7 @@ end--@
 -- @player_pos.write
 -- VARIABLES xx yy zz y_low y_high
 -- TO_SAVE val
+-- LENBYTES 6
 do
     xx, yy, zz = unpack(val)
     yy = math.clamp(yy, 0, 262)
@@ -93,6 +102,7 @@ end--@
 -- @player_pos.read
 -- VARIABLES i ii xx yy zz y_low y_high
 -- TO_LOAD result
+-- LENBYTES 6
 do
     i = buf:get_uint24()
     ii = buf:get_uint24()
@@ -109,6 +119,7 @@ end--@
 -- @bson.write
 -- VARIABLES 
 -- TO_SAVE val
+-- LENBYTES -1
 do
     bson.encode(buf, val)
 end--@
@@ -116,6 +127,7 @@ end--@
 -- @bson.read
 -- VARIABLES 
 -- TO_LOAD result
+-- LENBYTES -1
 do
     result = bson.decode(buf)
 end--@
@@ -123,6 +135,7 @@ end--@
 -- @int8.write
 -- VARIABLES 
 -- TO_SAVE val
+-- LENBYTES 1
 do
     buf:put_byte(val + 127)
 end--@
@@ -130,6 +143,7 @@ end--@
 -- @int8.read
 -- VARIABLES 
 -- TO_LOAD result
+-- LENBYTES 1
 do
     result = buf:get_byte() - 127
 end--@
@@ -137,6 +151,7 @@ end--@
 -- @uint8.write
 -- VARIABLES 
 -- TO_SAVE val
+-- LENBYTES 1
 do
     buf:put_byte(val)
 end--@
@@ -144,6 +159,7 @@ end--@
 -- @uint8.read
 -- VARIABLES 
 -- TO_LOAD result
+-- LENBYTES 1
 do
     result = buf:get_byte()
 end--@
@@ -151,6 +167,7 @@ end--@
 -- @int16.write
 -- VARIABLES 
 -- TO_SAVE val
+-- LENBYTES 2
 do
     buf:put_sint16(val)
 end--@
@@ -158,6 +175,7 @@ end--@
 -- @int16.read
 -- VARIABLES 
 -- TO_LOAD result
+-- LENBYTES 2
 do
     result = buf:get_sint16()
 end--@
@@ -165,6 +183,7 @@ end--@
 -- @uint16.write
 -- VARIABLES 
 -- TO_SAVE val
+-- LENBYTES 2
 do
     buf:put_uint16(val)
 end--@
@@ -172,6 +191,7 @@ end--@
 -- @uint16.read
 -- VARIABLES 
 -- TO_LOAD result
+-- LENBYTES 2
 do
     result = buf:get_uint16()
 end--@
@@ -179,6 +199,7 @@ end--@
 -- @int32.write
 -- VARIABLES 
 -- TO_SAVE val
+-- LENBYTES 4
 do
     buf:put_sint32(val)
 end--@
@@ -186,6 +207,7 @@ end--@
 -- @int32.read
 -- VARIABLES 
 -- TO_LOAD result
+-- LENBYTES 4
 do
     result = buf:get_sint32()
 end--@
@@ -193,6 +215,7 @@ end--@
 -- @uint32.write
 -- VARIABLES 
 -- TO_SAVE val
+-- LENBYTES 4
 do
     buf:put_uint32(val)
 end--@
@@ -200,6 +223,7 @@ end--@
 -- @uint32.read
 -- VARIABLES 
 -- TO_LOAD result
+-- LENBYTES 4
 do
     result = buf:get_uint32()
 end--@
@@ -207,6 +231,7 @@ end--@
 -- @int64.write
 -- VARIABLES 
 -- TO_SAVE val
+-- LENBYTES 8
 do
     buf:put_int64(val)
 end--@
@@ -214,6 +239,7 @@ end--@
 -- @int64.read
 -- VARIABLES 
 -- TO_LOAD result
+-- LENBYTES 8
 do
     result = buf:get_int64()
 end--@
@@ -221,6 +247,7 @@ end--@
 -- @f32.write
 -- VARIABLES 
 -- TO_SAVE val
+-- LENBYTES 4
 do
     buf:put_float32(val)
 end--@
@@ -228,6 +255,7 @@ end--@
 -- @f32.read
 -- VARIABLES 
 -- TO_LOAD result
+-- LENBYTES 4
 do
     result = buf:get_float32()
 end--@
@@ -235,6 +263,7 @@ end--@
 -- @f64.write
 -- VARIABLES 
 -- TO_SAVE val
+-- LENBYTES 8
 do
     buf:put_float64(val)
 end--@
@@ -242,6 +271,7 @@ end--@
 -- @f64.read
 -- VARIABLES 
 -- TO_LOAD result
+-- LENBYTES 8
 do
     result = buf:get_float64()
 end--@
@@ -249,6 +279,7 @@ end--@
 -- @string.write
 -- VARIABLES 
 -- TO_SAVE val
+-- LENBYTES -1
 do
     buf:put_string(val)
 end--@
@@ -256,6 +287,7 @@ end--@
 -- @string.read
 -- VARIABLES 
 -- TO_LOAD result
+-- LENBYTES -1
 do
     result = buf:get_string()
 end--@
@@ -264,6 +296,7 @@ end--@
 -- VARIABLES i
 -- TO_SAVE value
 -- TO_LOOPED data_type
+-- LENBYTES -1
 do
     buf:put_bytes(bincode.encode_varint(#value))
     for i = 1, #value do
@@ -275,6 +308,7 @@ end--@
 -- VARIABLES i array_length
 -- TO_LOAD result
 -- TO_LOOPED data_type
+-- LENBYTES -1
 do
     result = {}
     array_length = bincode.decode_varint(buf)
@@ -287,6 +321,7 @@ end--@
 -- @Chunk.write
 -- VARIABLES
 -- TO_SAVE data
+-- LENBYTES -1
 do
     buf:put_sint16(data[1])
     buf:put_sint16(data[2])
@@ -297,6 +332,7 @@ end--@
 -- @Chunk.read
 -- VARIABLES
 -- TO_LOAD chunk
+-- LENBYTES -1
 do
     chunk = {
         buf:get_sint16(),
@@ -308,6 +344,7 @@ end--@
 -- @Rule.write
 -- VARIABLES
 -- TO_SAVE data
+-- LENBYTES -1
 do
     buf:put_string(data[1])
     buf:put_bit(data[2])
@@ -316,6 +353,7 @@ end--@
 -- @Rule.read
 -- VARIABLES
 -- TO_LOAD rule
+-- LENBYTES -1
 do
     rule = {
         buf:get_string(),
@@ -326,6 +364,7 @@ end--@
 -- @Player.write
 -- VARIABLES
 -- TO_SAVE data
+-- LENBYTES -1
 do
     buf:put_uint32(data[1])
     buf:put_string(data[2])
@@ -334,6 +373,7 @@ end--@
 -- @Player.read
 -- VARIABLES
 -- TO_LOAD player
+-- LENBYTES -1
 do
     player = {
         buf:get_uint32(),
@@ -344,6 +384,7 @@ end--@
 -- @particle.write
 -- VARIABLES config
 -- TO_SAVE value
+-- LENBYTES -1
 do
     config = (type(value.origin) == "number" and 1 or 0) + (value.extension and 2 or 0)
     -- 0: origin - позиция, ext нету
@@ -377,6 +418,7 @@ end--@
 -- @particle.read
 -- VARIABLES config
 -- TO_LOAD value
+-- LENBYTES -1
 do
     value = {}
     value.pid = buf:get_uint32()
@@ -408,6 +450,7 @@ end--@
 -- @particle_origin.write
 -- VARIABLES
 -- TO_SAVE value
+-- LENBYTES -1
 do
     buf:put_uint32(value.pid)
     if type(value.origin) == "number" then
@@ -424,6 +467,7 @@ end--@
 -- @particle_origin.read
 -- VARIABLES
 -- TO_LOAD value
+-- LENBYTES -1
 do
     value = {}
     value.pid = buf:get_uint32()
@@ -441,6 +485,7 @@ end--@
 -- @Audio.write
 -- VARIABLES
 -- TO_SAVE audio
+-- LENBYTES -1
 do
     buf:put_uint32(audio.id)
     buf:put_norm8(audio.volume)
@@ -468,6 +513,7 @@ end--@
 -- @Audio.read
 -- VARIABLES
 -- TO_LOAD audio
+-- LENBYTES -1
 do
     audio = {}
     audio.id = buf:get_uint32()

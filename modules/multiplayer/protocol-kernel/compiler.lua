@@ -108,6 +108,9 @@ function module.compile_encoder(types)
     local cur_index = 0
     local sum_tokens = {}
 
+    local nofixed_len = false
+    local packet_len = 0
+
     if #types == 0 then
         return "return function () end"
     end
@@ -116,7 +119,14 @@ function module.compile_encoder(types)
         local outer, inner = parse_type(type)
         local type_info = PARSED_INFO.encode[outer]
 
+        if type_info.len == -1 then nofixed_len = true end
+        packet_len = packet_len + type_info.len
+
         if inner then
+            local len = PARSED_INFO.encode[inner].len
+            if len == -1 then nofixed_len = true end
+            packet_len = packet_len + len
+
             local code, to_save, cur_indx = loop_encode(cur_index, outer, inner)
             cur_index = cur_indx
             table.insert(sum_tokens, to_save)
@@ -142,13 +152,19 @@ function module.compile_encoder(types)
     end
 
     local args = table.concat(sum_tokens, ', ')
-    return string.format(FUNCTION_PATTERN_ENCODER, args, concated_code)
+
+    if nofixed_len then packet_len = -1 end
+
+    return string.format(FUNCTION_PATTERN_ENCODER, args, concated_code), packet_len
 end
 
 function module.compile_decoder(types)
     local concated_code = ""
     local cur_index = 0
     local sum_tokens = {}
+
+    local nofixed_len = false
+    local packet_len = 0
 
     if #types == 0 then
         return "return function () end"
@@ -158,7 +174,14 @@ function module.compile_decoder(types)
         local outer, inner = parse_type(type)
         local type_info = PARSED_INFO.decode[outer]
 
+        if type_info.len == -1 then nofixed_len = true end
+        packet_len = packet_len + type_info.len
+
         if inner then
+            local len = PARSED_INFO.decode[inner].len
+            if len == -1 then nofixed_len = true end
+            packet_len = packet_len + len
+
             local code, to_load, cur_indx = loop_decode(cur_index, outer, inner)
             cur_index = cur_indx
             table.insert(sum_tokens, to_load)
@@ -187,8 +210,10 @@ function module.compile_decoder(types)
         ::continue::
     end
 
+    if nofixed_len then packet_len = -1 end
+
     local returns = table.concat(sum_tokens, ', ')
-    return string.format(FUNCTION_PATTERN_DECODER, concated_code, returns)
+    return string.format(FUNCTION_PATTERN_DECODER, concated_code, returns), packet_len
 end
 
 function module.load(code)

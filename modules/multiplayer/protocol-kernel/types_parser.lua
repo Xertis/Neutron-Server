@@ -31,10 +31,21 @@ function module.parse_content(content)
         local to_action, to_var = header:match("TO_([%w_]+)%s+([%w_]+)")
 
         local to_looped = header:match("TO_LOOPED%s+([%w_]+)") or nil
+        local len = 0
+
+        local bits = header:match("LENBITS%s+([%w_]+)") or 0
+        local bytes = header:match("LENBYTES%s+([%w_]+)") or 0
+
+        if bits == 0 and bytes == 0 then
+            len = -1
+        else
+            len = bits + (bytes * 8)
+        end
 
         local entry = {
             VARIABLES = variables,
-            code = code
+            code = code,
+            len = len
         }
 
         if operation == "write" then

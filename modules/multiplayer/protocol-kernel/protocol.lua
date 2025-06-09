@@ -8,7 +8,14 @@ function protocol.create_databuffer(bytes)
     local buf = bit_buffer:new(bytes, protocol.data.order)
 
     function buf.ownDb:put_packet(packet)
-        self:put_uint16(#packet)
+        local type = packet[1]
+        packet:remove(1)
+
+        self:put_byte(type)
+        if protocol["serverParsers"][type+1].len == -1 then
+            self:put_uint16(#packet)
+        end
+
         self:put_bytes(packet)
     end
 
@@ -124,13 +131,14 @@ local function create_parser(client_or_server, index, name_and_type)
         table.insert(names, name)
     end
 
-    local encoder = compiler.load(compiler.compile_encoder(types))
+    local encoder, len = compiler.compile_encoder(types)
     local decoder = compiler.load(compiler.compile_decoder(types))
 
     protocol[client_or_server .. "Parsers"][index] = {
-        encoder = encoder,
+        encoder = compiler.load(encoder),
         decoder = decoder,
-        names = names
+        names = names,
+        len = len
     }
 end
 

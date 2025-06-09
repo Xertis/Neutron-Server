@@ -94,12 +94,12 @@ end
 
 -- do
 --     local compiler = require "server:multiplayer/protocol-kernel/compiler"
---     local bb = require "server:lib/public/bit_buffer":new()
 
---     local decoder = compiler.compile_decoder({"particle"})
---     local encoder = compiler.compile_encoder({"particle"})
+--     local decoder, len = compiler.compile_decoder({"int8", "array<uint32>"})
+--     local encoder = compiler.compile_encoder({"int8", "uint32"})
 
 --     print(encoder)
+--     print(len)
 --     print(decoder)
 -- end
 
