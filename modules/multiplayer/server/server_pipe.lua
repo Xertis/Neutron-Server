@@ -14,8 +14,7 @@ ServerPipe:add_middleware(function(client)
             while true do
                 local received_any = false
                 while true do
-                    local packet = nil
-                    success, packet = pcall(function()
+                    local success, packet = pcall(function()
                         return protocol.parse_packet("client", function (len) return client.network:recieve_bytes(len) end)
                     end)
 
@@ -23,7 +22,6 @@ ServerPipe:add_middleware(function(client)
                         List.pushright(client.received_packets, packet)
                         received_any = true
                     else
-                        print(packet)
                         break
                     end
                 end
