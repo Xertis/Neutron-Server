@@ -14,30 +14,15 @@ ServerPipe:add_middleware(function(client)
             while true do
                 local received_any = false
                 while true do
-                    local length_bytes = client.network:recieve_bytes(2)
-                    if not length_bytes then
-                        break
-                    end
-                    local success, length = pcall(function()
-                        local buffer = protocol.create_databuffer(length_bytes)
-                        return buffer:get_uint16()
-                    end)
-
-                    if not success or not length then
-                        break
-                    end
-                    local data_bytes = client.network:recieve_bytes(length)
-                    if not data_bytes or #data_bytes < length then
-                        break
-                    end
-
                     local success, packet = pcall(function()
-                        return protocol.parse_packet("client", data_bytes)
+                        return protocol.parse_packet("client", function (len) return client.network:recieve_bytes(len) end)
                     end)
 
                     if success and packet then
                         List.pushright(client.received_packets, packet)
                         received_any = true
+                    else
+                        break
                     end
                 end
                 if not received_any then

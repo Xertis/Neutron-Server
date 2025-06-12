@@ -49,6 +49,7 @@ function bit_buffer:new(bytes, order)
     obj.pos = 1
     obj.current = 0
 	obj.current_is_zero = true
+	obj.receive_func = false
 
 	if type(bytes) ~= "cdata" then
     	obj.bytes = Bytearray()
@@ -82,13 +83,18 @@ function bit_buffer:put_bit(bit)
 end
 
 function bit_buffer:get_bit()
-	local byte = self.bytes[math.ceil(self.pos / 8)]
-	local bit_pos = (self.pos - 1) % 8
-
-	if not byte then
-		coroutine.yield()
-		return self:get_bit()
+	local byte = nil
+	if not self.receive_func or self.bytes[math.ceil(self.pos / 8)] then
+		byte = self.bytes[math.ceil(self.pos / 8)]
+	else
+		local bytes = self.receive_func(1) or {}
+		byte = bytes[1]
+		if byte ~= nil then
+			self.bytes:append(byte)
+		end
 	end
+
+	local bit_pos = (self.pos - 1) % 8
 
 	local bit = getExp(byte, bit_pos) ~= 0
 
