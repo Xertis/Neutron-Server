@@ -60,6 +60,7 @@ local function main()
     events.handlers["server:client_disconnected"] = events_handlers["server:client_disconnected"]
 
     local save_interval = CONFIG.server.auto_save_interval * 60
+    local shutdown_timeout = (CONFIG.server.shutdown_timeout or -1) * 60
     local last_time_save = 0
 
     metadata.load()
@@ -83,6 +84,11 @@ local function main()
             events.emit("server:save")
             metadata.save()
             app.save_world()
+        end
+
+        if ctime > shutdown_timeout and shutdown_timeout > 0 then
+            metadata.save()
+            IS_RUNNING = false
         end
     end
 

@@ -21,6 +21,7 @@
     "chunks_loading_speed": 4,
     "password_auth": false,
     "dev_mode": false,
+    "shutdown_timeout": -1,
     "whitelist": [],
     "blacklist": []
   },
