@@ -143,23 +143,30 @@ local function create_parser(client_or_server, index, name_and_type)
 end
 
 -- Парсим из json типы пакетов сервера
+logger.log("Compiling server packets")
 for index, value in ipairs(protocol.data.server) do
     protocol.ServerMsg[index] = value[1]
     protocol.ServerMsg[value[1]] = index
 
     create_parser("server", index, table.sub(value, 2))
+    logger.log(string.format('%s. Packet "%s" compiled', index, value[1]))
 end
 -- Парсим из json типы пакетов клиента
+logger.blank()
+logger.log("Compiling client packets")
 for index, value in ipairs(protocol.data.client) do
     protocol.ClientMsg[index] = value[1] -- Имя типа пакета по индексу
     protocol.ClientMsg[value[1]] = index -- Индекс по имени типа пакета
 
     create_parser("client", index, table.sub(value, 2))
+    logger.log(string.format('%s. Packet "%s" compiled', index, value[1]))
 end
 -- Парсим из json статусы
 for index, value in ipairs(protocol.data.states) do
     protocol.States[index] = value
     protocol.States[value] = index
 end
+
+logger.log("Protocol compilation is complete")
 
 return protocol

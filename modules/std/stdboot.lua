@@ -78,3 +78,7 @@ function logger.log(text, type, only_save, custom_source)
 
     file.write(path, content .. message .. '\n')
 end
+
+function logger.blank()
+    print()
+end
