@@ -489,3 +489,24 @@ do
     audio.loop = buf:get_bit()
     audio.isStream = buf:get_bit()
 end--@
+
+-- @vec3.write
+-- VARIABLES i
+-- TO_SAVE vec
+-- TO_LOOPED data_type
+do
+    for i=1, 3 do
+        ForeignEncode(data_type, vec[i])
+    end
+end--@
+
+-- @vec3.read
+-- VARIABLES i
+-- TO_LOAD result
+-- TO_LOOPED data_type
+do
+    result = {}
+    for i=1, 3 do
+        ForeignDecode(data_type, result[i])
+    end
+end--@

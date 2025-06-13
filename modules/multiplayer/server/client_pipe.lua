@@ -8,6 +8,7 @@ local entities_manager = require "lib/private/entities/entities_manager"
 local weather_manager = require "lib/private/gfx/weather_manager"
 local particles_manager = require "lib/private/gfx/particles_manager"
 local audio_manager = require "lib/private/gfx/audio_manager"
+local text3d_manager = require "lib/private/gfx/text3d_manager"
 
 local ClientPipe = Pipeline.new()
 
@@ -298,6 +299,97 @@ ClientPipe:add_middleware(function(client)
         buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.AudioState, changed))
         client.network:send(buffer.bytes)
     end
+
+    return client
+end)
+
+-- Обновляем тексты
+ClientPipe:add_middleware(function(client)
+    if not client.account.is_logged then
+        return client
+    end
+
+    local cplayer = client.player
+    local pos = {player.get_pos(cplayer.pid)}
+
+    local client_text3ds = table.set_default(cplayer.temp, "current-text3ds", {})
+    local text3ds = text3d_manager.get_in_radius(pos[1], pos[3], RENDER_DISTANCE)
+
+    local stopped_text3ds = {}
+    local spawned_text3ds = {}
+    local changed_text3ds = {}
+    local changed_axis = {}
+
+    local server_text3ds_ids = {}
+    for _, text3d in ipairs(text3ds) do
+        server_text3ds_ids[text3d.id] = true
+    end
+
+    for id, client_text3d in pairs(client_text3ds) do
+        if not server_text3ds_ids[id] then
+            table.insert(stopped_text3ds, {id = id})
+            client_text3ds[id] = nil
+        end
+    end
+
+    for _, server_text3d in ipairs(text3ds) do
+        local client_text3d = client_text3ds[server_text3d.id]
+
+        if not client_text3d then
+            client_text3ds[server_text3d.id] = table.copy(server_text3d)
+            table.insert(spawned_text3ds, server_text3d)
+        elseif not table.deep_equals(server_text3d, client_text3d) then
+            local temp1 = table.copy(server_text3d)
+            local temp2 = table.copy(client_text3d)
+
+            temp1.axisX, temp1.axisY = nil, nil
+            temp2.axisX, temp2.axisY = nil, nil
+            if not table.deep_equals(temp1, temp2) then
+                client_text3ds[server_text3d.id] = table.copy(server_text3d)
+                local text = table.conj(server_text3d, client_text3d)
+                text.id = server_text3d.id
+                table.insert(changed_text3ds, text)
+            else
+                client_text3ds[server_text3d.id] = table.copy(server_text3d)
+                if not table.deep_equals(server_text3d.axisX, client_text3d.axisX) then
+                    table.insert(changed_axis, {text = server_text3d, is_x = true})
+                end
+
+                if not table.deep_equals(server_text3d.axisY, client_text3d.axisY) then
+                    table.insert(changed_axis, {text = server_text3d, is_x = false})
+                end
+            end
+        end
+    end
+
+    local buffer = protocol.create_databuffer()
+
+    for _, stopped in ipairs(stopped_text3ds) do
+        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.Text3DHide, stopped.id))
+    end
+
+    for _, spawned in ipairs(spawned_text3ds) do
+        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.Text3DShow, spawned))
+    end
+
+    for _, changed in ipairs(changed_text3ds) do
+        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.Text3DState, changed))
+    end
+
+    for _, changed in ipairs(changed_axis) do
+        local axis = nil
+        if changed.is_x then
+            axis = changed.text.axisX
+        else
+            axis = changed.text.axisY
+        end
+
+        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.Text3DAxis,
+            changed.text.id, axis, changed.is_x
+        ))
+    end
+
+    client.network:send(buffer.bytes)
 
     return client
 end)

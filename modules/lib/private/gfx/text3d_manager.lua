@@ -27,7 +27,8 @@ function module.show(position, text, preset, extension)
         position = position,
         text = text,
         preset = preset,
-        extension = extension
+        extension = extension,
+        id = NEXT_ID
     }
 
     NEXT_ID = NEXT_ID + 1
@@ -67,30 +68,30 @@ end
 
 function module.get_axis_x(id)
     ensureText(id)
-    return TEXTS[id].axisX
+    return TEXTS[id].axisX or {1, 0, 0}
 end
 
 function module.set_axis_x(id, axis)
     ensureText(id)
     ensureVec3(axis)
-    TEXTS[id].axisX = axisX
+    TEXTS[id].axisX = axis
 end
 
 function module.get_axis_y(id)
     ensureText(id)
-    return TEXTS[id].axisY
+    return TEXTS[id].axisY or {0, 1, 0}
 end
 
 function module.set_axis_y(id, axis)
     ensureText(id)
     ensureVec3(axis)
-    TEXTS[id].axisY = axisY
+    TEXTS[id].axisY = axis
 end
 
 function module.set_rotation(id, rotation)
     ensureText(id)
 
-    if type(vec) ~= "table" or #vec ~= 16 then
+    if type(rotation) ~= "table" or #rotation ~= 16 then
         error 'invalid mat4'
     end
 
@@ -103,6 +104,19 @@ function module.update_settings(id, preset)
     if type(preset) ~= "table" then error 'invalid preset' end
 
     TEXTS[id].preset = preset
+end
+
+function module.get_in_radius(x, z, radius)
+    local texts = {}
+
+    for id, text in pairs(TEXTS) do
+        local sx, sz = text.position[1], text.position[3]
+        if math.euclidian2D(x, z, sx, sz) <= radius then
+            table.insert(texts, text)
+        end
+    end
+
+    return texts
 end
 
 return module

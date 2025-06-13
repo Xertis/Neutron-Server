@@ -73,7 +73,7 @@ end
 function module.show(...)
     local id = text3d_manager.show(...)
 
-    return id, Text:new(id)
+    return id, Text.new(id)
 end
 
 return module

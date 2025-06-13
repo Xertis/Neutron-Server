@@ -295,6 +295,30 @@ function table.deep_equals(tbl1, tbl2)
     return true
 end
 
+function table.conj(tbl1, tbl2)
+    local function equal(v1, v2)
+        if type(v1) ~= type(v2) then
+            return false
+        end
+
+        if type(v1) == "table" then
+            return table.deep_equals(v1, v2)
+        end
+
+        return v1 == v2
+    end
+
+    local res = {}
+    for key, val in pairs(tbl1) do
+        if not equal(val, tbl2[key]) then
+            res[key] = val
+            tbl2[key] = nil
+        end
+    end
+
+    return res
+end
+
 function table.diff(tbl1, tbl2)
     local set1 = {}
     local set2 = {}

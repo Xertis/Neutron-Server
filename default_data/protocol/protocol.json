@@ -67,6 +67,11 @@
         ["AudioState", "state:bson"],
         ["AudioStop", "id:uint32"],
 
+        ["Text3DShow", "data:bson"],
+        ["Text3DState", "state:bson"],
+        ["Text3DAxis", "id:uint32", "axis:vec3<f32>", "is_x:boolean"],
+        ["Text3DHide", "id:uint32"],
+
         ["WeatherChanged", "weather:bson", "time:uint16", "name:string"],
         ["Disconnect", "reason:string"]
     ],
