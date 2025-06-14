@@ -15,6 +15,7 @@
     "version": "0.28.0",
     "max_players": 16,
     "name": "MasterServer",
+    "description": "",
     "port": 25565,
     "auto_save_interval": 5,
     "chunks_loading_distance": 4,

@@ -141,17 +141,16 @@ matches.fsm:add_state("sending_status", {
             icon = file.read_bytes(DEFAULT_ICON_PATH)
         end
 
-        local players = table.keys(sandbox.get_players())
+        local players_count = table.count_pairs(sandbox.get_players())
 
         local STATUS = {
             CONFIG.server.name,
+            CONFIG.server.description or '',
             icon,
             CONFIG.server.version,
             protocol.data.version,
-            players,
-            CONFIG.game.worlds[CONFIG.game.main_world].seed,
             CONFIG.server.max_players,
-            #players
+            players_count
         }
 
         buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.StatusResponse, unpack(STATUS)))

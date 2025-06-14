@@ -37,7 +37,7 @@
         ["SynchronizePlayerPosition", "x:f32", "y:f32", "z:f32", "yaw:degree", "pitch:degree", "noclip:boolean", "flight:boolean"],
         ["SetPlayerAbilities", "flags:uint8"],
         ["TimeUpdate", "game_time:uint16"],
-        ["StatusResponse", "name:string", "favicon:array<uint8>", "version:string", "protocol:uint16", "players:array<string>", "seed:string", "max:uint16", "online:uint16"],
+        ["StatusResponse", "name:string", "description:string", "favicon:array<uint8>", "version:string", "protocol:uint16", "max:uint16", "online:uint16"],
         ["PongResponse", "payload:uint32"],
         ["KeepAlive", "challenge:uint8"],
         ["PlayerJoined", "entity_id:uint32", "username:string", "x:f32", "y:f32", "z:f32", "noclip:boolean", "flight:boolean"],
