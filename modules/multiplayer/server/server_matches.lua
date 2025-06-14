@@ -93,6 +93,10 @@ matches.fsm:add_state("idle", {
             return
         end
 
+        if event.packet_type == protocol.ClientMsg.HandShake then
+            matches.fsm:set_data(client, "friends_list", event.friends_list)
+        end
+
         if event.next_state == protocol.States.Status then
             return "awaiting_status_request"
         elseif event.next_state == protocol.States.Login then
@@ -112,8 +116,7 @@ matches.fsm:add_state("awaiting_status_request", {
 matches.fsm:add_state("awaiting_join_game", {
     on_event = function(client, event)
         if event.packet_type == protocol.ClientMsg.JoinGame then
-            matches.fsm.client_data[client] = matches.fsm.client_data[client] or {}
-            matches.fsm.client_data[client].join_game = event
+            matches.fsm:set_data(client, "join_game", event)
             return "sending_packs_list"
         end
     end
@@ -122,8 +125,7 @@ matches.fsm:add_state("awaiting_join_game", {
 matches.fsm:add_state("awaiting_packs_hashes", {
     on_event = function(client, event)
         if event.packet_type == protocol.ClientMsg.PacksHashes then
-            matches.fsm.client_data[client] = matches.fsm.client_data[client] or {}
-            matches.fsm.client_data[client].packs_hashes = event
+            matches.fsm:set_data(client, "packs_hashes", event)
             return "joining"
         end
     end
@@ -141,16 +143,23 @@ matches.fsm:add_state("sending_status", {
             icon = file.read_bytes(DEFAULT_ICON_PATH)
         end
 
-        local players_count = table.count_pairs(sandbox.get_players())
+        local friends_list = matches.fsm:get_data(client, "friends_list") or {}
+        local players = table.keys(sandbox.get_players())
+        local friends_states = {}
+
+        for indx, friend in ipairs(friends_list) do
+            friends_states[indx] = table.has(players, friend)
+        end
 
         local STATUS = {
             CONFIG.server.name,
             CONFIG.server.description or '',
             icon,
+            friends_states,
             CONFIG.server.version,
             protocol.data.version,
             CONFIG.server.max_players,
-            players_count
+            #players
         }
 
         buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.StatusResponse, unpack(STATUS)))
@@ -186,9 +195,8 @@ matches.fsm:add_state("sending_packs_list", {
 
 matches.fsm:add_state("joining", {
     on_enter = function (client)
-        local values = matches.fsm.client_data[client]
-        local packet = values.join_game
-        local hashes = values.packs_hashes.packs
+        local packet = matches.fsm:get_data(client, "join_game")
+        local hashes = matches.fsm:get_data(client, "packs_hashes")
         local buffer = nil
 
         local account = account_manager.login(packet.username)

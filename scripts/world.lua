@@ -64,9 +64,3 @@ end
 events.on("server:block_interact", function (...)
     upd(...)
 end)
-
-function on_world_open()
-    local text3d = require "server:api/api".server.text3d
-
-    local id, text = text3d.show({0,20,0}, "Текстовый текст", {}, {})
-end

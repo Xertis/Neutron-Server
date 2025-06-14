@@ -14,7 +14,7 @@ function multi_state_machine.new()
     self.on_transition_end = nil -- Колбек, вызываемый в конце перехода.
     self.on_state_change = nil -- Колбек, вызываемый при изменении состояния.
     self.default_state = nil
-    self.client_data = {}
+    self.client_data_storage = {}
 
     return self
 end
@@ -123,6 +123,16 @@ end
 -- @param state string Стандартное состояние.
 function multi_state_machine:set_default_state(state)
     self.default_state = state
+end
+
+function multi_state_machine:set_data(client_id, key, val)
+    local storage = table.set_default(self.client_data_storage, client_id, {})
+    storage[key] = val
+end
+
+function multi_state_machine:get_data(client_id, key)
+    local storage = table.set_default(self.client_data_storage, client_id, {})
+    return storage[key]
 end
 
 return multi_state_machine

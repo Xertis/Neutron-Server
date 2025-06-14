@@ -2,7 +2,7 @@
     "version": 2,
     "order": "BE",
     "client": [
-        ["HandShake", "version:string", "protocol_version:uint8", "next_state:uint8"],
+        ["HandShake", "version:string", "protocol_version:uint8", "friends_list:array<string>", "next_state:uint8"],
         ["StatusRequest"],
         ["PingRequest", "payload:uint32"],
         ["JoinGame", "username:string"],
@@ -37,7 +37,7 @@
         ["SynchronizePlayerPosition", "x:f32", "y:f32", "z:f32", "yaw:degree", "pitch:degree", "noclip:boolean", "flight:boolean"],
         ["SetPlayerAbilities", "flags:uint8"],
         ["TimeUpdate", "game_time:uint16"],
-        ["StatusResponse", "name:string", "description:string", "favicon:array<uint8>", "version:string", "protocol:uint16", "max:uint16", "online:uint16"],
+        ["StatusResponse", "name:string", "description:string", "favicon:array<uint8>", "friends_states:array<boolean>", "version:string", "protocol:uint16", "max:uint16", "online:uint16"],
         ["PongResponse", "payload:uint32"],
         ["KeepAlive", "challenge:uint8"],
         ["PlayerJoined", "entity_id:uint32", "username:string", "x:f32", "y:f32", "z:f32", "noclip:boolean", "flight:boolean"],
