@@ -7,17 +7,18 @@ local module = {
     packets = {
         ServerMsg = protocol.ServerMsg,
         ClientMsg = protocol.ClientMsg
-    }
+    },
+    receive = {}
 }
 
-function module.add_middleware(packet_type, middleware)
+function module.receive.add_middleware(packet_type, middleware)
     if type(middleware) ~= "function" then
         return error("Incorrect argument type")
     end
     switcher:add_middleware(packet_type, middleware)
 end
 
-function module.add_general_middleware(middleware)
+function module.receive.add_general_middleware(middleware)
     if type(middleware) ~= "function" then
         return error("Incorrect argument type")
     end

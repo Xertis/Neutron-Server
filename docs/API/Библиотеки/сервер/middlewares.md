@@ -12,7 +12,7 @@
 ## 2. Добавление middleware
 
 ```lua
-api.middlewares.add_middleware(packet_type, middleware)
+api.middlewares.receive.add_middleware(packet_type, middleware)
 ```
 
 **Параметры:**
@@ -32,13 +32,13 @@ function(packet, client)
 
 ## 3. Добавление общего обработчика для всех пакетов
 ```lua
-api.middlewares.add_general_middleware(middleware)
+api.middlewares.receive.add_general_middleware(middleware)
 ```
 
 ## 4. Пример использования
 
 ```lua
-middlewares.add_middleware("ClientMsg", function(packet, client)
+middlewares.receive.add_middleware("ClientMsg", function(packet, client)
     if not packet then
         return false
     end
