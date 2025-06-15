@@ -64,3 +64,12 @@ end
 events.on("server:block_interact", function (...)
     upd(...)
 end)
+
+function on_world_open()
+    local middlewares = require "api/api".server.middlewares
+
+    middlewares.send.add_general_middleware(function ()
+        print("АЛОХА")
+        return true
+    end)
+end

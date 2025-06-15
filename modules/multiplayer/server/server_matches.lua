@@ -162,9 +162,12 @@ matches.fsm:add_state("sending_status", {
             #players
         }
 
-        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.StatusResponse, unpack(STATUS)))
-        client.network:send(buffer.bytes)
-        logger.log("Status has been sent")
+        local status = buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.StatusResponse, unpack(STATUS)))
+
+        if status then
+            client.network:send(buffer.bytes)
+            logger.log("Status has been sent")
+        end
 
         return "idle"
     end

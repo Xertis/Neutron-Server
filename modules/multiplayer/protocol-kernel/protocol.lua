@@ -8,8 +8,13 @@ function protocol.create_databuffer(bytes)
     local buf = bit_buffer:new(bytes, protocol.data.order)
 
     function buf.ownDb:put_packet(packet)
-        self:put_uint16(#packet)
-        self:put_bytes(packet)
+        if packet then
+            self:put_uint16(#packet)
+            self:put_bytes(packet)
+            return true
+        end
+
+        return false
     end
 
     function buf.ownDb:get_packet()
@@ -53,7 +58,9 @@ function protocol.build_packet(client_or_server, packet_type, ...)
         logger.log(json.tostring(...), 'E', true)
         return {}
     end
+
     buffer:flush()
+
     return buffer.bytes
 end
 

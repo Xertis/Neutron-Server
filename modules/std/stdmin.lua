@@ -388,6 +388,21 @@ function functions.args_check(name, args)
     end
 end
 
+function functions.set_middlewares(func, middlewares)
+    return function (...)
+        for _, middleware in ipairs(middlewares) do
+            if not middleware(...) then
+                return
+            end
+        end
+
+        print(...)
+        local res = func(...)
+        print(res, "почему два вызова", debug.getinfo(2).source)
+        return res
+    end
+end
+
 -- BJSON
 
 function bjson.archive_tobytes(tbls, gzip)

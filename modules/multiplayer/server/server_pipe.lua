@@ -4,6 +4,7 @@ local protect = require "lib/private/protect"
 local matches = require "multiplayer/server/server_matches"
 local ClientPipe = require "multiplayer/server/client_pipe"
 local List = require "lib/public/common/list"
+local middlewares_applier = require "lib/public/common/middlewares_applier"
 
 local ServerPipe = Pipeline.new()
 
