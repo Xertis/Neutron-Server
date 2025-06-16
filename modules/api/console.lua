@@ -4,12 +4,13 @@ local account_manager = start_require "server:lib/private/accounts/account_manag
 local module = {}
 
 module.colors = {
-    red = "[#ff0000]",
+    red =    "[#ff0000]",
     yellow = "[#ffff00]",
-    blue = "[#0000FF]",
-    black = "[#000000]",
-    green = "[#00FF00]",
-    white = "[#FFFFFF]"
+    blue =   "[#0000FF]",
+    black =  "[#000000]",
+    green =  "[#00FF00]",
+    white =  "[#FFFFFF]",
+    gray =   "[#4d4d4d]"
 }
 
 local function __parse_scheme(scheme)
