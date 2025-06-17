@@ -152,7 +152,7 @@ matches.fsm:add_state("sending_status", {
         end
 
         local STATUS = {
-            CONFIG.server.name,
+            CONFIG.server.short_description or '',
             CONFIG.server.description or '',
             icon,
             friends_states,

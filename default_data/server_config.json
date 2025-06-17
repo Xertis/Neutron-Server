@@ -14,7 +14,7 @@
   "server": {
     "version": "0.28.0",
     "max_players": 16,
-    "name": "MasterServer",
+    "short_description": "MasterServer",
     "description": "",
     "port": 25565,
     "auto_save_interval": 5,
