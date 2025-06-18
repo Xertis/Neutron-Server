@@ -29,7 +29,13 @@ local api = {
     weather = weather,
     particles = particles,
     audio = audio,
-    text3d = text3d
+    text3d = text3d,
+    gfx = {
+        weather = weather,
+        particles = particles,
+        text3d = text3d,
+        audio = audio
+    }
 }
 
 return {server = api}
