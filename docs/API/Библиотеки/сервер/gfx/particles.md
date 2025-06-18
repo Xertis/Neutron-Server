@@ -20,7 +20,7 @@ particles.emit(
 
 2. **Получение эммитера частиц по ID**
 ```lua
-weather.get(pid: int) -> ParticlerObj | nil
+particles.get(pid: int) -> ParticlerObj | nil
 ```
 Возвращает объект партиклов или nil, если эффект не найден.
 
