@@ -4,7 +4,7 @@
 Для создания команды консоли используется следующая функция:
 
 ```python
-api.console.add_command(
+api.console.set_command(
     схема: str, 
     разрешения: table< table<str> >, 
     исполнитель: function, 
