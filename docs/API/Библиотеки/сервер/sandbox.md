@@ -18,7 +18,12 @@ api.sandbox.players.get_player(account: Account) -> Player
 ```
    - Возвращает класс игрока по аккаунту
 
-4. **Получение игрока по аккаунту**
+4. **Получение объекта игрока по pid**
+```lua
+api.sandbox.players.get_by_pid(pid: number) -> Player
+```
+
+5. **Перемещение игрока**
 ```lua
 api.sandbox.players.set_pos(player: Player, pos: {x=x, y=y, z=z})
 ```

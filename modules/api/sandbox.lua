@@ -49,4 +49,16 @@ function module.players.get_in_radius(target_pos, radius)
     return res
 end
 
+function module.players.get_by_pid(pid)
+    if type(pid) ~= "number" then
+        error("pid (number) expected, got nil")
+    end
+
+    for _, _player in pairs(sandbox.get_players()) do
+        if _player.pid == pid then
+            return _player
+        end
+    end
+end
+
 return module
