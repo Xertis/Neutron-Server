@@ -16,12 +16,13 @@ api.sandbox.players.get_in_radius(pos: {x=x, y=y, z=z}, radius: num) -> Table<Us
 ```lua
 api.sandbox.players.get_player(account: Account) -> Player
 ```
-   - Возвращает класс игрока по аккаунту
+   - Возвращает объект игрока по аккаунту
 
 4. **Получение объекта игрока по pid**
 ```lua
 api.sandbox.players.get_by_pid(pid: number) -> Player
 ```
+   - Возвращает объект игрока по **pid**
 
 5. **Перемещение игрока**
 ```lua
