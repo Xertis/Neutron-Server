@@ -6,6 +6,7 @@ CONFIG = {} --Инициализируется в std
 
 --Песочница
 RENDER_DISTANCE = 0
+PLAYER_ENTITY_ID = nil
 CODES = {
     codes_path = "server:default_data/codes.json"
 }

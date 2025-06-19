@@ -81,6 +81,10 @@ function lib.world.open_main()
     player.set_noclip(ROOT, true)
     player.set_flight(ROOT, true)
     player.set_pos(ROOT, 0, 262, 0)
+
+    local root_entity = entities.get(player.get_entity(ROOT))
+
+    PLAYER_ENTITY_ID = root_entity:def_index()
 end
 
 function lib.world.close_main()

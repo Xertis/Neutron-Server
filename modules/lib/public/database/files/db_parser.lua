@@ -4,7 +4,7 @@ local VERSION = 0
 
 local module = {}
 
-TYPES = {
+local TYPES = {
     codes = {
         null       = 0,
         int8       = 1,
