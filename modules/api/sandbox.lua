@@ -50,8 +50,9 @@ function module.players.get_in_radius(target_pos, radius)
 end
 
 function module.players.get_by_pid(pid)
-    if type(pid) ~= "number" then
-        error("pid (number) expected, got nil")
+    local pid_type = type(pid)
+    if pid_type ~= "number" then
+        error("pid (number) expected, got " .. pid_type)
     end
 
     for _, _player in pairs(sandbox.get_players()) do

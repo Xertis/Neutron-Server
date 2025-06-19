@@ -6,6 +6,7 @@ local server_echo = require "multiplayer/server/server_echo"
 
 local module = {}
 local reg_entities = {}
+local player_fields = {}
 local entities_data = {}
 
 local culling = function (pid, pos, target_pos)
@@ -13,6 +14,10 @@ local culling = function (pid, pos, target_pos)
 end
 
 function module.register(entity_name, config, handler)
+    if PLAYER_ENTITY_ID == entities.def_name(entity_name) then
+        error("You cannot register an entity responsible for a player, to create custom fields use entities.players.add_custom_field")
+    end
+
     reg_entities[entity_name] = {
         config = config,
         spawn_handler = handler
@@ -31,6 +36,21 @@ function module.clear_pid(pid)
     end
 end
 
+function module.add_field(type, key, field)
+    if not table.has({"custom_fields", "models", "textures", "components"}, type) then
+        error("Incorrect type for entity field")
+    end
+
+    local fields = table.set_default(player_fields, type, {})
+    if fields[key] then
+        return false
+    end
+
+    fields[key] = field
+
+    return true
+end
+
 function module.despawn(uid)
     entities_data[uid] = nil
 
@@ -44,23 +64,26 @@ function module.despawn(uid)
     )
 end
 
-local function __create_data(entity)
+local function __create_data(entity, is_player)
     local uid = entity:get_uid()
     local str_name = entity:def_name()
     local tsf = entity.transform
     local body = entity.rigidbody
     local rig = entity.skeleton
+    local conf = nil
+    local data = {}
 
-    local conf = reg_entities[str_name].config
-
-    local data = {
-        standart_fields = {
+    if not is_player then
+        conf = reg_entities[str_name].config
+        data.standart_fields = {
             tsf_rot = tsf:get_rot(),
             tsf_pos = tsf:get_pos(),
             tsf_size = tsf:get_size(),
             body_size = body:get_size(),
-        },
-    }
+        }
+    else
+        conf = player_fields
+    end
 
     if conf.textures then
         data.textures = {}
@@ -80,47 +103,55 @@ local function __create_data(entity)
         data.components = {}
         for component, val in pairs(conf.components) do
             local is_on = val.provider(uid, component)
-
             if type(is_on) ~= "boolean" then
                 error("Incorrect state of the component")
             end
-
             data.components[component] = is_on
         end
     end
 
     local custom_fields = {}
-
-    for field_name, field in pairs(conf.custom_fields) do
-        custom_fields[field_name] = field.provider(uid, field_name)
+    for field_name, field in pairs(conf.custom_fields or conf) do
+        if (conf == player_fields and field_name ~= "textures" and field_name ~= "models" and field_name ~= "components") 
+        or (conf ~= player_fields and conf.custom_fields) then
+            local val = field.provider(uid, field_name)
+            local val_type = type(val)
+            if not table.has({"number", "string", "boolean", "table"}, val_type) then
+                error("Non-serializable data type got: " .. val_type)
+            end
+            custom_fields[field_name] = val
+        end
     end
-
     data.custom_fields = custom_fields
 
     return data
 end
 
-local function __get_dirty(entity, data, cur_data, p_pos, e_pos)
+local function __get_dirty(entity, data, cur_data, p_pos, e_pos, is_player)
     local dirty = table.deep_copy(cur_data)
     local str_name = entity:def_name()
-    local dist = math.euclidian3D(
-        e_pos[1], e_pos[2], e_pos[3],
-        p_pos[1], p_pos[2], p_pos[3]
-    )
+    local dist = 0
+
+    if not is_player then
+        dist = math.euclidian3D(
+            e_pos[1], e_pos[2], e_pos[3],
+            p_pos[1], p_pos[2], p_pos[3]
+        )
+    end
 
     for fields_type, type in pairs(cur_data) do
-
         for field_name, cur_val in pairs(type) do
-            local config = reg_entities[str_name].config[fields_type][field_name]
-
-            table.set_default(data, fields_type, {})
-            local value = data[fields_type][field_name]
-            local max_deviation = config.maximum_deviation
-            local eval = config.evaluate_deviation
-
-            local deviation = math.abs(eval(dist, cur_val, value))
-
-            if deviation <= max_deviation then
+            local config = is_player and player_fields[fields_type] or reg_entities[str_name].config[fields_type]
+            if config and config[field_name] then
+                table.set_default(data, fields_type, {})
+                local value = data[fields_type][field_name]
+                local max_deviation = config[field_name].maximum_deviation
+                local eval = config[field_name].evaluate_deviation
+                local deviation = math.abs(eval(dist, cur_val, value))
+                if deviation <= max_deviation then
+                    dirty[fields_type][field_name] = nil
+                end
+            else
                 dirty[fields_type][field_name] = nil
             end
         end
@@ -137,14 +168,9 @@ local function __update_data(data, dirty, cur_data)
     end
 end
 
-local function __send_dirty(uid, id, dirty, client)
-    local data = {
-        uid,
-        id,
-        dirty
-    }
+local function __send_dirty(entity, uid, id, dirty, client, is_player)
 
-    if table.count_pairs(dirty.standart_fields) == 0 then
+    if table.count_pairs(dirty.standart_fields or {}) == 0 then
         dirty.standart_fields = nil
     end
     if table.count_pairs(dirty.custom_fields or {}) == 0 then
@@ -165,7 +191,14 @@ local function __send_dirty(uid, id, dirty, client)
     end
 
     local buffer = protocol.create_databuffer()
-    buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.EntityUpdate, unpack(data)))
+    if not is_player then
+        local data = {uid, id, dirty}
+        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.EntityUpdate, unpack(data)))
+    else
+        local data = {entity:get_player(), dirty}
+        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.PlayerFieldsUpdate, unpack(data)))
+    end
+
     client.network:send(buffer.bytes)
 end
 
@@ -179,13 +212,9 @@ function module.process(client)
         local tsf = entity.transform
 
         local id = entity:def_index()
-        local str_id = entity:def_name()
+        local is_player = PLAYER_ENTITY_ID == id
 
-        if not reg_entities[str_id] then
-            goto continue
-        end
-
-        local cur_data = __create_data(entity)
+        local cur_data = __create_data(entity, is_player)
         local data = table.set_default(entities_data, uid, {})
 
         if not data[pid] then
@@ -195,17 +224,19 @@ function module.process(client)
         local e_pos = tsf:get_pos()
         data = data[pid]
 
-        local cul_pos = table.get_default(data, "standart_fields", "tsf_pos") or tsf:get_pos()
-        local last_culling = culling(pid, p_pos, cul_pos)
-        local cur_culling = culling(pid, p_pos, e_pos)
+        if not is_player then
+            local cul_pos = table.get_default(data, "standart_fields", "tsf_pos") or (is_player and e_pos or tsf:get_pos())
+            local last_culling = culling(pid, p_pos, cul_pos)
+            local cur_culling = culling(pid, p_pos, e_pos)
 
-        if not (last_culling or cur_culling) then
-            goto continue
+            if not (last_culling or cur_culling) then
+                goto continue
+            end
         end
 
-        local dirty = __get_dirty(entity, data, cur_data, p_pos, e_pos)
+        local dirty = __get_dirty(entity, data, cur_data, p_pos, e_pos, is_player)
         __update_data(data, dirty, cur_data)
-        __send_dirty(uid, id, dirty, client)
+        __send_dirty(entity, uid, id, dirty, client, is_player)
 
         ::continue::
     end

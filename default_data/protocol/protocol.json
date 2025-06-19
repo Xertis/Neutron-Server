@@ -59,7 +59,7 @@
         ["EntityUpdate", "uid:uint32", "entity_def:uint16", "dirty:bson"],
         ["EntityDespawn", "uid:uint32"],
 
-        ["PlayerFieldsUpdate", "pid:var", "dirty:bson"],
+        ["PlayerFieldsUpdate", "pid:uint32", "dirty:bson"],
 
         ["ParticleEmit", "particle:particle"],
         ["ParticleOrigin", "origin:particle_origin"],
