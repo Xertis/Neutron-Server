@@ -68,8 +68,6 @@ local function main()
     server = server.new(CONFIG.server.port)
     server:start()
 
-
-
     logger.log("server is started")
 
     while IS_RUNNING do

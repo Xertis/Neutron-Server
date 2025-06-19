@@ -26,7 +26,6 @@ local function generate_weather_seeds()
     LAST_CYCLE_UPDATE = current_cycle * WEATHER_CYCLE_DURATION
 end
 
-
 local function get_weather_map(x, z, gen_map)
     local current_time = world.get_total_time()
 

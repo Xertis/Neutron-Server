@@ -64,13 +64,3 @@ end
 events.on("server:block_interact", function (...)
     upd(...)
 end)
-
-function on_world_open()
-    local entities = require "server:api/api".server.entities
-
-    entities.players.add_field(entities.types.Custom, "time", {
-            maximum_deviation = 1,
-            evaluate_deviation = entities.eval.NotEquals,
-            provider = function(uid, field_name) return time.uptime() end
-    })
-end
