@@ -60,6 +60,7 @@ end)
 
 ServerPipe:add_middleware(function(client)
     if client.active then
+        events.emit("server:client_pipe_start", client)
         ClientPipe:process(client)
     end
 
