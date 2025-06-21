@@ -18,10 +18,10 @@ function (args, client)
     end
 
     local receiver_client = account_manager.get_client(receiver_account)
-    local blue, red = console.colors.blue, console.colors.red
+    local yellow, white = console.colors.yellow, console.colors.white
 
-    console.tell(string.format("%s[you%s -> %s%s] %s", blue, red, blue, username, message), client)
-    console.tell(string.format("%s[%s%s -> %syou] %s", blue, sender_username, red, blue, message), receiver_client)
+    console.tell(string.format("%s[you -> %s] %s %s", yellow, username, white, message), client)
+    console.tell(string.format("%s[%s -> you] %s %s", yellow, sender_username, white, message), receiver_client)
 end)
 
 console.set_command("list: -> Shows a list of online players", {}, function (args, client)

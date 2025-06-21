@@ -426,7 +426,7 @@ matches.client_online_handler:add_case(protocol.ClientMsg.Disconnect, (
         end
 
         local account = client.account
-        local message = string.format("[%s] %s", account.username, "leave the game")
+        local message = string.format("[%s] %s", account.username, "left the game")
         account_manager.leave(account)
 
         chat.echo(message)
