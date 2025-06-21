@@ -74,6 +74,11 @@
         ["Text3DAxis", "id:uint32", "axis:vec3<f32>", "is_x:boolean"],
         ["Text3DHide", "id:uint32"],
 
+        ["WrapShow", "id:var", "pos:vec3<f32>", "texture:string"],
+        ["WrapHide", "id:var"],
+        ["WrapSetPos", "id:var", "pos:vec3<f32>"],
+        ["WrapSetTexture", "id:var", "texture:string"],
+
         ["WeatherChanged", "weather:bson", "time:uint16", "name:string"],
         ["Disconnect", "reason:string"]
     ],

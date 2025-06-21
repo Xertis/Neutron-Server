@@ -13,6 +13,7 @@ local weather = require "api/weather"
 local particles = require "api/particles"
 local audio = require "api/audio"
 local text3d = require "api/text3d"
+local blockwraps = require "api/blockwraps"
 
 local api = {
     events = events,
@@ -29,7 +30,8 @@ local api = {
     weather = weather,
     particles = particles,
     audio = audio,
-    text3d = text3d
+    text3d = text3d,
+    blockwraps = blockwraps
 }
 
 return {server = api}

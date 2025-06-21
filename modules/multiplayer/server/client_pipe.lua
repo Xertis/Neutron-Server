@@ -9,6 +9,7 @@ local weather_manager = require "lib/private/gfx/weather_manager"
 local particles_manager = require "lib/private/gfx/particles_manager"
 local audio_manager = require "lib/private/gfx/audio_manager"
 local text3d_manager = require "lib/private/gfx/text3d_manager"
+local wraps_manager = require "lib/private/gfx/blockwraps_manager"
 
 local ClientPipe = Pipeline.new()
 
@@ -394,6 +395,86 @@ ClientPipe:add_middleware(function(client)
     return client
 end)
 
+--Обновляем обёртки у других
+ClientPipe:add_middleware(function(client)
+    if not client.account.is_logged then
+        return client
+    end
+
+    local cplayer = client.player
+    local pos = {player.get_pos(cplayer.pid)}
+
+    local client_wraps = table.set_default(cplayer.temp, "current-wraps", {})
+    local wraps = wraps_manager.get_in_radius(pos[1], pos[3], RENDER_DISTANCE)
+
+    local to_show = {}
+    local to_hide = {}
+    local to_change_pos = {}
+    local to_change_texture = {}
+
+    for id, client_wrap in pairs(client_wraps) do
+        local found = false
+        for _, wrap in ipairs(wraps) do
+            if wrap.id == id then
+                found = true
+                break
+            end
+        end
+
+        if not found then
+            table.insert(to_hide, client_wrap)
+            client_wraps[id] = nil
+        end
+    end
+
+    for _, wrap in ipairs(wraps) do
+        local client_wrap = client_wraps[wrap.id]
+
+        if not client_wrap then
+            local wrap_copy = table.deep_copy(wrap)
+            client_wraps[wrap.id] = wrap_copy
+            table.insert(to_show, wrap_copy)
+        else
+            if not table.deep_equals(wrap.pos, client_wrap.pos) then
+                client_wrap.pos = table.deep_copy(wrap.pos)
+                table.insert(to_change_pos, {
+                    id = wrap.id,
+                    pos = client_wrap.pos
+                })
+            end
+
+            if wrap.texture ~= client_wrap.texture then
+                client_wrap.texture = wrap.texture
+                table.insert(to_change_texture, {
+                    id = wrap.id,
+                    texture = client_wrap.texture
+                })
+            end
+        end
+    end
+
+    local buffer = protocol.create_databuffer()
+
+    for _, wrap in ipairs(to_show) do
+        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.WrapShow, wrap.id, wrap.pos, wrap.texture))
+    end
+
+    for _, wrap in ipairs(to_hide) do
+        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.WrapHide, wrap.id))
+    end
+
+    for _, wrap in ipairs(to_change_pos) do
+        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.WrapSetPos, wrap.id, wrap.pos))
+    end
+
+    for _, wrap in ipairs(to_change_texture) do
+        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.WrapSetTexture, wrap.id, wrap.texture))
+    end
+
+    client.network:send(buffer.bytes)
+
+    return client
+end)
 --Обновляем позицию у других
 ClientPipe:add_middleware(function(client)
 
