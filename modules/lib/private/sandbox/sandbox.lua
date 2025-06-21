@@ -204,13 +204,17 @@ do
         inventory[name] = function (invid, ...)
             local res = {func(invid, ...)}
 
-            local player = module.by_invid.get(invid)
+            local prefix = parse_path(debug.getinfo(2, "S").source)
 
-            if not player then
-                return unpack(res)
+            if prefix ~= "server" then
+                local player = module.by_invid.get(invid)
+                if not player then
+                    return unpack(res)
+                end
+
+                player.inv_is_changed = true
             end
 
-            player.inv_is_changed = true
             return unpack(res)
         end
     end
