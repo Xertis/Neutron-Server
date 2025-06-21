@@ -56,6 +56,7 @@ local function main()
     logger.log("world loop is started")
 
     events.handlers["server:save"] = events_handlers["server:save"]
+    events.handlers["server:main_tick"] = events_handlers["server:main_tick"]
     events.handlers["server:client_connected"] = events_handlers["server:client_connected"]
     events.handlers["server:client_disconnected"] = events_handlers["server:client_disconnected"]
     events.handlers["server:client_pipe_start"] = events_handlers["server:client_pipe_start"]
@@ -75,6 +76,8 @@ local function main()
         app.tick()
         timeout_executor.process()
         server:tick()
+
+        events.emit("server:main_tick")
 
         local ctime = math.round(time.uptime())
         if ctime % save_interval == 0 and ctime - last_time_save > 1 then
