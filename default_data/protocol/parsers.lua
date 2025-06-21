@@ -510,3 +510,90 @@ do
         ForeignDecode(data_type, result[i])
     end
 end--@
+
+-- @Inventory.write
+-- VARIABLES min_count max_count min_id max_id i slot count_ id_ has_meta needed_bits_id needed_bits_count
+-- TO_SAVE inv
+do
+    min_count = math.huge
+    max_count = 0
+
+    min_id = math.huge
+    max_id = 0
+
+    for i=1, 40 do
+        slot = inv[i]
+        count_ = slot.count
+        id_ = slot.id
+
+        if id ~= 0 then
+            min_count = math.min(min_count, count_)
+            max_count = math.max(max_count, count_)
+
+            min_id = math.min(min_id, id_)
+            max_id = math.max(max_id, id_)
+        end
+    end
+
+    needed_bits_id = math.floor(math.log(max_id-min_id, 2)) + 1
+    needed_bits_count = math.floor(math.log(max_count-min_count, 2)) + 1
+
+    buf:put_uint(needed_bits_id, 4)
+    buf:put_uint(needed_bits_count, 4)
+
+    buf:put_uint(min_id, needed_bits_id)
+    buf:put_uint(min_count, needed_bits_count)
+
+    for i=1, 40 do
+        slot = inv[i]
+
+        if slot.id ~= 0 then
+            buf:put_bit(true)
+            buf:put_uint(slot.id-min_id, needed_bits_id)
+            buf:put_uint(slot.count-min_count, needed_bits_count)
+
+            has_meta = slot.meta ~= nil
+            buf:put_bit(has_meta)
+
+            if has_meta then
+                bson.encode(buf, slot.meta)
+            end
+        else
+            buf:put_bit(false)
+        end
+    end
+end--@
+
+-- @Inventory.read
+-- VARIABLES needed_bits_id needed_bits_count min_id min_count has_item has_meta slot
+-- TO_LOAD inv
+do
+    needed_bits_id = buf:get_uint(4)
+    needed_bits_count = buf:get_uint(4)
+
+    min_id = buf:get_uint(needed_bits_id)
+    min_count = buf:get_uint(needed_bits_count)
+
+    inv = {}
+
+    for i = 1, 40 do
+        has_item = buf:get_bit()
+
+        if has_item then
+            slot = {}
+
+            slot.id = buf:get_uint(needed_bits_id) + min_id
+            slot.count = buf:get_uint(needed_bits_count) + min_count
+
+            has_meta = buf:get_bit()
+
+            if has_meta then
+                slot.meta = bson.decode(buf)
+            end
+
+            inv[i] = slot
+        else
+            inv[i] = {id = 0, count = 0}
+        end
+    end
+end--@

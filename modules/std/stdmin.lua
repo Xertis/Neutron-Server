@@ -507,38 +507,44 @@ function inventory.get_inv(invid)
     local inv_size = inventory.size(invid)
     local res_inv = {}
 
-    for slot = 0, inv_size - 1 do
-       local item_id, count = inventory.get(invid, slot)
+    for i = 1, 40 do
+        res_inv[i] = {id = 0, count = 0}
+    end
 
-       if item_id ~= 0 then
-          local item_data = inventory.get_all_data(invid, slot)
-          table.insert(res_inv, {item_id, count, item_data})
-       else
-          table.insert(res_inv, 0)
-       end
+    for slot = 0, inv_size - 1 do
+        local item_id, count = inventory.get(invid, slot)
+        local index = slot + 1
+
+        if item_id ~= 0 then
+            local item_data = inventory.get_all_data(invid, slot)
+            res_inv[index] = {
+                id = item_id,
+                count = count,
+                meta = item_data
+            }
+        end
     end
 
     return res_inv
- end
+end
 
- function inventory.set_inv(invid, res_inv)
+function inventory.set_inv(invid, res_inv)
     for i, item in ipairs(res_inv) do
-       local slot = i - 1
-       if item ~= 0 then
-          local item_id, count, item_data = unpack(item)
+        local slot = i - 1
 
-          inventory.set(invid, slot, item_id, count)
+        if item.id ~= 0 then
+            inventory.set(invid, slot, item.id, item.count)
 
-          if item_data then
-             for name, value in pairs(item_data) do
-                inventory.set_data(invid, slot, name, value)
-             end
-          end
-       else
-          inventory.set(invid, slot, 0, 0)
-       end
+            if item.meta then
+                for name, value in pairs(item.meta) do
+                    inventory.set_data(invid, slot, name, value)
+                end
+            end
+        else
+            inventory.set(invid, slot, 0, 0)
+        end
     end
- end
+end
 
 -- BIT
 
