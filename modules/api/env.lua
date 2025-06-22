@@ -2,12 +2,15 @@ local server_echo = start_require("multiplayer/server/server_echo")
 local protocol = require "multiplayer/protocol-kernel/protocol"
 
 local envs = {}
-local module = {}
+local module = {
+    public = {},
+    private = {}
+}
 
 -- Если меняется значение, кидаем на другую сторону новое значение
 -- Если значение не меняется, возвращаем значение из своей таблички
 
-function module.create_env(pack, env_name)
+function module.public.create(pack, env_name)
     local data = {}
     local proxy = {}
 
@@ -41,6 +44,42 @@ function module.create_env(pack, env_name)
                     client.network:send(buffer.bytes)
                 end
             )
+        end,
+    })
+
+    return proxy
+end
+
+function module.private.create(pack, env_name, client)
+    local data = {}
+    local proxy = {}
+
+    local pack_envs = table.set_default(envs, pack, {})
+    pack_envs[env_name] = data
+
+    setmetatable(proxy, {
+        __metatable = false,
+
+        __index = function(_, key)
+            return data[key]
+        end,
+
+        __newindex = function(_, key, value)
+            if not table.has({"number", "boolean", "string", "nil"}, type(value)) then
+                error("Env-table cannot contain " .. type(value) .. "'s")
+            elseif type(key) ~= "string" then
+                error("Env-table can only contain key-value pairs")
+            end
+
+            data[key] = value
+
+            if client.active ~= true then
+                return
+            end
+
+            local buffer = protocol.create_databuffer()
+            buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.PackEnv, pack, env_name, key, value))
+            client.network:send(buffer.bytes)
         end,
     })
 
