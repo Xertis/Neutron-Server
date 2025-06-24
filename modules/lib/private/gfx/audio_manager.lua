@@ -276,11 +276,13 @@ end
 function module.get_time_left(speaker)
     ensureSpeaker(speaker)
 
+    local sound = SPEAKERS[speaker]
+
     if not SOUNDS_DURATIONS[sound.path] then
         logger.log('The "audio.get_duration" function in the API returns 0 for technical reasons, please use "audio.register_duration" to fix it', 'W')
         return 0
     else
-        local playback = module.get_time(speaker) - time.uptime()
+        local playback = sound.offsetTime + SOUNDS_DURATIONS[sound.path] - module.get_time(speaker)
         return math.max(playback, 0)
     end
 end
