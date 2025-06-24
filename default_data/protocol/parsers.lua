@@ -539,12 +539,12 @@ do
 
     buf:put_bit(is_empty)
 
+    needed_bits_id = math.bit_length(max_id-min_id)
+    needed_bits_count = math.bit_length(max_count-min_count)
+
     if is_empty then
         goto continue
     end
-
-    needed_bits_id = math.bit_length(max_id-min_id)
-    needed_bits_count = math.bit_length(max_count-min_count)
 
     buf:put_uint(needed_bits_id, 4)
     buf:put_uint(needed_bits_count, 4)
