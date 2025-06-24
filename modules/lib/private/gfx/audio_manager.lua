@@ -9,6 +9,7 @@ if protect.protect_require() then return end
 local module = { }
 
 local SPEAKERS = { }
+local SOUNDS_DURATIONS = {}
 
 local aliveSpeakersCount = 0
 local playingStreamsCount = 0
@@ -18,6 +19,18 @@ local NEXT_ID = 1
 local function ensureSpeaker(id)
     if not SPEAKERS[id] then
         error("undefined speaker with id '"..id.."'")
+    end
+end
+
+local function ensureDurations(id)
+    local sound = SPEAKERS[id]
+    local duration = SOUNDS_DURATIONS[sound.path]
+    if not duration then
+        return true
+    end
+
+    if module.get_time(id) < time.uptime() then
+        return false
     end
 end
 
@@ -260,12 +273,16 @@ function module.set_time(speaker, _time)
     SPEAKERS[speaker].offsetTime = time.uptime() - _time
 end
 
-function module.get_duration(speaker)
+function module.get_time_left(speaker)
     ensureSpeaker(speaker)
 
-    logger.log("'audio.get_duration' function in the API always returns 0 for technical reasons", 'W')
-
-    return 0
+    if not SOUNDS_DURATIONS[sound.path] then
+        logger.log('The "audio.get_duration" function in the API returns 0 for technical reasons, please use "audio.register_duration" to fix it', 'W')
+        return 0
+    else
+        local playback = module.get_time(speaker) - time.uptime()
+        return math.max(playback, 0)
+    end
 end
 
 function module.count_speakers()
@@ -276,11 +293,21 @@ function module.count_streams()
     return playingStreamsCount
 end
 
+function module.register_duration(path, duration)
+    SOUNDS_DURATIONS[path] = duration
+end
+
 function module.get_in_radius(x, y, z, radius)
     local speakers = {}
 
     for id, speaker in pairs(SPEAKERS) do
         local sx, sy, sz = speaker.x, speaker.y, speaker.z
+
+        if not ensureDurations(id) then
+            sx = nil
+            module.stop(id)
+        end
+
         if sx then
             if math.euclidian3D(x, y, z, sx, sy, sz) <= radius then
                 table.insert(speakers, speaker)

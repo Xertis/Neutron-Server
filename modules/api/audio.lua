@@ -5,7 +5,8 @@ local defFuncs = {
     "stop", "pause", "resume", "set_loop", "is_loop", "get_volume",
     "set_volume", "get_pitch", "set_pitch", "get_time", "set_time",
     "get_position", "set_position", "get_velocity", "set_velocity",
-    "get_duration", "count_speakers", "count_streams"
+    "get_duration", "count_speakers", "count_streams", "get_time_left",
+    "register_duration"
 }
 
 local playFuncs = {
@@ -81,6 +82,10 @@ end
 
 function Speaker:set_time(time)
     return audio_manager.set_time(self.id, time)
+end
+
+function Speaker:get_time_left()
+    return audio_manager.get_time_left(self.id)
 end
 
 function Speaker:get_duration()

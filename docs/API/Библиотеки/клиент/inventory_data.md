@@ -4,7 +4,7 @@
 ```lua
 api.inventory_data.serialize(inv: Table<Any>) -> Table<Bytes>
 ```
-   - Возвращает **inv** в виде байт
+   - Возвращает инвентарь в виде массива байт
 
 2. **Десериализация:**
 ```lua
