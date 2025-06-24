@@ -512,9 +512,10 @@ do
 end--@
 
 -- @Inventory.write
--- VARIABLES min_count max_count min_id max_id i slot count_ id_ has_meta needed_bits_id needed_bits_count
+-- VARIABLES min_count max_count min_id max_id i slot count_ id_ has_meta needed_bits_id needed_bits_count is_empty
 -- TO_SAVE inv
 do
+    is_empty = true
     min_count = math.huge
     max_count = 0
 
@@ -526,7 +527,8 @@ do
         count_ = slot.count
         id_ = slot.id
 
-        if id ~= 0 then
+        if id_ ~= 0 then
+            is_empty = false
             min_count = math.min(min_count, count_)
             max_count = math.max(max_count, count_)
 
@@ -535,8 +537,14 @@ do
         end
     end
 
-    needed_bits_id = math.floor(math.log(max_id-min_id, 2)) + 1
-    needed_bits_count = math.floor(math.log(max_count-min_count, 2)) + 1
+    buf:put_bit(is_empty)
+
+    if is_empty then
+        goto continue
+    end
+
+    needed_bits_id = math.bit_length(max_id-min_id)
+    needed_bits_count = math.bit_length(max_count-min_count)
 
     buf:put_uint(needed_bits_id, 4)
     buf:put_uint(needed_bits_count, 4)
@@ -562,12 +570,19 @@ do
             buf:put_bit(false)
         end
     end
+
+    ::continue::
 end--@
 
 -- @Inventory.read
 -- VARIABLES needed_bits_id needed_bits_count min_id min_count has_item has_meta slot
 -- TO_LOAD inv
 do
+
+    if buf:get_bit() then
+        return table.rep({}, {id = 0, count = 0}, 40)
+    end
+
     needed_bits_id = buf:get_uint(4)
     needed_bits_count = buf:get_uint(4)
 

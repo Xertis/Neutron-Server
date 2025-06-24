@@ -1,148 +1,173 @@
--- Entity Dirty Data
 local bson = require "lib/private/files/bson"
+
 local module = {}
 
-local function put_degree(buffer, value)
-    local deg = math.clamp(value, -180, 180)
+-- ... (keep all your existing constants and type definitions)
 
-    local normalized = (deg + 180) / 360
-
-    buffer:put_uint24(math.floor(normalized * 16777215 + 0.5))
+local function __get_num(buf)
+    local item_type = buf:get_uint(4)
+    
+    if item_type == TYPES.float32 then
+        return buf:get_float32()
+    elseif item_type == TYPES.float64 then
+        return buf:get_float64()
+    elseif item_type == TYPES.byte then
+        return buf:get_byte()
+    elseif item_type == TYPES.uint16 then
+        return buf:get_uint16()
+    elseif item_type == TYPES.uint32 then
+        return buf:get_uint32()
+    elseif item_type == TYPES.int64 then
+        return buf:get_int64()
+    elseif item_type == TYPES.nbyte then
+        return -buf:get_byte()
+    elseif item_type == TYPES.nint16 then
+        return -buf:get_uint16()
+    elseif item_type == TYPES.nint32 then
+        return -buf:get_uint32()
+    end
+    
+    return 0
 end
 
-local function encode_standart_fields(buf, fields)
-    --Кладём поворот
-    for _, axis in ipairs(fields.tsf_rot) do
-        put_degree(buf, axis)
-    end
-
-    --Кладём позицию
-    for _, axis in ipairs(fields.tsf_pos) do
-        buf:put_float64(axis)
-    end
-
-    --Кладём размер
-    for _, axis in ipairs(fields.tsf_size) do
-        buf:put_uint24(math.floor((axis + 838) * 10000 + 0.5))
-    end
-
-    --Кладём хитбокс
-    for _, axis in ipairs(fields.body_size) do
-        buf:put_uint24(math.floor((axis + 838) * 10000 + 0.5))
+local function __get_item(buf)
+    local item_type = buf:get_uint(4)
+    
+    if item_type == TYPES.bool then
+        return buf:get_bit()
+    elseif item_type == TYPES.string then
+        return buf:get_string()
+    elseif item_type == TYPES.table then
+        return bson.decode_array(buf)
+    else -- all number types
+        return __get_num(buf)
     end
 end
 
-local function encode_textures(buf, fields)
-    for key, val in pairs(fields) do
-        buf:put_string(key)
-        buf:put_string(val)
-    end
+local function __decode_vec(buf)
+    return {
+        buf:get_float32(),
+        buf:get_float32(),
+        buf:get_float32()
+    }
 end
 
-local function encode_models(buf, fields)
-    for key, val in pairs(fields) do
-        if type(key) == "number" then
-
-        buf:put_sint16(key)
-        buf:put_string(val)
-
+local function __decode_rot(buf)
+    local signs = {}
+    for i = 1, 16 do
+        signs[i] = buf:get_bit()
+    end
+    
+    local quaternion = {
+        buf:get_float32(),
+        buf:get_float32(),
+        buf:get_float32(),
+        buf:get_float32()
+    }
+    
+    -- Reconstruct matrix from quaternion (implementation depends on your math library)
+    local mat = quat.to_mat4(quaternion)
+    
+    -- Apply signs if needed (implementation depends on your specific needs)
+    for i = 1, 16 do
+        if not signs[i] then
+            mat[i] = -math.abs(mat[i])
+        else
+            mat[i] = math.abs(mat[i])
         end
     end
+    
+    return mat
 end
 
-local function encode_components(buf, fields)
-    for comp, is_active in pairs(fields) do
-        buf:put_string(comp)
-        buf:put_bool(is_active)
-    end
+local function __get_standart(buf, has_standart)
+    if not has_standart then return nil end
+    
+    local standart = {}
+    local has_rot = buf:get_bit()
+    local has_pos = buf:get_bit()
+    local has_size = buf:get_bit()
+    local has_body = buf:get_bit()
+    
+    if has_rot then standart.tsf_rot = __decode_rot(buf) end
+    if has_pos then standart.tsf_pos = __decode_vec(buf) end
+    if has_size then standart.tsf_size = __decode_vec(buf) end
+    if has_body then standart.body_size = __decode_vec(buf) end
+    
+    return standart
 end
 
-function module.encode(buf, dirty)
-    encode_standart_fields(buf, dirty.standart_fields or {})
-    bson.encode(buf, dirty.custom_fields or {})
-
-    encode_textures(buf, dirty.textures or {})
-    encode_models(buf, dirty.models or {})
-    encode_components(buf, dirty.components or {})
-end
-
---------------------------------------------------
-
-local function get_degree(buf)
-    local normalized = buf:get_uint24() / 16777215
-    return normalized * 360 - 180
-end
-
-local function decode_standard_fields(buf)
-    local fields = {}
-
-    fields.tsf_rot = {
-        get_degree(buf),
-        get_degree(buf),
-        get_degree(buf)
-    }
-
-    fields.tsf_pos = {
-        buf:get_float64(),
-        buf:get_float64(),
-        buf:get_float64()
-    }
-
-    fields.tsf_size = {
-        buf:get_uint24() / 10000 - 838,
-        buf:get_uint24() / 10000 - 838,
-        buf:get_uint24() / 10000 - 838
-    }
-
-    fields.body_size = {
-        buf:get_uint24() / 10000 - 838,
-        buf:get_uint24() / 10000 - 838,
-        buf:get_uint24() / 10000 - 838
-    }
-
-    return fields
-end
-
-local function decode_textures(buf)
-    local textures = {}
-    while buf:remaining() > 0 do
+local function __get_custom(buf, has_custom)
+    if not has_custom then return nil end
+    
+    local custom = {}
+    local count = buf:get_byte()
+    
+    for _ = 1, count do
         local key = buf:get_string()
-        local value = buf:get_string()
-        textures[key] = value
+        custom[key] = __get_item(buf)
     end
+    
+    return custom
+end
+
+local function __get_textures(buf, has_textures)
+    if not has_textures then return nil end
+    
+    local textures = {}
+    local count = buf:get_byte()
+    
+    for _ = 1, count do
+        local key = buf:get_string()
+        textures[key] = buf:get_string()
+    end
+    
     return textures
 end
 
-local function decode_models(buf)
+local function __get_models(buf, has_models)
+    if not has_models then return nil end
+    
     local models = {}
-    while buf:remaining() > 0 do
-        local key = buf:get_sint16()
-        local value = buf:get_string()
-        models[key] = value
+    local count = buf:get_byte()
+    
+    for _ = 1, count do
+        local key = buf:get_byte()
+        models[key] = buf:get_string()
     end
+    
     return models
 end
 
-local function decode_components(buf)
+local function __get_components(buf, has_components)
+    if not has_components then return nil end
+    
     local components = {}
-    while buf:remaining() > 0 do
-        local comp = buf:get_string()
-        local is_active = buf:get_bool()
-        components[comp] = is_active
+    local count = buf:get_byte()
+    
+    for _ = 1, count do
+        local key = buf:get_string()
+        components[key] = buf:get_bit()
     end
+    
     return components
 end
 
 function module.decode(buf)
     local dirty = {}
-
-    dirty.standart_fields = decode_standard_fields(buf)
-    dirty.custom_fields = bson.decode(buf)
-
-    dirty.textures = decode_textures(buf)
-    dirty.models = decode_models(buf)
-    dirty.components = decode_components(buf)
-
+    
+    local has_standart = buf:get_bit()
+    local has_custom = buf:get_bit()
+    local has_textures = buf:get_bit()
+    local has_models = buf:get_bit()
+    local has_components = buf:get_bit()
+    
+    dirty.standart_fields = __get_standart(buf, has_standart)
+    dirty.custom_fields = __get_custom(buf, has_custom)
+    dirty.textures = __get_textures(buf, has_textures)
+    dirty.models = __get_models(buf, has_models)
+    dirty.components = __get_components(buf, has_components)
+    
     return dirty
 end
 

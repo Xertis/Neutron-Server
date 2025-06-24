@@ -1,6 +1,13 @@
 local data_buffer = require "lib/public/bit_buffer"
 
 _G['$Neutron'] = "server"
+_G['$Multiplayer'] = {
+    side = "server",
+    api_reference = {
+        name = "Neutron",
+        version = 1
+    }
+}
 
 --- PLAYER
 
@@ -138,6 +145,14 @@ end
 --- TABLE
 
 table.unpack = unpack
+
+function table.rep(tbl, elem, rep_count)
+    for i=1, rep_count do
+        table.insert(tbl, table.deep_copy(elem))
+    end
+
+    return tbl
+end
 
 function table.get_default(tbl, ...)
     for _, key in ipairs({...}) do
@@ -364,6 +379,16 @@ end
 
 function math.euclidian2D(x1, y1, x2, y2)
     return ((x1 - x2) ^ 2 + (y1 - y2) ^ 2) ^ 0.5
+end
+
+function math.bit_length(num)
+    num = math.abs(num)
+
+    if num == 0 then
+        return 1
+    end
+
+    return math.floor(math.log(num, 2)) + 1
 end
 
 

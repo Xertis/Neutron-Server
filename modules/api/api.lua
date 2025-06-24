@@ -14,6 +14,7 @@ local particles = require "api/particles"
 local audio = require "api/audio"
 local text3d = require "api/text3d"
 local blockwraps = require "api/blockwraps"
+local inv_dat = require "api/inv_dat"
 
 local api = {
     events = events,
@@ -31,7 +32,9 @@ local api = {
     particles = particles,
     audio = audio,
     text3d = text3d,
-    blockwraps = blockwraps
+    blockwraps = blockwraps,
+    inventory_data = inv_dat
+
 }
 
 return {server = api}
