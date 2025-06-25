@@ -43,8 +43,11 @@ function module.join_player(account)
     logger.log(string.format('Player "%s" is join.', account_player.username))
     account_player:save()
 
-    if player.is_suspended(account_player.pid) then
+    local is_suspended = player.is_suspended(account_player.pid)
+    logger.log(string.format('Suspended player "%s" is %s', account_player.username, tostring(is_suspended)))
+    if is_suspended then
         player.set_suspended(account_player.pid, false)
+        logger.log(string.format('Suspended player "%s" changed to false', account_player.username))
     end
 
     return account_player
@@ -58,6 +61,7 @@ function module.leave_player(account_player)
     container.player_online.put(account_player.username, nil)
 
     player.set_suspended(account_player.pid, true)
+    logger.log(string.format('Suspended player "%s" is true', account_player.username))
 
     return account_player
 end
