@@ -549,8 +549,14 @@ do
     buf:put_uint(needed_bits_id, 4)
     buf:put_uint(needed_bits_count, 4)
 
-    buf:put_uint(min_id, needed_bits_id)
-    buf:put_uint(min_count, needed_bits_count)
+    max_id_bits = math.bit_length(max_id)
+    max_count_bits = math.bit_length(max_count)
+
+    buf:put_uint(max_id_bits, 4)
+    buf:put_uint(max_count_bits, 4)
+
+    buf:put_uint(min_id, max_id_bits)
+    buf:put_uint(min_count, max_count_bits)
 
     for i=1, 40 do
         slot = inv[i]
@@ -586,8 +592,11 @@ do
     needed_bits_id = buf:get_uint(4)
     needed_bits_count = buf:get_uint(4)
 
-    min_id = buf:get_uint(needed_bits_id)
-    min_count = buf:get_uint(needed_bits_count)
+    max_id_bits = buf:get_uint(4)
+    max_count_bits = buf:get_uint(4)
+
+    min_id = buf:get_uint(max_id_bits)
+    min_count = buf:get_uint(max_count_bits)
 
     inv = {}
 
