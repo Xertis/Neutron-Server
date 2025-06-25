@@ -43,13 +43,13 @@ end
 
 -- Патчим чтобы работало так, как в доках, а то хуня
 
-local player_set_suspended = player.set_suspended
-local player_is_suspended = player.is_suspended
+-- local player_set_suspended = player.set_suspended
+-- local player_is_suspended = player.is_suspended
 
-function player.set_suspended(pid, susi)
-    player_set_suspended(pid, not susi)
-end
+-- function player.set_suspended(pid, susi)
+--     player_set_suspended(pid, not susi)
+-- end
 
-function player.is_suspended(pid)
-    return not player_is_suspended(pid)
-end
+-- function player.is_suspended(pid)
+--     return not player_is_suspended(pid)
+-- end
