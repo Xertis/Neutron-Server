@@ -13,6 +13,10 @@ function module.get_client(account)
     return account_manager.get_client(account)
 end
 
+function module.get_client_by_name(username)
+    return account_manager.by_username.get_client(username)
+end
+
 function module.kick(account, message)
     if not account.username then
         error("Invalid account")

@@ -81,6 +81,15 @@ function module.get_client(account)
     end
 end
 
+function module.by_username.get_client(username)
+    for _, client in pairs(container.clients_all.get()) do
+
+        if client.account.username == username then
+            return client
+        end
+    end
+end
+
 function module.get_rules(account, category)
     if not category then
         category = "game_rules"
