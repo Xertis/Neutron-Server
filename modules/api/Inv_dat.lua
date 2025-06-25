@@ -1,5 +1,5 @@
-local bson = require "lib/common/bson"
-local bb = require "lib/common/bit_buffer"
+local bson = require "lib/private/files/bson"
+local bb = require "lib/public/bit_buffer"
 local module = {}
 
 function module.serialize(inv)
@@ -33,6 +33,9 @@ function module.serialize(inv)
     local needed_bits_id = math.bit_length(max_id-min_id)
     local needed_bits_count = math.bit_length(max_count-min_count)
 
+    local min_id_bits = math.bit_length(min_id)
+    local min_count_bits = math.bit_length(min_count)
+
     if is_empty then
         goto continue
     end
@@ -40,14 +43,11 @@ function module.serialize(inv)
     buf:put_uint(needed_bits_id, 4)
     buf:put_uint(needed_bits_count, 4)
 
-    local max_id_bits = math.bit_length(max_id)
-    local max_count_bits = math.bit_length(max_count)
+    buf:put_uint(min_id_bits, 4)
+    buf:put_uint(min_count_bits, 4)
 
-    buf:put_uint(max_id_bits, 4)
-    buf:put_uint(max_count_bits, 4)
-
-    buf:put_uint(min_id, max_id_bits)
-    buf:put_uint(min_count, max_count_bits)
+    buf:put_uint(min_id, min_id_bits)
+    buf:put_uint(min_count, min_count_bits)
 
     for i=1, #inv do
         local slot = inv[i]
@@ -86,11 +86,11 @@ function module.deserialize(bytes)
     local needed_bits_id = buf:get_uint(4)
     local needed_bits_count = buf:get_uint(4)
 
-    local max_id_bits = buf:get_uint(4)
-    local max_count_bits = buf:get_uint(4)
+    local min_id_bits = buf:get_uint(4)
+    local min_count_bits = buf:get_uint(4)
 
-    local min_id = buf:get_uint(max_id_bits)
-    local min_count = buf:get_uint(max_count_bits)
+    local min_id = buf:get_uint(min_id_bits)
+    local min_count = buf:get_uint(min_count_bits)
 
     local inv = {}
 
