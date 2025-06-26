@@ -16,11 +16,11 @@ function module.players.get_player(account)
     return sandbox.get_player(account)
 end
 
-function module.players.set_pos(player, pos)
-    local client = account_manager.by_username.get_account(player.username)
-    player.set_pos(player.pid, pos.x, pos.y, pos.z)
+function module.players.set_pos(_player, pos)
+    local client = account_manager.by_username.get_account(_player.username)
+    player.set_pos(_player.pid, pos.x, pos.y, pos.z)
 
-    local state = sandbox.get_player_state(player)
+    local state = sandbox.get_player_state(_player)
 
     local DATA = {pos = pos}
     local buf = protocol.create_databuffer()
