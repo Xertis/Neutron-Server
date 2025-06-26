@@ -66,23 +66,23 @@ local function tests()
 
     if math.random() > 0.5 then
         player.pos = {
-            math.random() * 200 - 100,
-            math.random() * 100,
-            math.random() * 200 - 100
+            x = math.random() * 200 - 100,
+            y = math.random() * 100,
+            z = math.random() * 200 - 100
         }
     end
 
     if math.random() > 0.5 then
         player.rot = {
-            math.random() * 360 - 180,
-            math.random() * 360 - 180
+            yaw = math.random() * 360 - 180,
+            pitch = math.random() * 360 - 180
         }
     end
 
     if math.random() > 0.7 then
         player.cheats = {
-            math.random() > 0.5,
-            math.random() > 0.5
+            noclip = math.random() > 0.5,
+            flight = math.random() > 0.5
         }
     end
 
