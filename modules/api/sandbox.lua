@@ -22,9 +22,9 @@ function module.players.set_pos(player, pos)
 
     local state = sandbox.get_player_state(player)
 
-    local DATA = {pos.x, pos.y, pos.z, state.yaw, state.pitch, state.noclip, state.flight}
+    local DATA = {pos = pos}
     local buf = protocol.create_databuffer()
-    buf:put_packet(protocol.build_packet("server", protocol.ServerMsg.SynchronizePlayerPosition, unpack(DATA)))
+    buf:put_packet(protocol.build_packet("server", protocol.ServerMsg.SynchronizePlayerPosition, DATA))
     client.network:send(buf.bytes)
 end
 

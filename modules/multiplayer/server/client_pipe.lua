@@ -89,10 +89,14 @@ ClientPipe:add_middleware(function(client)
     if not account.is_logged then
         local account_player = sandbox.get_player(account)
         local state = sandbox.get_player_state(account_player)
-        DATA = {state.x, state.y, state.z, state.yaw, state.pitch, state.noclip, state.flight}
+        DATA = {
+            pos = {x = state.x, y = state.y, z = state.z},
+            rot = {yaw = state.yaw, pitch = state.pitch},
+            cheats = {noclip = state.noclip, flight = state.flight}
+        }
 
         local buffer = protocol.create_databuffer()
-        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.SynchronizePlayerPosition, unpack(DATA)))
+        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.SynchronizePlayerPosition, DATA))
         client.network:send(buffer.bytes)
     end
 
@@ -475,10 +479,12 @@ ClientPipe:add_middleware(function(client)
 
     return client
 end)
+
 --Обновляем позицию у других
 ClientPipe:add_middleware(function(client)
-
     local client_states = sandbox.get_player_state(client.player)
+
+    local prev_states = table.set_default(client.player.temp, "player-prev-states", {})
 
     for _, player in pairs(sandbox.get_players()) do
         if table.has(RESERVED_USERNAMES, player.username) then
@@ -492,24 +498,44 @@ ClientPipe:add_middleware(function(client)
             client_states.z,
             state.x,
             state.z
-        ) > (CONFIG.server.chunks_loading_distance+5) * 16 then
+        ) > RENDER_DISTANCE then
             return client
         end
 
-        local buffer = protocol.create_databuffer()
-        local DATA = {
+        local prev_state = prev_states[player.pid] or {}
+
+        local changed_data = {
             player.pid,
-            state.x,
-            state.y,
-            state.z,
-            state.yaw,
-            state.pitch,
-            state.noclip,
-            state.flight
+            {}
         }
 
-        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.PlayerMoved, unpack(DATA)))
-        client.network:send(buffer.bytes)
+        local current_pos = {x = state.x, y = state.y, z = state.z}
+        if not prev_state.pos or not table.deep_equals(prev_state.pos, current_pos) then
+            changed_data[2].pos = current_pos
+        end
+
+        local current_rot = {yaw = state.yaw, pitch = state.pitch}
+        if not prev_state.rot or not table.deep_equals(prev_state.rot, current_rot) then
+            changed_data[2].rot = current_rot
+        end
+
+        local current_cheats = {noclip = state.noclip, flight = state.flight}
+        if not prev_state.cheats or not table.deep_equals(prev_state.cheats, current_cheats) then
+            changed_data[2].cheats = current_cheats
+        end
+
+        if changed_data[2].pos or changed_data[2].rot or changed_data[2].cheats then
+            local buffer = protocol.create_databuffer()
+
+            buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.PlayerMoved, unpack(changed_data)))
+            client.network:send(buffer.bytes)
+
+            prev_states[player.pid] = table.deep_copy({
+                pos = current_pos or prev_state.pos,
+                rot = current_rot or prev_state.rot,
+                cheats = current_cheats or prev_state.cheats
+            })
+        end
 
         ::continue::
     end

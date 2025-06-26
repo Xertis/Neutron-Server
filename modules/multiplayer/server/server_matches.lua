@@ -263,10 +263,14 @@ matches.fsm:add_state("joining", {
 
         timeout_executor.push(
             function (_client, x, y, z, yaw, pitch, noclip, flight, is_last)
-                local _DATA = {x, y, z, yaw, pitch, noclip, flight}
+                local _DATA = {
+                    pos = {x = x, y = y, z = z},
+                    rot = {yaw = yaw, pitch = pitch},
+                    cheats = {noclip = noclip, flight = flight}
+                }
 
                 local buf = protocol.create_databuffer()
-                buf:put_packet(protocol.build_packet("server", protocol.ServerMsg.SynchronizePlayerPosition, unpack(_DATA)))
+                buf:put_packet(protocol.build_packet("server", protocol.ServerMsg.SynchronizePlayerPosition, _DATA))
                 _client.network:send(buf.bytes)
 
                 if is_last then

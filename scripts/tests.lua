@@ -4,12 +4,33 @@ require "server:std/stdboot"
 
 LAUNCH_ATTEMPTS = 1
 
+local function eval(encode, decode, val)
+    local bit_buffer = require "server:lib/public/bit_buffer"
+    local status, res = pcall(function ()
+        local buf = bit_buffer:new()
+        encode(buf, val)
+
+        buf:flush()
+        buf:reset()
+
+        local res = decode(buf)[1]
+
+        return table.deep_equals(val, res)
+    end)
+
+    if not status or not res then
+        print(json.tostring(val))
+        error("Error: " .. tostring(res))
+    end
+end
+
 local function tests()
     -- Тест парсеров пакетов
-
-    -- Тест инвентаря
+    logger.log("Start of tests", "T")
     local compiler = require "server:multiplayer/protocol-kernel/compiler"
     local bit_buffer = require "server:lib/public/bit_buffer"
+
+    -- Тест инвентаря
 
     local encoder = compiler.compile_encoder({"Inventory"})
     local decoder = compiler.compile_decoder({"Inventory"})
@@ -18,7 +39,6 @@ local function tests()
     local decoder_compil = compiler.load(decoder)
 
     local Inventory = {}
-    local inv = {}
     for i=1, 40 do
         local id = math.random(0, 1000)
         local count = math.random(0, 1000)
@@ -31,27 +51,43 @@ local function tests()
         end
     end
 
-    local status, res = pcall(function ()
-        local buf = bit_buffer:new()
-        encoder_compil(buf, Inventory)
+    eval(encoder_compil, decoder_compil, Inventory)
+    logger.log("Inventory type test passed", "T")
 
-        buf:flush()
-        buf:reset()
+    -- Тест PlayerEntity
 
-        inv = decoder_compil(buf)[1]
+    encoder = compiler.compile_encoder({"PlayerEntity"})
+    decoder = compiler.compile_decoder({"PlayerEntity"})
 
-        return table.deep_equals(Inventory, inv)
-    end)
+    encoder_compil = compiler.load(encoder)
+    decoder_compil = compiler.load(decoder)
 
-    if not status or not res then
-        print(json.tostring(Inventory))
-        print("=======================")
-        print(json.tostring(inv))
-        error("Error: " .. tostring(res))
-    else
-        logger.log("Inventory packet test passed", "T")
+    local player = {}
+
+    if math.random() > 0.5 then
+        player.pos = {
+            math.random() * 200 - 100,
+            math.random() * 100,
+            math.random() * 200 - 100
+        }
     end
 
+    if math.random() > 0.5 then
+        player.rot = {
+            math.random() * 360 - 180,
+            math.random() * 360 - 180
+        }
+    end
+
+    if math.random() > 0.7 then
+        player.cheats = {
+            math.random() > 0.5,
+            math.random() > 0.5
+        }
+    end
+
+    eval(encoder_compil, decoder_compil, player)
+    logger.log("PlayerEntity type test passed", "T")
 
     -- Конец тестов
     logger.log("All tests passed", "T")
@@ -109,16 +145,7 @@ local function main()
     events.handlers["server:client_pipe_start"] = events_handlers["server:client_pipe_start"]
     events.handlers["server:player_ground_landing"] = events_handlers["server:player_ground_landing"]
 
-    local save_interval = CONFIG.server.auto_save_interval * 60
-    local shutdown_timeout = (CONFIG.server.shutdown_timeout or -1) * 60
-    local last_time_save = 0
-
     metadata.load()
-
-    server = server.new(CONFIG.server.port)
-    server:start()
-
-    logger.log("server is started")
 
     tests()
 end
