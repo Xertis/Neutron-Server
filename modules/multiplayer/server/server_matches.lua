@@ -271,6 +271,7 @@ matches.fsm:add_state("joining", {
 
                 if is_last then
                     _client.player.is_teleported = true
+                    events.emit("server:player_ground_landing", _client)
                 end
             end,
             {client, state.x, state.y, state.z, state.yaw, state.pitch, state.noclip, state.flight}, 3

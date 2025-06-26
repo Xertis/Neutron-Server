@@ -60,6 +60,7 @@ local function main()
     events.handlers["server:client_connected"] = events_handlers["server:client_connected"]
     events.handlers["server:client_disconnected"] = events_handlers["server:client_disconnected"]
     events.handlers["server:client_pipe_start"] = events_handlers["server:client_pipe_start"]
+    events.handlers["server:player_ground_landing"] = events_handlers["server:player_ground_landing"]
 
     local save_interval = CONFIG.server.auto_save_interval * 60
     local shutdown_timeout = (CONFIG.server.shutdown_timeout or -1) * 60
