@@ -87,12 +87,6 @@ local function main()
     require "server:init/server"
     require "server:multiplayer/server/chat/commands"
 
-    if IS_FIRST_RUN then
-        logger.log("The first startup was detected, server has been stopped.")
-        logger.log("A configuration file was created on the config:server_config.json. Please configure the settings and restart.")
-        return
-    end
-
     local timeout_executor = require "server:lib/private/common/timeout_executor"
     local server = require "server:multiplayer/server/server"
 
