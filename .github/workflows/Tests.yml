@@ -5,7 +5,7 @@ on:
     branches: [ main ]
 
 jobs:
-  test-voxelcore:
+  Neutron-test:
     runs-on: windows-latest
 
     steps:
