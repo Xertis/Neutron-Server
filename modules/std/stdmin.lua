@@ -532,11 +532,7 @@ function inventory.get_inv(invid)
     local inv_size = inventory.size(invid)
     local res_inv = {}
 
-    for i = 0, inv_size - 1 do
-        res_inv[i] = {id = 0, count = 0}
-    end
-
-    for slot = 0, inv_size - 1 do
+    for slot = 0, inv_size-1 do
         local item_id, count = inventory.get(invid, slot)
         local index = slot + 1
 
@@ -547,6 +543,8 @@ function inventory.get_inv(invid)
                 count = count,
                 meta = item_data
             }
+        else
+            res_inv[index] = {id = 0, count = 0}
         end
     end
 
