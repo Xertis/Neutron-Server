@@ -29,7 +29,7 @@ local function ensureDurations(id)
         return true
     end
 
-    if module.get_time(id) < time.uptime() then
+    if module.get_time(id) > duration then
         return false
     end
 end
