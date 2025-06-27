@@ -27,7 +27,7 @@ api.sandbox.players.get_by_pid(pid: number) -> Player
    - Возвращает объект игрока по **pid**
 
 ---
-5. **Перемещение игрока**
+5. **Синхронизация игрока**
 ```lua
 api.sandbox.players.sync_states(player: Player, states: {pos={...}, rot={...}, cheats={...}})
 ```
