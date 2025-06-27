@@ -586,7 +586,8 @@ end--@
 do
 
     if buf:get_bit() then
-        return table.rep({}, {id = 0, count = 0}, 40)
+        inv = table.rep({}, {id = 0, count = 0}, 40)
+        goto continue
     end
 
     needed_bits_id = buf:get_uint(4)
@@ -620,6 +621,8 @@ do
             inv[i] = {id = 0, count = 0}
         end
     end
+
+    ::continue::
 end--@
 
 -- @PlayerEntity.write
