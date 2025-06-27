@@ -382,13 +382,15 @@ function math.euclidian2D(x1, y1, x2, y2)
 end
 
 function math.bit_length(num)
-    num = math.abs(num)
-
     if num == 0 then
         return 1
     end
-
-    return math.floor(math.log(num, 2)) + 1
+    local count = 0
+    while num > 0 do
+        count = count + 1
+        num = math.floor(num / 2)
+    end
+    return count
 end
 
 
