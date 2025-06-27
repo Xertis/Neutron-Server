@@ -1,5 +1,6 @@
 local sandbox = start_require("server:lib/private/sandbox/sandbox")
 local account_manager = start_require("server:lib/private/accounts/account_manager")
+local protocol = start_require "server:multiplayer/protocol-kernel/protocol"
 
 local module = {
     players = {},
