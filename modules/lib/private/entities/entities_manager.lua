@@ -214,6 +214,13 @@ function module.process(client)
         local id = entity:def_index()
         local is_player = PLAYER_ENTITY_ID == id
 
+        if is_player then
+            local entity_pid = entity:get_player()
+            if entity_pid == ROOT_PID then
+                goto continue
+            end
+        end
+
         local cur_data = __create_data(entity, is_player)
         local data = table.set_default(entities_data, uid, {})
 

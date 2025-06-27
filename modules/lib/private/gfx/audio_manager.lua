@@ -32,6 +32,8 @@ local function ensureDurations(id)
     if module.get_time(id) > duration then
         return false
     end
+
+    return true
 end
 
 local function ensureArgs(args, names)
