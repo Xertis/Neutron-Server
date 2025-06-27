@@ -29,7 +29,17 @@ api.sandbox.players.get_by_pid(pid: number) -> Player
 ---
 5. **Перемещение игрока**
 ```lua
-api.sandbox.players.set_pos(player: Player, pos: {x=x, y=y, z=z})
+api.sandbox.players.sync_states(player: Player, states: {pos={...}, rot={...}, cheats={...}})
 ```
-   - Устанавливает позицию игрока на сервере и синхронизирует её между клиентами
+   - Изменяет игрока в соответствии с таблицой **states** и принудительно отправляет эти данные на клиент
+   - Таблица **states** может содержать частичные данные (может отсутствовать pos/rot/cheats)
+
+   - **Сигнатура States**
+   ```lua
+   local states = {
+      pos = {x = 0, y = 0, z = 0},
+      rot = {yaw = 0, pitch = 0},
+      cheats = {noclip = false, flight = false}
+   }
+   ```
 
