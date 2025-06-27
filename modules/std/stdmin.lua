@@ -532,7 +532,7 @@ function inventory.get_inv(invid)
     local inv_size = inventory.size(invid)
     local res_inv = {}
 
-    for i = 1, 40 do
+    for i = 0, inv_size - 1 do
         res_inv[i] = {id = 0, count = 0}
     end
 

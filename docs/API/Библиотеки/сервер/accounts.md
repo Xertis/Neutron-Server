@@ -12,32 +12,38 @@ api.accounts.get_client(account: Account) -> Client
 ```
    - Возвращает класс типа **Client** игрока с аккаунтом **account**.
 
-3. **Кик аккаунта:**
+3. **Получение клиента аккаунта по имени:**
+```lua
+api.accounts.get_client_by_name(username: String) -> Client
+```
+   - Возвращает класс типа **Client** игрока с ником **username**.
+
+4. **Кик аккаунта:**
 ```lua
 api.accounts.kick(account: Account, [опционально] reason: string)
 ```
    - Кикает аккаунт **account** с сервера с причиной **reason**
 
-4. **Получение роли:**
+5. **Получение роли:**
 ```lua
 api.accounts.roles.get(account: Account) -> table
 ```
    - Возвращает конфиг роли по аккаунту
 
-5. **Получение правил аккаунта:**
+6. **Получение правил аккаунта:**
 ```lua
 api.accounts.roles.get_rules(account: Account, [опционально] category: boolean) -> table
 ```
    - Возвращает таблицу правил роли по аккаунту
    - Category - категория тех правил, которые надо вернуть (false -> game_rules / true  -> server_rules)
 
-6. **Сравнение приоритета ролей:**
+7. **Сравнение приоритета ролей:**
 ```lua
 api.accounts.roles.is_higher(role1: table, role2: table) -> boolean
 ```
    - Возвращает `true` если первая роль имеет больший приоритет, чем вторая
 
-7. **Проверка на существование роли:**
+8. **Проверка на существование роли:**
 ```lua
 api.accounts.roles.exists(role: table) -> boolean
 ```
