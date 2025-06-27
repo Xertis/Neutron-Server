@@ -19,6 +19,8 @@ local protocol = start_require("server:multiplayer/protocol-kernel/protocol")
 local sandbox = start_require("server:lib/private/sandbox/sandbox")
 
 local function upd(blockid, x, y, z, playerid)
+    playerid = math.max(playerid, 0)
+
     local data = {
         x,
         y,
@@ -44,7 +46,7 @@ local function upd(blockid, x, y, z, playerid)
                 client_states.z,
                 x,
                 z
-            ) > (CONFIG.server.chunks_loading_distance+5) then
+            ) > RENDER_DISTANCE then
                 return
             end
 

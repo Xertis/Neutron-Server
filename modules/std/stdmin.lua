@@ -383,7 +383,7 @@ end
 
 function math.bit_length(num)
     if num == 0 then
-        return 1
+        return 0
     end
     local count = 0
     while num > 0 do
