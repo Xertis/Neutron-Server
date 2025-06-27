@@ -194,7 +194,7 @@ function module.by_invid.get(invid)
     end
 end
 
---Вынужденый ужас
+--Вынужденный ужас
 --TODO: В СРОЧНОМ ПОРЯДКЕ ЗАСУНУТЬ ЭТО В БОЛЕЕ ПРАВИЛЬНОЕ МЕСТО
 do
     local inventory_funcs = {
