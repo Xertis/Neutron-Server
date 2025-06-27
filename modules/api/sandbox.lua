@@ -1,6 +1,6 @@
 local sandbox = start_require("server:lib/private/sandbox/sandbox")
 local account_manager = start_require("server:lib/private/accounts/account_manager")
-local protocol = start_require "server:multiplayer/protocol-kernel/protocol"
+local protocol = start_require("server:multiplayer/protocol-kernel/protocol")
 
 local module = {
     players = {},
@@ -17,15 +17,24 @@ function module.players.get_player(account)
     return sandbox.get_player(account)
 end
 
-function module.players.set_pos(_player, pos)
-    local client = account_manager.by_username.get_account(_player.username)
-    player.set_pos(_player.pid, pos.x, pos.y, pos.z)
+function module.players.sync_states(_player, states)
+    local client = account_manager.by_username.get_client(_player.username)
 
-    local state = sandbox.get_player_state(_player)
+    if states.pos then
+        player.set_pos(_player.pid, states.pos.x, states.pos.y, states.pos.z)
+    end
 
-    local DATA = {pos = pos}
+    if states.rot then
+        player.set_rot(_player.pid, states.rot.yaw, states.rot.pitch)
+    end
+
+    if states.cheats then
+        player.set_noclip(states.cheats.noclip)
+        player.set_flight(states.cheats.flight)
+    end
+
     local buf = protocol.create_databuffer()
-    buf:put_packet(protocol.build_packet("server", protocol.ServerMsg.SynchronizePlayerPosition, DATA))
+    buf:put_packet(protocol.build_packet("server", protocol.ServerMsg.SynchronizePlayerPosition, states))
     client.network:send(buf.bytes)
 end
 
