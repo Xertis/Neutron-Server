@@ -33,7 +33,11 @@ local api = {
     audio = audio,
     text3d = text3d,
     blockwraps = blockwraps,
-    inventory_data = inv_dat
+    inventory_data = inv_dat,
+    constants = {
+        config = CONFIG,
+        render_distance = RENDER_DISTANCE
+    }
 
 }
 
