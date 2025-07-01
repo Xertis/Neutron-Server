@@ -26,13 +26,13 @@ end
 
 function server:start()
     self.server_socket = socketlib.create_server(self.port, function(client_socket)
-        logger.log("Connection request received")
+        logger.log("Connection to the client has been successfully established")
         local network = Network.new( client_socket )
         local address, port = client_socket:get_address()
         local client = Player.new(false, network, address, port)
 
-        for i, mclient in ipairs(self.clients) do
-            if mclient.address == client.address and not mclient.active then
+        for i, server_client in ipairs(self.clients) do
+            if server_client.address == client.address and not server_client.active then
                 self.clients[i].network = client.network
                 self.clients[i].port = client.port
                 self.clients[i].is_kicked = client.is_kicked
@@ -55,7 +55,8 @@ function server:stop()
 end
 
 function server:tick()
-    for index, client in ipairs(self.clients) do
+    for index=#self.clients, 1, -1 do
+        local client = self.clients[index]
         local socket = client.network.socket
         if not socket or not socket:is_alive() or client.is_kicked then
             if client.active then
@@ -66,7 +67,7 @@ function server:tick()
                 socket:close()
             end
 
-            table.remove_value(self.clients, client)
+            table.remove(self.clients, index)
 
             server_matches.client_online_handler:switch(
                 protocol.ClientMsg.Disconnect,
