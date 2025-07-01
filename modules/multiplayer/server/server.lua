@@ -26,19 +26,21 @@ end
 
 function server:start()
     self.server_socket = socketlib.create_server(self.port, function(client_socket)
-        logger.log("Connection to the client has been successfully established")
         local network = Network.new( client_socket )
         local address, port = client_socket:get_address()
         local client = Player.new(false, network, address, port)
 
         for i, server_client in ipairs(self.clients) do
             if server_client.address == client.address and not server_client.active then
+                logger.log("Reconnection from the client side was detected")
                 self.clients[i].network = client.network
                 self.clients[i].port = client.port
                 self.clients[i].is_kicked = client.is_kicked
                 return
             end
         end
+
+        logger.log("Connection to the client has been successfully established")
 
         table.insert(self.clients, client)
     end)
