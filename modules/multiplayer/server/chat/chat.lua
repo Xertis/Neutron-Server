@@ -25,7 +25,7 @@ end
 function module.command(message, client)
     local state = states.get_state(client)
 
-    if message[1] ~= '.' and not state  then
+    if message[1] ~= COMMAND_PREFIX and not state  then
         return false
     end
 
