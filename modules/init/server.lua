@@ -15,6 +15,10 @@ do
     end
 end
 
+if IS_FIRST_RUN then
+    return
+end
+
 --Загружаем конфиг
 do
     CONFIG = json.parse(file.read(CONFIG_PATH))

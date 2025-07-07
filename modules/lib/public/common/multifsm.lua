@@ -112,6 +112,10 @@ function multi_state_machine:handle_event(client_id, event)
     end
 end
 
+function multi_state_machine:clear(client_id)
+    self.client_states[client_id] = nil
+end
+
 --- Возвращает текущее состояние клиента.
 -- @param client_id any Уникальный идентификатор клиента.
 -- @return string Текущее состояние клиента.

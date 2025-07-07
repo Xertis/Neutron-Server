@@ -45,7 +45,7 @@ ServerPipe:add_middleware(function(client)
 
     local success, err = pcall(function()
         if client.active == false then
-            matches.fsm:handle_event(client, packet)
+            matches.general_fsm:handle_event(client, packet)
         elseif client.active == true then
             matches.client_online_handler:switch(packet.packet_type, packet, client)
         end

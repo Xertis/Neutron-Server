@@ -15,7 +15,9 @@ local mfsm = require "lib/public/common/multifsm"
 local hashed_packs = nil
 
 local matches = {
-    fsm = mfsm.new(),
+    general_fsm = mfsm.new(),
+    status_fsm = mfsm.new(),
+    joining_fsm = mfsm.new(),
     client_online_handler = switcher.new(function (...)
         local values = {...}
         print(json.tostring(values[1]))
@@ -83,29 +85,40 @@ end
 
 --- FSM
 
-matches.fsm:add_state("idle", {
+matches.general_fsm:add_state("idle", {
     on_event = function(client, event)
-        if event.packet_type ~= protocol.ClientMsg.HandShake then
-            return
-        end
-
-        if event.protocol_version ~= protocol.Version then
-            return
-        end
-
         if event.packet_type == protocol.ClientMsg.HandShake then
-            matches.fsm:set_data(client, "friends_list", event.friends_list)
-        end
+            if event.protocol_version ~= protocol.Version then
+                return "idle"
+            end
 
-        if event.next_state == protocol.States.Status then
-            return "awaiting_status_request"
-        elseif event.next_state == protocol.States.Login then
-            return "awaiting_join_game"
+            if event.next_state == protocol.States.Status then
+                matches.status_fsm:set_data(client, "friends_list", event.friends_list)
+                matches.status_fsm:transition_to(client, "awaiting_status_request")
+                return "status"
+            end
+
+            if event.next_state == protocol.States.Login then
+                matches.joining_fsm:transition_to(client, "awaiting_join_game")
+                return "joining"
+            end
         end
     end
 })
 
-matches.fsm:add_state("awaiting_status_request", {
+matches.general_fsm:add_state("status", {
+    on_event = function (client, event)
+        matches.status_fsm:handle_event(client, event)
+    end
+})
+
+matches.general_fsm:add_state("joining", {
+    on_event = function (client, event)
+        matches.joining_fsm:handle_event(client, event)
+    end
+})
+
+matches.status_fsm:add_state("awaiting_status_request", {
     on_event = function(client, event)
         if event.packet_type == protocol.ClientMsg.StatusRequest then
             return "sending_status"
@@ -113,25 +126,7 @@ matches.fsm:add_state("awaiting_status_request", {
     end
 })
 
-matches.fsm:add_state("awaiting_join_game", {
-    on_event = function(client, event)
-        if event.packet_type == protocol.ClientMsg.JoinGame then
-            matches.fsm:set_data(client, "join_game", event)
-            return "sending_packs_list"
-        end
-    end
-})
-
-matches.fsm:add_state("awaiting_packs_hashes", {
-    on_event = function(client, event)
-        if event.packet_type == protocol.ClientMsg.PacksHashes then
-            matches.fsm:set_data(client, "packs_hashes", event)
-            return "joining"
-        end
-    end
-})
-
-matches.fsm:add_state("sending_status", {
+matches.status_fsm:add_state("sending_status", {
     on_enter = function(client)
         logger.log("The expected package has been received, sending the status...")
         local buffer = protocol.create_databuffer()
@@ -143,7 +138,7 @@ matches.fsm:add_state("sending_status", {
             icon = file.read_bytes(DEFAULT_ICON_PATH)
         end
 
-        local friends_list = matches.fsm:get_data(client, "friends_list") or {}
+        local friends_list = matches.status_fsm:get_data(client, "friends_list") or {}
         local players = table.keys(sandbox.get_players())
         local friends_states = {}
 
@@ -166,11 +161,22 @@ matches.fsm:add_state("sending_status", {
         client.network:send(buffer.bytes)
         logger.log("Status has been sent")
 
-        return "idle"
+        client:kick()
+        matches.status_fsm:clear(client)
+        matches.general_fsm:transition_to(client, "idle")
     end
 })
 
-matches.fsm:add_state("sending_packs_list", {
+matches.joining_fsm:add_state("awaiting_join_game", {
+    on_event = function(client, event)
+        if event.packet_type == protocol.ClientMsg.JoinGame then
+            matches.joining_fsm:set_data(client, "join_game", event)
+            return "sending_packs_list"
+        end
+    end
+})
+
+matches.joining_fsm:add_state("sending_packs_list", {
     on_enter = function(client)
         local buffer = protocol.create_databuffer()
 
@@ -188,15 +194,28 @@ matches.fsm:add_state("sending_packs_list", {
 
         buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.PacksList, DATA))
         client.network:send(buffer.bytes)
-
         return "awaiting_packs_hashes"
     end
 })
 
-matches.fsm:add_state("joining", {
+matches.joining_fsm:add_state("awaiting_packs_hashes", {
+    on_event = function(client, event)
+        if event.packet_type == protocol.ClientMsg.PacksHashes then
+            matches.joining_fsm:set_data(client, "packs_hashes", event)
+            return "joining"
+        end
+    end
+})
+
+matches.joining_fsm:add_state("joining", {
     on_enter = function (client)
-        local packet = matches.fsm:get_data(client, "join_game")
-        local hashes = matches.fsm:get_data(client, "packs_hashes")
+        local function close()
+            matches.joining_fsm:clear(client)
+            matches.general_fsm:transition_to(client, "idle")
+        end
+
+        local packet = matches.joining_fsm:get_data(client, "join_game")
+        local hashes = matches.joining_fsm:get_data(client, "packs_hashes")
         local buffer = nil
 
         local account = account_manager.login(packet.username)
@@ -205,31 +224,38 @@ matches.fsm:add_state("joining", {
         if not hash_status and not CONFIG.server.dev_mode then
             logger.log("JoinSuccess has been aborted")
             matches.actions.Disconnect(client, "Inconsistencies in mods:" .. hash_reason)
-            return "idle"
+            close()
+            return
         elseif not lib.validate.username(packet.username) then
             logger.log("JoinSuccess has been aborted")
             matches.actions.Disconnect(client, "Incorrect user name")
-            return "idle"
+            close()
+            return
         elseif not account then
             logger.log("JoinSuccess has been aborted")
             matches.actions.Disconnect(client, "Not found or unable to create an account")
-            return "idle"
+            close()
+            return
         elseif #table.keys(sandbox.get_players()) >= CONFIG.server.max_players then
             logger.log("JoinSuccess has been aborted")
             matches.actions.Disconnect(client, "The server is full")
-            return "idle"
+            close()
+            return
         elseif (not table.has(table.freeze_unpack(CONFIG.server.whitelist), packet.username) and #table.freeze_unpack(CONFIG.server.whitelist) > 0) then
             logger.log("JoinSuccess has been aborted")
             matches.actions.Disconnect(client, "You are not on the whitelist")
-            return "idle"
+            close()
+            return
         elseif table.has(table.freeze_unpack(CONFIG.server.blacklist), packet.username) then
             logger.log("JoinSuccess has been aborted")
             matches.actions.Disconnect(client, "You're on the blacklist")
-            return "idle"
+            close()
+            return
         elseif sandbox.get_players()[packet.username] ~= nil then
             logger.log("JoinSuccess has been aborted")
             matches.actions.Disconnect(client, "A player with that name is already online")
-            return "idle"
+            close()
+            return
         end
 
         local account_player = sandbox.join_player(account)
@@ -327,7 +353,8 @@ matches.fsm:add_state("joining", {
 
         if not CONFIG.server.password_auth then
             client.account.is_logged = true
-            return "idle"
+            close()
+            return
         end
 
         if account.password == nil then
@@ -336,11 +363,11 @@ matches.fsm:add_state("joining", {
             chat.tell("Please log in using the command .login <password> to access your account.", client)
         end
 
-        return "idle"
+        close()
     end
 })
 
-matches.fsm:set_default_state("idle")
+matches.general_fsm:set_default_state("idle")
 
 --- CASES
 
