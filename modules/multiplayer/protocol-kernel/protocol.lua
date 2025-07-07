@@ -92,7 +92,7 @@ function protocol.parse_packet(client_or_server, data)
 
         logger.log("Data:", 'E', true)
         logger.log(table.tostring(data), 'E', true)
-        return {}
+        error()
     end
 
     for indx, name in ipairs(names) do

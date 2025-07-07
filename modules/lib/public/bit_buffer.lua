@@ -91,6 +91,9 @@ function bit_buffer:get_bit()
 		byte = bytes[1]
 		if byte ~= nil then
 			self.bytes:append(byte)
+		else
+			coroutine.yield()
+			return self:get_bit()
 		end
 	end
 

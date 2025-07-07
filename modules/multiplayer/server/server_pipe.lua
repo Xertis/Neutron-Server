@@ -21,6 +21,10 @@ ServerPipe:add_middleware(function(client)
                     if success and packet then
                         List.pushright(client.received_packets, packet)
                         received_any = true
+                    elseif not success then
+                        client:kick()
+                        logger.log("Error while parsing packet: " .. packet .. '\n' .. "Client disconnected", 'E')
+                        break
                     else
                         break
                     end
@@ -52,7 +56,8 @@ ServerPipe:add_middleware(function(client)
     end)
 
     if not success then
-        logger.log("Error while reading packet: " .. err, 'E')
+        client:kick()
+        logger.log("Error while reading packet: " .. err .. '\n' .. "Client disconnected", 'E')
     end
 
     return client, not List.is_empty(client.received_packets)

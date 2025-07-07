@@ -33,6 +33,7 @@ end
 
 function Player:kick()
     self.is_kicked = true
+    self.active = false
 end
 
 function Player:set_account(account)
