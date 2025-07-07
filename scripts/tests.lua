@@ -118,34 +118,8 @@ local function main()
         version: %s
     ]], PROJECT_NAME, IS_RELEASE, SERVER_VERSION))
 
-    local lib = require "server:lib/private/min"
-
     require "server:init/server"
     require "server:multiplayer/server/chat/commands"
-
-    local timeout_executor = require "server:lib/private/common/timeout_executor"
-    local server = require "server:multiplayer/server/server"
-
-    local metadata = require "server:lib/private/files/metadata"
-    local world = lib.world
-
-    _G["/$p"] = table.copy(package.loaded)
-    local events_handlers = table.copy(events.handlers)
-
-    require "server:init/engine_patcher"
-
-    IS_RUNNING = true
-    world.open_main()
-    logger.log("world loop is started")
-
-    events.handlers["server:save"] = events_handlers["server:save"]
-    events.handlers["server:main_tick"] = events_handlers["server:main_tick"]
-    events.handlers["server:client_connected"] = events_handlers["server:client_connected"]
-    events.handlers["server:client_disconnected"] = events_handlers["server:client_disconnected"]
-    events.handlers["server:client_pipe_start"] = events_handlers["server:client_pipe_start"]
-    events.handlers["server:player_ground_landing"] = events_handlers["server:player_ground_landing"]
-
-    metadata.load()
 
     tests()
 end
