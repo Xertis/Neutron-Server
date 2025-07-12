@@ -121,11 +121,12 @@ ClientPipe:add_middleware(function(client)
     end
 
     local cplayer = client.player
-    local cur_weather = table.set_default(cplayer.temp, "current-weather", {})
+    local cur_weather = table.set_default(cplayer.temp, "current-weather", nil)
     local pos = {player.get_pos(cplayer.pid)}
 
     local weather = weather_manager.get_by_pos(pos[1], pos[3])
     local DATA = nil
+    local should_update = false
 
     if not weather then
         if cur_weather == nil then
@@ -133,31 +134,30 @@ ClientPipe:add_middleware(function(client)
         end
 
         DATA = {{}, 1, "clear"}
-        cur_weather = nil
+        should_update = true
+    else
+        if not table.deep_equals(cur_weather or {}, weather.weather) then
+            local packet_time = weather.time_transition
+            if weather.time_start + weather.time_transition < time.uptime() then
+                packet_time = 1
+            end
+
+            DATA = {
+                weather.weather,
+                packet_time,
+                weather.name
+            }
+            should_update = true
+        end
     end
 
-    if weather then
-        if table.deep_equals(cur_weather or {}, weather.weather) then
-            return client
-        end
-
-        local packet_time = weather.time_transition
-        if weather.time_start + weather.time_transition < time.uptime() then
-            packet_time = 1
-        end
-
-        DATA = {
-            weather.weather,
-            packet_time,
-            weather.name
-        }
-
-        cur_weather = weather.weather
+    if should_update then
+        cplayer.temp["current-weather"] = weather and weather.weather or nil
+        local buffer = protocol.create_databuffer()
+        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.WeatherChanged, unpack(DATA)))
+        client.network:send(buffer.bytes)
     end
 
-    local buffer = protocol.create_databuffer()
-    buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.WeatherChanged, unpack(DATA)))
-    client.network:send(buffer.bytes)
     return client
 end)
 

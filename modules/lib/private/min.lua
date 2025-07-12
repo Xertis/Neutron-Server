@@ -17,14 +17,15 @@ function lib.world.preparation_main()
     --Загружаем мир
     local packs = table.freeze_unpack(CONFIG.game.content_packs)
     local plugins = table.freeze_unpack(CONFIG.game.plugins)
-    table.insert(packs, "server")
 
     if not lib.validate.plugins() then
         logger.log("Plugins should not add new content.", "E")
         error("Plugins should not add new content.")
     end
 
-    app.config_packs(table.merge(packs, plugins))
+    table.insert(packs, "server")
+    app.reset_content()
+    app.config_packs(table.merge(packs, plugins), {})
     app.load_content()
 
     if not file.exists("user:worlds/" .. CONFIG.game.main_world .. "/world.json") then

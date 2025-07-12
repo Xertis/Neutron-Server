@@ -5,8 +5,6 @@ require "server:std/stdboot"
 LAUNCH_ATTEMPTS = 1
 
 local function main()
-    app.config_packs({"server"})
-    app.load_content()
 
     require "server:constants"
     require "server:std/stdmin"

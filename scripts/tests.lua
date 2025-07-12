@@ -94,9 +94,6 @@ local function tests()
 end
 
 local function main()
-    app.config_packs({"server"})
-    app.load_content()
-
     require "server:constants"
     require "server:std/stdmin"
 
@@ -117,6 +114,7 @@ local function main()
         release: %s
         version: %s
     ]], PROJECT_NAME, IS_RELEASE, SERVER_VERSION))
+    
 
     require "server:init/server"
     require "server:multiplayer/server/chat/commands"
