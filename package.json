@@ -1,7 +1,7 @@
 {
     "id": "server",
     "title": "Neutron",
-    "version": "0.2.0",
+    "version": "1.0.0",
     "description": "Server",
     "creators": ["Wampal", "Murka124", "Ghost", "Xertis", "Onran"]
 }
