@@ -15,12 +15,9 @@ local ClientPipe = Pipeline.new()
 
 --Отправляем игровое время
 ClientPipe:add_middleware(function(client)
-
-    local buffer = protocol.create_databuffer()
     local time = time.day_time_to_uint16(world.get_day_time())
 
-    buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.TimeUpdate, time))
-    client.network:send(buffer.bytes)
+    client:push_packet(protocol.ServerMsg.TimeUpdate, time)
     return client
 end)
 
@@ -32,10 +29,7 @@ ClientPipe:add_middleware(function(client)
         return client
     end
 
-    local buffer = protocol.create_databuffer()
-
-    buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.KeepAlive, math.random(0, 200)))
-    client.network:send(buffer.bytes)
+    client:push_packet(protocol.ServerMsg.KeepAlive, math.random(0, 200))
     client.ping.last_upd = cur_time
     return client
 end)
@@ -67,15 +61,8 @@ ClientPipe:add_middleware(function (client)
     local data = sandbox.get_inventory(player)
     local inv, slot = data.inventory, data.slot
 
-    local buffer = protocol.create_databuffer()
-    buffer = protocol.create_databuffer()
-    buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.PlayerInventory, inv))
-    client.network:send(buffer.bytes)
-
-    buffer = protocol.create_databuffer()
-    buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.PlayerHandSlot, slot))
-    client.network:send(buffer.bytes)
-
+    client:push_packet(protocol.ServerMsg.PlayerInventory, inv)
+    client:push_packet(protocol.ServerMsg.PlayerHandSlot, slot)
 end)
 
 --Запрос на логин/регистрацию
@@ -95,9 +82,7 @@ ClientPipe:add_middleware(function(client)
             cheats = {noclip = state.noclip, flight = state.flight}
         }
 
-        local buffer = protocol.create_databuffer()
-        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.SynchronizePlayerPosition, DATA))
-        client.network:send(buffer.bytes)
+        client:push_packet(protocol.ServerMsg.SynchronizePlayerPosition, DATA)
     end
 
     return client
@@ -153,9 +138,7 @@ ClientPipe:add_middleware(function(client)
 
     if should_update then
         cplayer.temp["current-weather"] = weather and weather.weather or nil
-        local buffer = protocol.create_databuffer()
-        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.WeatherChanged, unpack(DATA)))
-        client.network:send(buffer.bytes)
+        client:push_packet(protocol.ServerMsg.WeatherChanged, unpack(DATA))
     end
 
     return client
@@ -225,23 +208,17 @@ ClientPipe:add_middleware(function(client)
                 break
             end
         end
-        local buffer = protocol.create_databuffer()
-        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.ParticleStop, pid))
-        client.network:send(buffer.bytes)
+        client:push_packet(protocol.ServerMsg.ParticleStop, pid)
     end
 
     for _, pid in ipairs(dirty_particles) do
         local particle = particles_with_pid[pid]
-        local buffer = protocol.create_databuffer()
-        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.ParticleEmit, particle))
-        client.network:send(buffer.bytes)
+        client:push_packet(protocol.ServerMsg.ParticleEmit, particle)
     end
 
     for _, pid in ipairs(changed_origin_particles) do
         local particle = particles_with_pid[pid]
-        local buffer = protocol.create_databuffer()
-        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.ParticleOrigin, particle))
-        client.network:send(buffer.bytes)
+        client:push_packet(protocol.ServerMsg.ParticleOrigin, particle)
     end
 
     return client
@@ -288,21 +265,15 @@ ClientPipe:add_middleware(function(client)
     end
 
     for _, stopped in ipairs(stopped_speakers) do
-        local buffer = protocol.create_databuffer()
-        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.AudioStop, stopped.id))
-        client.network:send(buffer.bytes)
+        client:push_packet(protocol.ServerMsg.AudioStop, stopped.id)
     end
 
     for _, spawned in ipairs(spawned_speakers) do
-        local buffer = protocol.create_databuffer()
-        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.AudioEmit, spawned))
-        client.network:send(buffer.bytes)
+        client:push_packet(protocol.ServerMsg.AudioEmit, spawned)
     end
 
     for _, changed in ipairs(changed_speakers) do
-        local buffer = protocol.create_databuffer()
-        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.AudioState, changed))
-        client.network:send(buffer.bytes)
+        client:push_packet(protocol.ServerMsg.AudioState, changed)
     end
 
     return client
@@ -367,18 +338,16 @@ ClientPipe:add_middleware(function(client)
         end
     end
 
-    local buffer = protocol.create_databuffer()
-
     for _, stopped in ipairs(stopped_text3ds) do
-        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.Text3DHide, stopped.id))
+        client:push_packet(protocol.ServerMsg.Text3DHide, stopped.id)
     end
 
     for _, spawned in ipairs(spawned_text3ds) do
-        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.Text3DShow, spawned))
+        client:push_packet(protocol.ServerMsg.Text3DShow, spawned)
     end
 
     for _, changed in ipairs(changed_text3ds) do
-        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.Text3DState, changed))
+        client:push_packet(protocol.ServerMsg.Text3DState, changed)
     end
 
     for _, changed in ipairs(changed_axis) do
@@ -389,12 +358,10 @@ ClientPipe:add_middleware(function(client)
             axis = changed.text.axisY
         end
 
-        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.Text3DAxis,
+        client:push_packet(protocol.ServerMsg.Text3DAxis,
             changed.text.id, axis, changed.is_x
-        ))
+        )
     end
-
-    client.network:send(buffer.bytes)
 
     return client
 end)
@@ -457,25 +424,21 @@ ClientPipe:add_middleware(function(client)
         end
     end
 
-    local buffer = protocol.create_databuffer()
-
     for _, wrap in ipairs(to_show) do
-        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.WrapShow, wrap.id, wrap.pos, wrap.texture))
+        client:push_packet(protocol.ServerMsg.WrapShow, wrap.id, wrap.pos, wrap.texture)
     end
 
     for _, wrap in ipairs(to_hide) do
-        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.WrapHide, wrap.id))
+        client:push_packet(protocol.ServerMsg.WrapHide, wrap.id)
     end
 
     for _, wrap in ipairs(to_change_pos) do
-        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.WrapSetPos, wrap.id, wrap.pos))
+        client:push_packet(protocol.ServerMsg.WrapSetPos, wrap.id, wrap.pos)
     end
 
     for _, wrap in ipairs(to_change_texture) do
-        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.WrapSetTexture, wrap.id, wrap.texture))
+        client:push_packet(protocol.ServerMsg.WrapSetTexture, wrap.id, wrap.texture)
     end
-
-    client.network:send(buffer.bytes)
 
     return client
 end)
@@ -525,10 +488,8 @@ ClientPipe:add_middleware(function(client)
         end
 
         if changed_data[2].pos or changed_data[2].rot or changed_data[2].cheats then
-            local buffer = protocol.create_databuffer()
 
-            buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.PlayerMoved, unpack(changed_data)))
-            client.network:send(buffer.bytes)
+            client:push_packet(protocol.ServerMsg.PlayerMoved, unpack(changed_data))
 
             prev_states[player.pid] = table.deep_copy({
                 pos = current_pos or prev_state.pos,

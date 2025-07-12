@@ -1,3 +1,4 @@
+local protocol = require "multiplayer/protocol-kernel/protocol"
 local List = require "lib/public/common/list"
 
 local Player = {}
@@ -46,6 +47,11 @@ end
 
 function Player:set_active(new_value)
     self.active = new_value
+end
+
+function Player:push_packet(...)
+    local bytes = protocol.prepare_packet(protocol.build_packet("server", ...))
+    self:queue_response(bytes)
 end
 
 function Player:queue_response(event)

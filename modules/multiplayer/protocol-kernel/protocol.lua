@@ -31,6 +31,20 @@ function protocol.create_databuffer(bytes)
     return buf
 end
 
+--Совсем скоро будет Deprecated, ждём кварц
+function protocol.prepare_packet(packet, order)
+    order = order or '>'
+
+    local len_bytes = byteutil.pack(order .. 'H', #packet)
+    local bytes = len_bytes
+
+    for _, byte in ipairs(packet) do
+        bytes:append(byte)
+    end
+
+    return bytes
+end
+
 function protocol.build_packet(client_or_server, packet_type, ...)
     local buffer = protocol.create_databuffer()
     buffer:put_byte(packet_type - 1)

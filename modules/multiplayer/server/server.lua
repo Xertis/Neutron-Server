@@ -65,10 +65,6 @@ function server:tick()
                 client.active = false
             end
 
-            if socket and socket:is_alive() then
-                socket:close()
-            end
-
             table.remove(self.clients, index)
 
             server_matches.client_online_handler:switch(
@@ -76,6 +72,11 @@ function server:tick()
                 {packet_type = protocol.ClientMsg.Disconnect},
                 client
             )
+
+            if socket and socket:is_alive() then
+                socket:close()
+            end
+
         end
     end
 
