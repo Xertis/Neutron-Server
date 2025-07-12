@@ -72,8 +72,13 @@ function protocol.parse_packet(client_or_server, data)
 
     local packet_type = buffer:get_byte() + 1
     result.packet_type = packet_type
-    --print(packet_type)
+
     local packet_parser_info = protocol[client_or_server .. "Parsers"][packet_type]
+
+    if not packet_parser_info then
+        error("Unknown packet type: " .. packet_type)
+    end
+
     local decoder = packet_parser_info.decoder
     local names = packet_parser_info.names
 
