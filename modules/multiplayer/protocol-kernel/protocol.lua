@@ -31,6 +31,7 @@ function protocol.create_databuffer(bytes)
 end
 
 --Совсем скоро будет Deprecated, ждём кварц
+-- УЖЕ DEPRECATED
 function protocol.prepare_packet(packet, order)
     return packet
 end
