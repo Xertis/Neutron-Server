@@ -17,7 +17,7 @@ jobs:
 
     - name: Clone client
       run: |
-        git clone --depth 1 --branch main https://github.com/GHOST3118/voxel-engine-multiplayer-client.git client-src
+        git clone --depth 1 --branch main https://github.com/Xertis/Quartz-Client.git client-src
 
     - name: Prepare packages
       run: |
@@ -29,10 +29,10 @@ jobs:
         zip -r server.zip Neutron-Server-main
         rm -rf Neutron-Server-main
 
-        mkdir -p voxelonline
-        cp -r client-src/* voxelonline/
-        zip -r client.zip voxelonline
-        rm -rf voxelonline
+        mkdir -p Quartz
+        cp -r client-src/* Quartz/
+        zip -r client.zip Quartz
+        rm -rf Quartz
 
     - name: Upload packages
       uses: actions/upload-artifact@v4

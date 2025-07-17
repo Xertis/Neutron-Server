@@ -2,7 +2,7 @@
     "version": 2,
     "order": "BE",
     "client": [
-        ["HandShake", "version:string", "protocol_version:uint8", "friends_list:array<string>", "next_state:uint8"],
+        ["HandShake", "version:string", "protocol_reference:string", "protocol_version:uint16", "friends_list:array<string>", "next_state:uint8"],
         ["StatusRequest"],
         ["PingRequest", "payload:uint32"],
         ["JoinGame", "username:string"],
@@ -37,7 +37,7 @@
         ["SynchronizePlayerPosition", "data:PlayerEntity"],
         ["SetPlayerAbilities", "flags:uint8"],
         ["TimeUpdate", "game_time:uint16"],
-        ["StatusResponse", "short_desc:string", "description:string", "favicon:array<uint8>", "friends_states:array<boolean>", "version:string", "protocol:uint16", "max:uint16", "online:uint16"],
+        ["StatusResponse", "short_desc:string", "description:string", "favicon:array<uint8>", "friends_states:array<boolean>", "version:string", "protocol_reference:string", "protocol_version:uint16", "max:uint16", "online:uint16"],
         ["PongResponse", "payload:uint32"],
         ["KeepAlive", "challenge:uint8"],
         ["PlayerJoined", "entity_id:var", "username:string", "data:PlayerEntity"],

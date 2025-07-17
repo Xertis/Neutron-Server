@@ -152,6 +152,7 @@ matches.status_fsm:add_state("sending_status", {
             icon,
             friends_states,
             CONFIG.server.version,
+            "Neutron",
             protocol.data.version,
             CONFIG.server.max_players,
             #players
