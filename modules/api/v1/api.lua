@@ -1,4 +1,4 @@
-local events = start_require("server:api/events")
+local events = start_require("server:api/v1/events")
 local rpc = require "api/v1/rpc"
 local accounts = require "api/v1/accounts"
 local bson = require "lib/private/files/bson"
