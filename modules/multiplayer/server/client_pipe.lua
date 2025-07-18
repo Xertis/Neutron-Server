@@ -450,7 +450,7 @@ ClientPipe:add_middleware(function(client)
     local prev_states = table.set_default(client.player.temp, "player-prev-states", {})
 
     for _, player in pairs(sandbox.get_players()) do
-        if table.has(RESERVED_USERNAMES, player.username) then
+        if table.has(RESERVED_USERNAMES, player.username) or player.username == client.player.username then
             goto continue
         end
 
