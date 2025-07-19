@@ -6,8 +6,8 @@ local account_manager = require "lib/private/accounts/account_manager"
 local chat = require "multiplayer/server/chat/chat"
 local timeout_executor = require "lib/private/common/timeout_executor"
 local echo = require "multiplayer/server/server_echo"
-local api_events = require "api/events"
-local api_env = require "api/env"
+local api_events = require "api/v1/events"
+local api_env = require "api/v1/env"
 local entities_manager = require "lib/private/entities/entities_manager"
 local lib = require "lib/private/min"
 local mfsm = require "lib/public/common/multifsm"
@@ -152,6 +152,7 @@ matches.status_fsm:add_state("sending_status", {
             icon,
             friends_states,
             CONFIG.server.version,
+            "Neutron",
             protocol.data.version,
             CONFIG.server.max_players,
             #players

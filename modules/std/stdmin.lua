@@ -5,7 +5,7 @@ _G['$Multiplayer'] = {
     side = "server",
     pack_id = "server",
     api_references = {
-        Neutron = {1}
+        Neutron = {"v1"}
     }
 }
 

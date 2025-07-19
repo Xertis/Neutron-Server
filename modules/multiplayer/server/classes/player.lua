@@ -50,7 +50,7 @@ function Player:set_active(new_value)
 end
 
 function Player:push_packet(...)
-    local bytes = protocol.prepare_packet(protocol.build_packet("server", ...))
+    local bytes = protocol.build_packet("server", ...)
     self:queue_response(bytes)
 end
 

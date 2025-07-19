@@ -1,4 +1,4 @@
-local events = start_require("server:api/events")
+local events = start_require("server:api/v1/events")
 local bson = require "lib/private/files/bson"
 local db = require "lib/public/bit_buffer"
 

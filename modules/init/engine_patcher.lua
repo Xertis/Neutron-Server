@@ -1,4 +1,3 @@
-local api = require "api/api".server
 local entities_manager = start_require "lib/private/entities/entities_manager"
 
 logger.log("Patching the in-memory engine before start")

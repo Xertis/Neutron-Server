@@ -2,7 +2,7 @@ local protocol = require "multiplayer/protocol-kernel/protocol"
 local sandbox = require "lib/private/sandbox/sandbox"
 local account_manager = require "lib/private/accounts/account_manager"
 local lib = require "lib/private/min"
-local console = require "api/console"
+local console = require "api/v1/console"
 
 console.set_command("tell: username=<string> message=<string> -> Sends a private message to a specific player", {},
 function (args, client)
