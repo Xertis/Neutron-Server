@@ -221,6 +221,12 @@ function module.process(client)
             end
         end
 
+        local str_name = entity:def_name()
+        if not reg_entities[str_name] then
+            logger.log("Spawn of an unregistered entity: " .. str_name)
+            goto continue
+        end
+
         local cur_data = __create_data(entity, is_player)
         local data = table.set_default(entities_data, uid, {})
 
