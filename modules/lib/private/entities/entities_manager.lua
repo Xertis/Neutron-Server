@@ -222,8 +222,8 @@ function module.process(client)
         end
 
         local str_name = entity:def_name()
-        local data = reg_entities[str_name] or {}
-        if not data.config then
+        local _data = reg_entities[str_name] or {}
+        if not _data.config and not is_player then
             logger.log("Spawn of an unregistered entity: " .. str_name)
             goto continue
         end
