@@ -29,46 +29,42 @@ matches.actions = {}
 local function check_mods(client_hashes)
     local packs = pack.get_installed()
     local plugins = table.freeze_unpack(CONFIG.game.plugins)
-
-    table.filter(packs, function (_, p)
-        if p == "server" or table.has(plugins, p) then
-            return false
-        end
-        return true
+    table.filter(packs, function(_, p)
+        return not (p == "server" or table.has(plugins, p))
     end)
 
     local temp = {}
-    for i=1, #client_hashes, 2 do
-        temp[client_hashes[i]] = client_hashes[i+1]
+    for i = 1, #client_hashes, 2 do
+        temp[client_hashes[i]] = client_hashes[i + 1]
     end
     client_hashes = temp
 
     if not hashed_packs then
         hashed_packs = {}
-        for _, pack in ipairs(packs) do
-            hashed_packs[pack] = lib.hash.hash_mods({pack})
+        for _, pack_name in ipairs(packs) do
+            hashed_packs[pack_name] = lib.hash.hash_mods({pack_name})
         end
     end
 
-    local incorrect = ''
+    local incorrect = {}
     local i = 1
 
-    for pack, hash in pairs(hashed_packs) do
-        if hash ~= client_hashes[pack] then
-            incorrect = incorrect .. string.format("\n%s: %s", i, pack)
+    for pack_name, hash in pairs(hashed_packs) do
+        if hash ~= client_hashes[pack_name] then
+            table.insert(incorrect, string.format("\n%s: %s", i, pack_name))
             i = i + 1
         end
-
-        client_hashes[pack] = nil
+        client_hashes[pack_name] = nil
     end
 
-    for pack, _ in pairs(client_hashes) do
-        incorrect = incorrect .. string.format("\n%s: %s", i, pack)
-        logger.log(string.format('The account has a modified client and is trying to add "%s" pack.', pack), '!')
+    for pack_name, _ in pairs(client_hashes) do
+        table.insert(incorrect, string.format("\n%s: %s", i, pack_name))
+        logger.log(string.format('The account has a modified client and is trying to add "%s" pack.', pack_name), '!')
         i = i + 1
     end
 
-    return incorrect == '', incorrect
+    local error_msg = table.concat(incorrect)
+    return error_msg == '', error_msg
 end
 
 
@@ -220,7 +216,7 @@ matches.joining_fsm:add_state("joining", {
         local buffer = nil
 
         local account = account_manager.login(packet.username)
-        local hash_status, hash_reason = check_mods(hashes)
+        local hash_status, hash_reason = check_mods(hashes.packs)
 
         if not hash_status and not CONFIG.server.dev_mode then
             logger.log("JoinSuccess has been aborted")
