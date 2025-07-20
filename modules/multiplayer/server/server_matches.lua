@@ -694,7 +694,7 @@ matches.client_online_handler:add_case(protocol.ClientMsg.KeepAlive, (
 
 matches.client_online_handler:add_case(protocol.ClientMsg.PlayerInventory, (
     function (packet, client)
-        if not client.account or not client.account.is_logged then
+        if not client.account or not client.account.is_logged or not client.player.is_teleported then
             return
         end
 
@@ -704,7 +704,7 @@ matches.client_online_handler:add_case(protocol.ClientMsg.PlayerInventory, (
 
 matches.client_online_handler:add_case(protocol.ClientMsg.PlayerHandSlot, (
     function (packet, client)
-        if not client.account or not client.account.is_logged then
+        if not client.account or not client.account.is_logged or not client.player.is_teleported then
             return
         end
 
