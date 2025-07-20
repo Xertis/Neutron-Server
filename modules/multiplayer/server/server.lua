@@ -30,13 +30,11 @@ function server:start()
         local address, port = client_socket:get_address()
         local client = Player.new(false, network, address, port)
 
-        for i, server_client in ipairs(self.clients) do
+        for i=#self.clients, 1, -1 do
+            local server_client = self.clients[i]
             if server_client.address == client.address and not server_client.active then
                 logger.log("Reconnection from the client side was detected")
-                self.clients[i].network = client.network
-                self.clients[i].port = client.port
-                self.clients[i].is_kicked = client.is_kicked
-                return
+                table.remove(self.clients, i)
             end
         end
 
@@ -60,6 +58,7 @@ function server:tick()
     for index=#self.clients, 1, -1 do
         local client = self.clients[index]
         local socket = client.network.socket
+
         if not socket or not socket:is_alive() or client.is_kicked then
             if client.active then
                 client.active = false
@@ -76,7 +75,6 @@ function server:tick()
             if socket and socket:is_alive() then
                 socket:close()
             end
-
         end
     end
 
