@@ -1,10 +1,11 @@
 local protect = require "lib/private/protect"
-
 if protect.protect_require() then return end
 
 local metadata = start_require "lib/private/files/metadata"
 local Player = {}
 Player.__index = Player
+
+local players_proxy = metadata.proxy("players")
 
 function Player.new(username)
     local self = setmetatable({}, Player)
@@ -29,20 +30,19 @@ end
 
 function Player:abort()
     self.active = false
-    metadata.players.set(self.username, self:to_save())
+    self:save()
 end
 
 function Player:save()
-    metadata.players.set(self.username, self:to_save())
+    players_proxy[self.username] = self:to_save()
 end
 
 function Player:revive()
-
-    if self.active == true then
+    if self.active then
         return CODES.players.WithoutChanges
     end
 
-    local data = metadata.players.get(self.username)
+    local data = players_proxy[self.username]
     if not data then
         return CODES.players.DataLoss
     end
@@ -62,7 +62,8 @@ function Player:to_save()
         entity_id = self.entity_id,
         world = self.world,
         pid = self.pid,
-        invid = self.invid
+        invid = self.invid,
+        region_pos = self.region_pos
     }
 end
 
@@ -72,6 +73,7 @@ function Player:to_load(data)
     self.world = data.world
     self.pid = data.pid
     self.invid = data.invid
+    self.region_pos = data.region_pos or {x = 0, z = 0}
 end
 
 return Player

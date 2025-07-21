@@ -6,6 +6,8 @@ local lib = require "lib/private/min"
 local account = {}
 account.__index = account
 
+local accounts_proxy = metadata.proxy("server", "accounts")
+
 function account.new(username)
     local self = setmetatable({}, account)
 
@@ -25,15 +27,15 @@ end
 
 function account:abort()
     self.active = false
-    metadata.accounts.set(self.username, self:to_save())
+    self:save()
 end
 
 function account:save()
-    metadata.accounts.set(self.username, self:to_save())
+    accounts_proxy[self.username] = self:to_save()
 end
 
 function account:set_password(password)
-    if type(password)[1] ~= 's' then
+    if type(password) ~= 'string' then
         return CODES.accounts.PasswordUnvalidated
     elseif #password < 8 then
         return CODES.accounts.PasswordUnvalidated
@@ -53,17 +55,17 @@ function account:check_password(password)
 end
 
 function account:revive()
-    if self.active == true then
+    if self.active then
         return CODES.accounts.WithoutChanges
     end
 
-    local data = metadata.accounts.get(self.username)
+    local data = accounts_proxy[self.username]
     if not data then
         return CODES.accounts.DataLoss
     end
 
     self.active = true
-    account:to_load(data)
+    self:to_load(data)
     return CODES.accounts.ReviveSuccess
 end
 
@@ -81,10 +83,9 @@ function account:to_save()
 end
 
 function account:to_load(data)
-    self.username = data.username
-    self.password = data.password
-    self.role = data.role
-    self.ip = data.ip
+    for k, v in pairs(data) do
+        self[k] = v
+    end
 end
 
 return account

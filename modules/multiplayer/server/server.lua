@@ -48,7 +48,7 @@ function server:start()
         end
 
         if LAST_SERVER_UPDATE > 0 then
-            if os.time() - LAST_SERVER_UPDATE > 10 then
+            if os.time() - LAST_SERVER_UPDATE > 60 then
                 logger.log('The "pending problem" has been detected. The server is stopped', 'P')
 
                 local tb = debug.get_traceback(1)
