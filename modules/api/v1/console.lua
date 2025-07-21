@@ -176,7 +176,7 @@ end
 module.set_command("help: command=[string] -> Shows a list of available commands.", {}, function (args, client)
     local command = args.command
     local handlers = chat.get_handlers()
-    local message = string.format("\n%s----- Help (.help) -----\n", module.colors.yellow)
+    local message = string.format("\n%s----- Help (/help) -----\n", module.colors.yellow)
 
     local function concat(schem)
         local main_part = schem[1]

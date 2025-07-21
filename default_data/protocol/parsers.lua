@@ -686,3 +686,107 @@ do
         }
     end
 end--@
+
+-- @InventoryUnlimited.write
+-- VARIABLES is_empty min_count max_count min_id max_id needed_bits_id needed_bits_count min_id_bits min_count_bits slot i
+-- TO_SAVE inv
+do
+    size = #inv
+    buf:put_uint16(size)
+
+    is_empty = true
+    min_count = math.huge
+    max_count = 0
+    min_id = math.huge
+    max_id = 0
+
+    for i = 1, size do
+        slot = inv[i]
+        count = slot.count
+        id = slot.id
+
+        if id ~= 0 then
+            is_empty = false
+            min_count = math.min(min_count, count)
+            max_count = math.max(max_count, count)
+            min_id = math.min(min_id, id)
+            max_id = math.max(max_id, id)
+        end
+    end
+
+    buf:put_bit(is_empty)
+
+    if is_empty then
+        return
+    end
+
+    needed_bits_id = math.bit_length(max_id - min_id)
+    needed_bits_count = math.bit_length(max_count - min_count)
+    min_id_bits = math.bit_length(min_id)
+    min_count_bits = math.bit_length(min_count)
+
+    buf:put_uint(needed_bits_id, 4)
+    buf:put_uint(needed_bits_count, 4)
+    buf:put_uint(min_id_bits, 4)
+    buf:put_uint(min_count_bits, 4)
+    buf:put_uint(min_id, min_id_bits)
+    buf:put_uint(min_count, min_count_bits)
+
+    for i = 1, size do
+        slot = inv[i]
+        if slot.id ~= 0 then
+            buf:put_bit(true)
+            buf:put_uint(slot.id - min_id, needed_bits_id)
+            buf:put_uint(slot.count - min_count, needed_bits_count)
+
+            has_meta = slot.meta ~= nil
+            buf:put_bit(has_meta)
+            if has_meta then
+                bson.encode(buf, slot.meta)
+            end
+        else
+            buf:put_bit(false)
+        end
+    end
+end--@
+
+-- @InventoryUnlimited.read
+-- VARIABLES is_empty needed_bits_id needed_bits_count min_id_bits min_count_bits min_id min_count has_item i size
+-- TO_LOAD inv
+do
+    size = buf:get_uint16()
+    is_empty = buf:get_bit()
+
+    if is_empty then
+        inv = {}
+        for i = 1, size do
+            inv[i] = {id = 0, count = 0}
+        end
+        return
+    end
+
+    needed_bits_id = buf:get_uint(4)
+    needed_bits_count = buf:get_uint(4)
+    min_id_bits = buf:get_uint(4)
+    min_count_bits = buf:get_uint(4)
+    min_id = buf:get_uint(min_id_bits)
+    min_count = buf:get_uint(min_count_bits)
+
+    inv = {}
+    for i = 1, size do
+        has_item = buf:get_bit()
+        if has_item then
+            slot = {
+                id = buf:get_uint(needed_bits_id) + min_id,
+                count = buf:get_uint(needed_bits_count) + min_count
+            }
+
+            if buf:get_bit() then
+                slot.meta = bson.decode(buf)
+            end
+            inv[i] = slot
+        else
+            inv[i] = {id = 0, count = 0}
+        end
+    end
+end--@

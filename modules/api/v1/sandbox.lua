@@ -1,10 +1,12 @@
 local sandbox = start_require("server:lib/private/sandbox/sandbox")
 local account_manager = start_require("server:lib/private/accounts/account_manager")
 local protocol = start_require("server:multiplayer/protocol-kernel/protocol")
+local inv_dat = require "server:api/v1/inv_dat"
 
 local module = {
     players = {},
-    world = {}
+    world = {},
+    blocks = {}
 }
 
 function module.players.get_all()
@@ -70,6 +72,17 @@ function module.players.get_by_pid(pid)
             return _player
         end
     end
+end
+
+function module.blocks.sync_inventory(pos, client)
+    local invid = inventory.get_block(pos.x, pos.y, pos.z)
+    local inv = inventory.get_inv(invid)
+
+    client:push_packet(protocol.ServerMsg.BlockInventory, pos.x, pos.y, pos.z, inv)
+end
+
+function module.blocks.sync_slot(pos, slot, client)
+    client:push_packet(protocol.ServerMsg.BlockInventorySlot, pos.x, pos.y, pos.z, slot.slot_id, slot.item_id, slot.item_count)
 end
 
 return module

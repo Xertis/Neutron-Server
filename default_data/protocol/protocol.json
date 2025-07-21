@@ -30,6 +30,10 @@
         ["PlayerRegion", "x:int16", "z:int16"],
         ["PackEnv", "pack:string", "env:string", "key:string", "value:any"],
         ["EntitySpawnTry", "entity_def:uint16", "args:bson"],
+
+        ["BlockInventory", "x:int32", "y:uint8", "z:int32", "inventory:InventoryUnlimited"],
+        ["BlockInventorySlot", "x:int32", "y:uint8", "z:int32", "slot_id:uint16", "item_id:uint16", "item_count:uint16"],
+
         ["Disconnect"]
     ],
     "server": [
@@ -80,6 +84,10 @@
         ["WrapSetTexture", "id:var", "texture:string"],
 
         ["WeatherChanged", "weather:bson", "time:uint16", "name:string"],
+
+        ["BlockInventory", "x:int32", "y:uint8", "z:int32", "inventory:InventoryUnlimited"],
+        ["BlockInventorySlot", "x:int32", "y:uint8", "z:int32", "slot_id:uint16", "item_id:uint16", "item_count:uint16"],
+
         ["Disconnect", "reason:string"]
     ],
     "states": ["Status", "Login", "Active"]

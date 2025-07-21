@@ -24,6 +24,7 @@
     "dev_mode": false,
     "shutdown_timeout": -1,
     "whitelist": [],
+    "whitelist_ip": [],
     "blacklist": []
   },
   "roles": {

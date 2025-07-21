@@ -243,6 +243,11 @@ matches.joining_fsm:add_state("joining", {
             matches.actions.Disconnect(client, "You are not on the whitelist")
             close()
             return
+        elseif (not table.has(table.freeze_unpack(CONFIG.server.whitelist_ip), client.address) and #table.freeze_unpack(CONFIG.server.whitelist_ip) > 0) then
+            logger.log("JoinSuccess has been aborted")
+            matches.actions.Disconnect(client, "You are not on the whitelist")
+            close()
+            return
         elseif table.has(table.freeze_unpack(CONFIG.server.blacklist), packet.username) then
             logger.log("JoinSuccess has been aborted")
             matches.actions.Disconnect(client, "You're on the blacklist")
@@ -355,9 +360,9 @@ matches.joining_fsm:add_state("joining", {
         end
 
         if account.password == nil then
-            chat.tell("Please register using the command .register <password> <confirm password> to secure your account.", client)
+            chat.tell("Please register using the command /register <password> <confirm password> to secure your account.", client)
         elseif not account.is_logged then
-            chat.tell("Please log in using the command .login <password> to access your account.", client)
+            chat.tell("Please log in using the command /login <password> to access your account.", client)
         end
 
         close()
@@ -523,10 +528,10 @@ local function chunks_responce_optimizate(packet, client)
     local chunks_packet = packet.chunks
     local chunks_list = {}
 
-    if not client.account.is_logged then
-        local queue = table.set_default(client.meta, "chunks_queue", {})
-        table.merge(queue, chunks_packet)
-        return
+    if not chunks_packet then
+        chunks_packet = table.set_default(client.meta, "chunks_queue", {})
+
+        if not chunks_packet then return end
     end
 
     for indx=1, #chunks_packet, 2 do

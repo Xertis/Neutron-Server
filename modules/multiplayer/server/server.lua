@@ -30,6 +30,11 @@ function server:start()
         local address, port = client_socket:get_address()
         local client = Player.new(false, network, address, port)
 
+        if (not table.has(table.freeze_unpack(CONFIG.server.whitelist_ip), client.address) and #table.freeze_unpack(CONFIG.server.whitelist_ip) > 0) then
+            client_socket:close()
+            return
+        end
+
         for i=#self.clients, 1, -1 do
             local server_client = self.clients[i]
             if server_client.address == client.address and not server_client.active then
