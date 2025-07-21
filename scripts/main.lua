@@ -73,7 +73,7 @@ local function main()
 
     while IS_RUNNING do
         local ctime = math.round(time.uptime())
-        LAST_SERVER_UPDATE = ctime
+        LAST_SERVER_UPDATE = os.time()
 
         app.tick()
         timeout_executor.process()

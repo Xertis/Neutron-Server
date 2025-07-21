@@ -43,7 +43,7 @@ function server:start()
         end
 
         if LAST_SERVER_UPDATE > 0 then
-            if time.uptime() - LAST_SERVER_UPDATE > 10 then
+            if os.time() - LAST_SERVER_UPDATE > 10 then
                 logger.log('The "pending problem" has been detected. The server is stopped', 'P')
 
                 local tb = debug.get_traceback(1)
@@ -55,6 +55,10 @@ function server:start()
                 core.quit()
             end
         end
+
+        print("Pending problem info:")
+        print(LAST_SERVER_UPDATE)
+        print(os.time())
 
         logger.log("Connection to the client has been successfully established")
 
