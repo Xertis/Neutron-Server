@@ -36,6 +36,7 @@ ServerPipe:add_middleware(function(client)
         end)
         client.meta.recieve_co = co
     end
+
     coroutine.resume(co)
     return client
 end)

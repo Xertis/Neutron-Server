@@ -72,13 +72,15 @@ local function main()
     logger.log("server is started")
 
     while IS_RUNNING do
+        local ctime = math.round(time.uptime())
+        LAST_SERVER_UPDATE = ctime
+
         app.tick()
         timeout_executor.process()
         server:tick()
 
         events.emit("server:main_tick")
 
-        local ctime = math.round(time.uptime())
         if ctime % save_interval == 0 and ctime - last_time_save > 1 then
             logger.log("Saving world...")
             last_time_save = ctime

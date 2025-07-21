@@ -34,7 +34,25 @@ function server:start()
             local server_client = self.clients[i]
             if server_client.address == client.address and not server_client.active then
                 logger.log("Reconnection from the client side was detected")
+                if server_client.network.socket:is_alive() then
+                    server_client.network.socket:close()
+                end
+
                 table.remove(self.clients, i)
+            end
+        end
+
+        if LAST_SERVER_UPDATE > 0 then
+            if time.uptime() - LAST_SERVER_UPDATE > 10 then
+                logger.log('The "pending problem" has been detected. The server is stopped', 'P')
+
+                local tb = debug.get_traceback(1)
+                local s = "app.quit() traceback:"
+                for i, frame in ipairs(tb) do
+                    s = s .. "\n\t"..tb_frame_tostring(frame)
+                end
+                debug.log(s)
+                core.quit()
             end
         end
 

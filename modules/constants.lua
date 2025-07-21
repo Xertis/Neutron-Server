@@ -3,6 +3,7 @@ PACK_ID = "server"
 --Конфиг
 CONFIG_PATH = "config:server_config.json"
 CONFIG = {} --Инициализируется в std
+LAST_SERVER_UPDATE = -1
 
 --Песочница
 RENDER_DISTANCE = 0
