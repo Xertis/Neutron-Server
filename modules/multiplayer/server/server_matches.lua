@@ -559,6 +559,10 @@ matches.client_online_handler:add_case(protocol.ClientMsg.RequestChunks, chunks_
 matches.client_online_handler:add_case(protocol.ClientMsg.BlockInteract, (
     function (packet, client)
 
+        if not client.account or not client.account.is_logged or not client.player.is_teleported then
+            return
+        end
+
         local x, y, z = packet.x, packet.y, packet.z
 
         local block_id = block.get(x, y, z)
@@ -570,6 +574,10 @@ matches.client_online_handler:add_case(protocol.ClientMsg.BlockInteract, (
 
 matches.client_online_handler:add_case(protocol.ClientMsg.BlockRegionInteract, (
     function (packet, client)
+
+        if not client.account or not client.account.is_logged or not client.player.is_teleported then
+            return
+        end
 
         local x, y, z = packet.x, packet.y, packet.z
 
@@ -587,6 +595,10 @@ matches.client_online_handler:add_case(protocol.ClientMsg.BlockRegionInteract, (
 
 matches.client_online_handler:add_case(protocol.ClientMsg.BlockUpdate, (
     function (packet, client)
+
+        if not client.account or not client.account.is_logged or not client.player.is_teleported then
+            return
+        end
 
         if not client.account or not client.account.is_logged then
             return
@@ -607,7 +619,7 @@ matches.client_online_handler:add_case(protocol.ClientMsg.BlockUpdate, (
 matches.client_online_handler:add_case(protocol.ClientMsg.BlockRegionUpdate, (
     function (packet, client)
 
-        if not client.account or not client.account.is_logged then
+        if not client.account or not client.account.is_logged or not client.player.is_teleported then
             return
         end
 
@@ -633,7 +645,7 @@ matches.client_online_handler:add_case(protocol.ClientMsg.BlockRegionUpdate, (
 matches.client_online_handler:add_case(protocol.ClientMsg.BlockDestroy, (
     function (packet, client)
 
-        if not client.account or not client.account.is_logged then
+        if not client.account or not client.account.is_logged or not client.player.is_teleported then
             return
         end
 
@@ -648,7 +660,7 @@ matches.client_online_handler:add_case(protocol.ClientMsg.BlockDestroy, (
 matches.client_online_handler:add_case(protocol.ClientMsg.BlockRegionDestroy, (
     function (packet, client)
 
-        if not client.account or not client.account.is_logged then
+        if not client.account or not client.account.is_logged or not client.player.is_teleported then
             return
         end
 
