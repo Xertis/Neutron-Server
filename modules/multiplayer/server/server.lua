@@ -26,14 +26,23 @@ end
 
 function server:start()
     self.server_socket = socketlib.create_server(self.port, function(client_socket)
-        local network = Network.new( client_socket )
-        local address, port = client_socket:get_address()
-        local client = Player.new(false, network, address, port)
-
-        if (not table.has(table.freeze_unpack(CONFIG.server.whitelist_ip), client.address) and #table.freeze_unpack(CONFIG.server.whitelist_ip) > 0) then
+        local address, _ = client_socket:get_address()
+        if (not table.has(table.freeze_unpack(CONFIG.server.whitelist_ip), address) and #table.freeze_unpack(CONFIG.server.whitelist_ip) > 0) then
             client_socket:close()
             return
         end
+
+        table.insert(self.tasks, client_socket)
+    end)
+end
+
+function server:do_tasks()
+    for j=#self.tasks, 1, -1 do
+        local client_socket = self.tasks[j]
+
+        local network = Network.new( client_socket )
+        local address, port = client_socket:get_address()
+        local client = Player.new(false, network, address, port)
 
         for i=#self.clients, 1, -1 do
             local server_client = self.clients[i]
@@ -47,28 +56,11 @@ function server:start()
             end
         end
 
-        if LAST_SERVER_UPDATE > 0 then
-            if os.time() - LAST_SERVER_UPDATE > 60 then
-                logger.log('The "pending problem" has been detected. The server is stopped', 'P')
-
-                local tb = debug.get_traceback(1)
-                local s = "app.quit() traceback:"
-                for i, frame in ipairs(tb) do
-                    s = s .. "\n\t"..tb_frame_tostring(frame)
-                end
-                debug.log(s)
-                core.quit()
-            end
-        end
-
-        print("Pending problem info:")
-        print(LAST_SERVER_UPDATE)
-        print(os.time())
-
         logger.log("Connection to the client has been successfully established")
 
         table.insert(self.clients, client)
-    end)
+        table.remove(self.tasks, j)
+    end
 end
 
 function server:queue_response(event)
@@ -82,11 +74,14 @@ function server:stop()
 end
 
 function server:tick()
+    self:do_tasks()
+
     for index=#self.clients, 1, -1 do
         local client = self.clients[index]
         local socket = client.network.socket
 
         if not socket or not socket:is_alive() or client.is_kicked then
+            print(socket, socket:is_alive(), client.is_kicked)
             if client.active then
                 client.active = false
             end

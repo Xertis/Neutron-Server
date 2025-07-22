@@ -80,7 +80,6 @@ function module.save()
 end
 
 function module.server.get(catalog, key)
-    print(catalog, key)
     return SERVER_META[catalog][key]
 end
 

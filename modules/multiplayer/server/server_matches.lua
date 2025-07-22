@@ -487,12 +487,6 @@ matches.client_online_handler:add_case(protocol.ClientMsg.Disconnect, (
 local function chunk_responce(packet, client, is_timeout)
     local chunk_pos = {x = packet.x, z = packet.z}
 
-    if not client.account.is_logged then
-        local queue = table.set_default(client.meta, "chunks_queue", {})
-        table.merge(queue, {packet.x, packet.z})
-        return
-    end
-
     local chunk = sandbox.get_chunk(chunk_pos)
 
     if not chunk then
