@@ -20,8 +20,9 @@ function switcher:add_middleware(val, middleware)
         local middlewares = table.set_default(self.switchs[val], "middlewares", {})
 
         table.insert(middlewares, middleware)
+        return true
     else
-        error("The handler was not found")
+        return false
     end
 end
 

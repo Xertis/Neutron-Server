@@ -81,7 +81,6 @@ function server:tick()
         local socket = client.network.socket
 
         if not socket or not socket:is_alive() or client.is_kicked then
-            print(socket, socket:is_alive(), client.is_kicked)
             if client.active then
                 client.active = false
             end
