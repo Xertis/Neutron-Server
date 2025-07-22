@@ -59,7 +59,7 @@ function module.despawn(uid)
 
     server_echo.put_event(
         function (client)
-            client.network:send(buffer.bytes)
+            client:queue_response(buffer.bytes)
         end
     )
 end
@@ -199,7 +199,7 @@ local function __send_dirty(entity, uid, id, dirty, client, is_player)
         buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.PlayerFieldsUpdate, unpack(data)))
     end
 
-    client.network:send(buffer.bytes)
+    client:queue_response(buffer.bytes)
 end
 
 function module.process(client)

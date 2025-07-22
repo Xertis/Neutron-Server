@@ -73,9 +73,7 @@ function matches.actions.Disconnect(client, reason)
         entities_manager.clear_pid(client.player.pid)
     end
 
-    local buffer = protocol.create_databuffer()
-    buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.Disconnect, reason))
-    client.network:send(buffer.bytes)
+    client:push_packet(protocol.ServerMsg.Disconnect, reason)
     client:kick()
 end
 
@@ -154,8 +152,7 @@ matches.status_fsm:add_state("sending_status", {
             #players
         }
 
-        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.StatusResponse, unpack(STATUS)))
-        client.network:send(buffer.bytes)
+        client:push_packet(protocol.ServerMsg.StatusResponse, unpack(STATUS))
         logger.log("Status has been sent")
 
         client:kick()
@@ -189,8 +186,7 @@ matches.joining_fsm:add_state("sending_packs_list", {
 
         local DATA = packs
 
-        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.PacksList, DATA))
-        client.network:send(buffer.bytes)
+        client:push_packet(protocol.ServerMsg.PacksList, DATA)
         return "awaiting_packs_hashes"
     end
 })
@@ -213,7 +209,6 @@ matches.joining_fsm:add_state("joining", {
 
         local packet = matches.joining_fsm:get_data(client, "join_game")
         local hashes = matches.joining_fsm:get_data(client, "packs_hashes")
-        local buffer = nil
 
         local account = account_manager.login(packet.username)
         local hash_status, hash_reason = check_mods(hashes.packs)
@@ -278,9 +273,7 @@ matches.joining_fsm:add_state("joining", {
             math.clamp(CONFIG.server.chunks_loading_distance, 0, 255)
         }
 
-        buffer = protocol.create_databuffer()
-        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.JoinSuccess, unpack(DATA)))
-        client.network:send(buffer.bytes)
+        client:push_packet(protocol.ServerMsg.JoinSuccess, unpack(DATA))
         logger.log("JoinSuccess has been sended")
 
         ---
@@ -297,9 +290,7 @@ matches.joining_fsm:add_state("joining", {
                     cheats = {noclip = noclip, flight = flight}
                 }
 
-                local buf = protocol.create_databuffer()
-                buf:put_packet(protocol.build_packet("server", protocol.ServerMsg.SynchronizePlayerPosition, _DATA))
-                _client.network:send(buf.bytes)
+                client:push_packet(protocol.ServerMsg.SynchronizePlayerPosition, _DATA)
 
                 if is_last then
                     _client.player.is_teleported = true
@@ -317,11 +308,13 @@ matches.joining_fsm:add_state("joining", {
         ---
 
         local p_data = {account_player.username, account_player.pid}
+
+        local buffer = protocol.create_databuffer()
+        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.PlayerListAdd, unpack(p_data)))
+
         echo.put_event(
             function (c)
-                buffer = protocol.create_databuffer()
-                buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.PlayerListAdd, unpack(p_data)))
-                c.network:send(buffer.bytes)
+                c:queue_response(buffer.bytes)
             end,
         client)
 
@@ -335,20 +328,14 @@ matches.joining_fsm:add_state("joining", {
             }
         end)
 
-        buffer = protocol.create_databuffer()
-        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.PlayerList, player_keys))
-        client.network:send(buffer.bytes)
+        client:push_packet(protocol.ServerMsg.PlayerList, player_keys)
 
         local data = sandbox.get_inventory(account_player)
         local inv, slot = data.inventory, data.slot
 
-        buffer = protocol.create_databuffer()
-        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.PlayerInventory, inv))
-        client.network:send(buffer.bytes)
+        client:push_packet(protocol.ServerMsg.PlayerInventory, inv)
 
-        buffer = protocol.create_databuffer()
-        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.PlayerHandSlot, slot))
-        client.network:send(buffer.bytes)
+        client:push_packet(protocol.ServerMsg.PlayerHandSlot, slot)
 
         ---
         events.emit("server:client_connected", client)
@@ -501,16 +488,13 @@ local function chunk_responce(packet, client, is_timeout)
         return
     end
 
-    local buffer = protocol.create_databuffer()
-
     local DATA = {
         packet.x,
         packet.z,
         chunk
     }
 
-    buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.ChunkData, unpack(DATA)))
-    client.network:send(buffer.bytes)
+    client:push_packet(protocol.ServerMsg.ChunkData, unpack(DATA))
 
     return true
 end
@@ -544,10 +528,7 @@ local function chunks_responce_optimizate(packet, client)
         end
     end
 
-    local buffer = protocol.create_databuffer()
-
-    buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.ChunksData, chunks_list))
-    client.network:send(buffer.bytes)
+    client:push_packet(protocol.ServerMsg.ChunksData, chunks_list)
 
     return true
 end

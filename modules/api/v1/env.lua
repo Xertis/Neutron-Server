@@ -39,9 +39,7 @@ function module.public.create(pack, env_name)
                         return
                     end
 
-                    local buffer = protocol.create_databuffer()
-                    buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.PackEnv, pack, env_name, key, value))
-                    client.network:send(buffer.bytes)
+                    client:push_packet(protocol.ServerMsg.PackEnv, pack, env_name, key, value)
                 end
             )
         end,
@@ -77,9 +75,7 @@ function module.private.create(pack, env_name, client)
                 return
             end
 
-            local buffer = protocol.create_databuffer()
-            buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.PackEnv, pack, env_name, key, value))
-            client.network:send(buffer.bytes)
+            client:push_packet(protocol.ServerMsg.PackEnv, pack, env_name, key, value)
         end,
     })
 
@@ -102,9 +98,7 @@ function module.__env_update__(pack, env_name, key, value)
                 return
             end
 
-            local buffer = protocol.create_databuffer()
-            buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.PackEnv, pack, env_name, key, value))
-            client.network:send(buffer.bytes)
+            client:push_packet(protocol.ServerMsg.PackEnv, pack, env_name, key, value)
         end
     )
 end
