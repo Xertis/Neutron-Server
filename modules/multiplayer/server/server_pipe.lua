@@ -78,6 +78,7 @@ ServerPipe:add_middleware(function(client)
             client.network:send(packet)
         end)
         if not success then
+            logger.log("Error when sending a packet: " .. err, 'E')
             break
         end
     end

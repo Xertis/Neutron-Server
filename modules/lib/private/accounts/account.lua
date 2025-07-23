@@ -66,6 +66,16 @@ function account:revive()
 
     self.active = true
     self:to_load(data)
+
+    if not CONFIG.roles[self.role] then
+        local default_role = CONFIG.roles.default_role
+        logger.log(string.format(
+            [["%s" account has a non-existent "%s" role, his role has been changed to: "%s"]],
+            self.username, self.role, default_role),
+        "W")
+        self.role = default_role
+    end
+
     return CODES.accounts.ReviveSuccess
 end
 
