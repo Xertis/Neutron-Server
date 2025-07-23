@@ -91,11 +91,13 @@ end
 
 
 function matches.actions.Disconnect(client, reason)
+    reason = reason or "No reason"
     if client.player then
         entities_manager.clear_pid(client.player.pid)
     end
 
     local buffer = protocol.create_databuffer()
+    logger.log("Aborted message: " .. reason, 'W')
     buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.Disconnect, reason))
     client.network:send(buffer.bytes)
     client:kick()
