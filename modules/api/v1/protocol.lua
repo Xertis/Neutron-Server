@@ -12,7 +12,9 @@ function module.tell(client, packet_type, data)
         return
     end
 
-    client:push_packet(packet_type, unpack(data))
+    local buffer = protocol.create_databuffer()
+    buffer:put_packet(protocol.build_packet("server", packet_type, unpack(data)))
+    client.network:send(buffer.bytes)
 end
 
 function module.echo(packet_type, data)
@@ -30,7 +32,7 @@ function module.echo(packet_type, data)
                 return
             end
 
-            client:queue_response(buffer.bytes)
+            client.network:send(buffer.bytes)
         end
     )
 end

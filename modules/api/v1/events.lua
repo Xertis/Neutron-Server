@@ -6,14 +6,19 @@ local handlers = {}
 
 function module.tell(pack, event, client, bytes)
     if IS_RUNNING then
-        client:push_packet(protocol.ServerMsg.PackEvent, pack, event, bytes)
+        local buffer = protocol.create_databuffer()
+        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.PackEvent, pack, event, bytes))
+
+        client.network:send(buffer.bytes)
     end
 end
 
 function module.echo(pack, event, bytes)
     if IS_RUNNING then
         server_echo.put_event(function(client)
-            client:push_packet(protocol.ServerMsg.PackEvent, pack, event, bytes)
+            local buffer = protocol.create_databuffer()
+            buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.PackEvent, pack, event, bytes))
+            client.network:send(buffer.bytes)
         end)
     end
 end
