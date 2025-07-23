@@ -39,28 +39,50 @@ local function check_mods(client_hashes)
     end
     client_hashes = temp
 
-    if not hashed_packs then
-        hashed_packs = {}
-        for _, pack_name in ipairs(packs) do
-            hashed_packs[pack_name] = lib.hash.hash_mods({pack_name})
-        end
-    end
-
     local incorrect = {}
     local i = 1
 
-    for pack_name, hash in pairs(hashed_packs) do
-        if hash ~= client_hashes[pack_name] then
-            table.insert(incorrect, string.format("\n%s: %s", i, pack_name))
+    if CONFIG.server.shallow_dev_mode then
+        local server_packs_lookup = {}
+        for _, pack_name in ipairs(packs) do
+            server_packs_lookup[pack_name] = true
+        end
+
+        for _, pack_name in ipairs(packs) do
+            if not client_hashes[pack_name] then
+                table.insert(incorrect, string.format("\n%s: %s (missing)", i, pack_name))
+                i = i + 1
+            end
+        end
+
+        for pack_name, _ in pairs(client_hashes) do
+            if not server_packs_lookup[pack_name] then
+                table.insert(incorrect, string.format("\n%s: %s (extra)", i, pack_name))
+                logger.log(string.format('Client has extra pack "%s" in shallow_dev_mode', pack_name), '!')
+                i = i + 1
+            end
+        end
+    else
+        if not hashed_packs then
+            hashed_packs = {}
+            for _, pack_name in ipairs(packs) do
+                hashed_packs[pack_name] = lib.hash.hash_mods({pack_name})
+            end
+        end
+
+        for pack_name, hash in pairs(hashed_packs) do
+            if hash ~= client_hashes[pack_name] then
+                table.insert(incorrect, string.format("\n%s: %s (hash mismatch)", i, pack_name))
+                i = i + 1
+            end
+            client_hashes[pack_name] = nil
+        end
+
+        for pack_name, _ in pairs(client_hashes) do
+            table.insert(incorrect, string.format("\n%s: %s (extra)", i, pack_name))
+            logger.log(string.format('Client has extra pack "%s" in standard mode', pack_name), '!')
             i = i + 1
         end
-        client_hashes[pack_name] = nil
-    end
-
-    for pack_name, _ in pairs(client_hashes) do
-        table.insert(incorrect, string.format("\n%s: %s", i, pack_name))
-        logger.log(string.format('The account has a modified client and is trying to add "%s" pack.', pack_name), '!')
-        i = i + 1
     end
 
     local error_msg = table.concat(incorrect)
@@ -218,7 +240,7 @@ matches.joining_fsm:add_state("joining", {
         local account = account_manager.login(packet.username)
         local hash_status, hash_reason = check_mods(hashes.packs)
 
-        if not hash_status and not CONFIG.server.dev_mode then
+        if not hash_status and (not CONFIG.server.dev_mode or CONFIG.server.shallow_dev_mode) then
             logger.log("JoinSuccess has been aborted")
             matches.actions.Disconnect(client, "Inconsistencies in mods:" .. hash_reason)
             close()
