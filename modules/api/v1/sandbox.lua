@@ -35,7 +35,9 @@ function module.players.sync_states(_player, states)
         player.set_flight(states.cheats.flight)
     end
 
-    client:push_packet(protocol.ServerMsg.SynchronizePlayerPosition, states)
+    local buf = protocol.create_databuffer()
+    buf:put_packet(protocol.build_packet("server", protocol.ServerMsg.SynchronizePlayerPosition, states))
+    client.network:send(buf.bytes)
 end
 
 function module.players.get_in_radius(target_pos, radius)

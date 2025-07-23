@@ -9,17 +9,17 @@ local handlers = {}
 
 function module.echo(message)
     logger.log(message)
-
-    local buffer = protocol.create_databuffer()
-    buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.ChatMessage, message))
-
     server_echo.put_event(function (client)
-        client:queue_response(buffer.bytes)
+        local buffer = protocol.create_databuffer()
+        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.ChatMessage, message))
+        client.network:send(buffer.bytes)
     end)
 end
 
 function module.tell(message, client)
-    client:push_packet(protocol.ServerMsg.ChatMessage, message)
+    local buffer = protocol.create_databuffer()
+    buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.ChatMessage, message))
+    client.network:send(buffer.bytes)
 end
 
 function module.command(message, client)
