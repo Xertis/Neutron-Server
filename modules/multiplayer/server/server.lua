@@ -32,6 +32,24 @@ function server:start()
             return
         end
 
+        if LAST_SERVER_UPDATE > 0 then
+            if os.time() - LAST_SERVER_UPDATE > 20 then
+                logger.log('The "pending problem" has been detected. The server is stopped', 'P')
+
+                local tb = debug.get_traceback(1)
+                local s = "app.quit() traceback:"
+                for i, frame in ipairs(tb) do
+                    s = s .. "\n\t"..tb_frame_tostring(frame)
+                end
+                debug.log(s)
+                core.quit()
+            end
+        end
+
+        print("Pending problem info:")
+        print(LAST_SERVER_UPDATE)
+        print(os.time())
+
         table.insert(self.tasks, client_socket)
     end)
 end
