@@ -454,6 +454,7 @@ matches.client_online_handler:add_case(protocol.ClientMsg.ChatMessage, (
         local message = string.format("[%s] %s", player.username, packet.message)
         local state = chat.command(packet.message, client)
         if state == false then
+            if not client.account.is_logged then return end
             chat.echo(message)
         end
     end

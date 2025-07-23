@@ -209,6 +209,11 @@ function module.process(client)
 
     for _, uid in pairs(entities.get_all_in_radius(p_pos, RENDER_DISTANCE)) do
         local entity = entities.get(uid)
+
+        if not entity then
+            goto continue
+        end
+
         local tsf = entity.transform
 
         local id = entity:def_index()
