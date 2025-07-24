@@ -139,6 +139,10 @@ function data_buffer:put_norm16(single)
 	self:put_bytes(bit_converter.norm16_to_bytes(single, self.order))
 end
 
+function data_buffer:put_float16(f16)
+	self:put_bytes(bit_converter.float16_to_bytes(f16, self.order))
+end
+
 function data_buffer:put_float32(single)
 	self:put_bytes(bit_converter.float32_to_bytes(single, self.order))
 end
@@ -278,6 +282,9 @@ function data_buffer:get_uint24()
 	return bit_converter.bytes_to_uint24(self:get_bytes(3), self.order)
 end
 
+function data_buffer:get_float16()
+	return bit_converter.bytes_to_float16(self:get_bytes(2), self.order)
+end
 
 function data_buffer:get_float32()
 	return bit_converter.bytes_to_float32(self:get_bytes(4), self.order)

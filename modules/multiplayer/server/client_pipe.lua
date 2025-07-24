@@ -445,8 +445,17 @@ end)
 
 --Обновляем позицию у других
 ClientPipe:add_middleware(function(client)
-    local client_states = sandbox.get_player_state(client.player)
+    local function can_represented_f16(vec1, vec2)
+        for key, val in pairs(vec1) do
+            if math.abs(val - vec2[key]) > 100 then
+                return false
+            end
+        end
 
+        return true
+    end
+
+    local client_states = sandbox.get_player_state(client.player)
     local prev_states = table.set_default(client.player.temp, "player-prev-states", {})
 
     for _, player in pairs(sandbox.get_players()) do
@@ -473,8 +482,26 @@ ClientPipe:add_middleware(function(client)
         }
 
         local current_pos = {x = state.x, y = state.y, z = state.z}
+
+        local compressed = false
+        if prev_state.pos and can_represented_f16(current_pos, prev_state.pos or {x=0, y=0, z=0}) then
+            compressed = true
+        end
+
+        changed_data[2].compressed = compressed
+
         if not prev_state.pos or not table.deep_equals(prev_state.pos, current_pos) then
-            changed_data[2].pos = current_pos
+            if compressed then
+                local pos = prev_state.pos or {x = 0, y = 0, z = 0}
+
+                changed_data[2].pos = {
+                    x = current_pos.x - pos.x,
+                    y = current_pos.y - pos.y,
+                    z = current_pos.z - pos.z
+                }
+            else
+                changed_data[2].pos = current_pos
+            end
         end
 
         local current_rot = {yaw = state.yaw, pitch = state.pitch}

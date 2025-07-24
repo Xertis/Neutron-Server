@@ -108,7 +108,72 @@ local function bytesToFloatOrDouble(bytes, opt)
     end
 end
 
+local function f16ToBytes(val)
+    local sign = 0
+    if val < 0 then
+        sign = 1
+        val = -val
+    end
+
+    local mantissa, exponent = 0, 0
+    if val ~= 0 then
+        local m, e = math.frexp(val)
+        mantissa = (m * 2 - 1) * 1024.0
+        exponent = e + 14
+
+        if exponent < 1 then
+            mantissa = math.floor(mantissa * math.ldexp(0.5, 1 - exponent) + 0.5)
+            exponent = 0
+        elseif exponent >= 31 then
+            exponent = 31
+            mantissa = 0
+        else
+            mantissa = math.floor(mantissa + 0.5)
+            if mantissa >= 1024 then
+                mantissa = 0
+                exponent = exponent + 1
+                if exponent >= 31 then exponent = 31 end
+            end
+        end
+    end
+
+    local byte0 = mantissa % 256
+    local byte1 = math.floor(mantissa / 256) + (exponent % 32) * 4 + sign * 128
+    return {byte0, byte1}
+end
+
+local function bytesToF16(bytes)
+    local byte0, byte1 = bytes[1], bytes[2]
+    local sign = math.floor(byte1 / 128)
+    local exponent = math.floor((byte1 % 128) / 4)
+    local mantissa = byte0 + (byte1 % 4) * 256
+
+    if exponent == 0 then
+        if mantissa == 0 then
+            return sign == 1 and -0.0 or 0.0
+        else
+            return sign == 1 
+               and -math.ldexp(mantissa / 1024.0, -14) 
+                or math.ldexp(mantissa / 1024.0, -14)
+        end
+    elseif exponent == 31 then
+        if mantissa == 0 then
+            return sign == 1 and -math.huge or math.huge
+        else
+            return 0/0
+        end
+    else
+        local m = 1 + mantissa / 1024.0
+        if sign == 1 then m = -m end
+        return math.ldexp(m, exponent - 15)
+    end
+end
+
 function bit_converter.is_valid_order(order) return table.has(orders, order) end
+
+function bit_converter.float16_to_bytes(float, order)
+    return fromLE(f16ToBytes(float), order)
+end
 
 function bit_converter.float32_to_bytes(float, order)
     return fromLE(floatOrDoubleToBytes(float, 'f'), order)
@@ -116,6 +181,10 @@ end
 
 function bit_converter.float64_to_bytes(float, order)
     return fromLE(floatOrDoubleToBytes(float, 'd'), order)
+end
+
+function bit_converter.bytes_to_float16(bytes, order)
+    return bytesToF16(toLE(bytes, order))
 end
 
 function bit_converter.bytes_to_float32(bytes, order)

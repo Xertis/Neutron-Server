@@ -626,27 +626,33 @@ do
 end--@
 
 -- @PlayerEntity.write
--- VARIABLES has_pos has_rot has_cheats
+-- VARIABLES has_pos has_rot has_cheats is_compressed
 -- TO_SAVE player
 
 do
     has_pos = player.pos ~= nil
     has_rot = player.rot ~= nil
     has_cheats = player.cheats ~= nil
+    is_compressed = player.compressed or false
 
     buf:put_bit(has_pos)
     buf:put_bit(has_rot)
     buf:put_bit(has_cheats)
+    buf:put_bit(is_compressed)
 
-    if has_pos then
+    if has_pos and is_compressed then
+        buf:put_float16(player.pos.x)
+        buf:put_float16(player.pos.y)
+        buf:put_float16(player.pos.z)
+    elseif has_pos then
         buf:put_float32(player.pos.x)
         buf:put_float32(player.pos.y)
         buf:put_float32(player.pos.z)
     end
 
     if has_rot then
-        buf:put_uint24(math.floor((math.clamp(player.rot.yaw, -180, 180) + 180) / 360 * 16777215 + 0.5))
-        buf:put_uint24(math.floor((math.clamp(player.rot.pitch, -180, 180) + 180) / 360 * 16777215 + 0.5))
+        buf:put_uint16(math.floor((math.clamp(player.rot.yaw, -180, 180) + 180) / 360 * 65535 + 0.5))
+        buf:put_uint16(math.floor((math.clamp(player.rot.pitch, -180, 180) + 180) / 360 * 65535 + 0.5))
     end
 
     if has_cheats then
@@ -656,15 +662,24 @@ do
 end--@
 
 -- @PlayerEntity.read
--- VARIABLES has_pos has_rot has_cheats
+-- VARIABLES has_pos has_rot has_cheats is_compressed
 -- TO_LOAD player
 do
     player = {}
     has_pos = buf:get_bit()
     has_rot = buf:get_bit()
     has_cheats = buf:get_bit()
+    is_compressed = buf:get_bit()
 
-    if has_pos then
+    player.compressed = is_compressed
+
+    if has_pos and is_compressed then
+        player.pos = {
+            x = buf:get_float16(),
+            y = buf:get_float16(),
+            z = buf:get_float16()
+        }
+    elseif has_pos then
         player.pos = {
             x = buf:get_float32(),
             y = buf:get_float32(),
@@ -674,8 +689,8 @@ do
 
     if has_rot then
         player.rot = {
-            yaw = (buf:get_uint24() / 16777215 * 360) - 180,
-            pitch = (buf:get_uint24() / 16777215 * 360) - 180
+            yaw = (buf:get_uint16() / 65535 * 360) - 180,
+            pitch = (buf:get_uint16() / 65535 * 360) - 180
         }
     end
 
