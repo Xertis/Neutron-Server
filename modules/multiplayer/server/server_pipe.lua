@@ -72,17 +72,26 @@ ServerPipe:add_middleware(function(client)
         ClientPipe:process(client)
     end
 
-    while not List.is_empty(client.response_queue) do
-        local packet = List.popleft(client.response_queue)
-        local success, err = pcall(function()
-            client.network:send(packet)
-        end)
-        if not success then
-            logger.log("Error when sending a packet: " .. err, 'E')
-            break
-        end
-    end
     return client
+end)
+
+ServerPipe:add_middleware(function(client)
+
+    if List.is_empty(client.response_queue) then
+        return client
+    end
+
+    local packet = List.popleft(client.response_queue)
+
+    local success, err = pcall(function()
+        client.network:send(packet)
+    end)
+    if not success then
+        logger.log("Error when sending a packet: " .. err, 'E')
+        return client
+    end
+
+    return client, not List.is_empty(client.response_queue)
 end)
 
 return protect.protect_return(ServerPipe)
