@@ -462,7 +462,7 @@ ClientPipe:add_middleware(function(client)
             state.x,
             state.z
         ) > RENDER_DISTANCE then
-            return client
+            goto continue
         end
 
         local prev_state = prev_states[player.pid] or {}
