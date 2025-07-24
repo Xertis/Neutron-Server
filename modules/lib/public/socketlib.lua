@@ -22,7 +22,6 @@ end
 function socketlib.create_server(port, on_client_connect)
     local server = network.tcp_open(port, function(client_socket)
         if on_client_connect then
-            -- console.log("Пришло новое подключение по сокету ["..client_socket:get_address().."]")
             on_client_connect(client_socket)
         end
     end)
