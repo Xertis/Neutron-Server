@@ -62,7 +62,7 @@ local function tests()
     encoder_compil = compiler.load(encoder)
     decoder_compil = compiler.load(decoder)
 
-    local player = {}
+    local player = {compressed = false}
 
     if math.random() > 0.5 then
         player.pos = {
