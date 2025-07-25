@@ -36,9 +36,10 @@ local api = {
     inventory_data = inv_dat,
     constants = {
         config = CONFIG,
-        render_distance = RENDER_DISTANCE
+        render_distance = RENDER_DISTANCE,
+        tps = TPS
     }
 
 }
 
-return {server = api}
+return { server = api }
