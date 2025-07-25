@@ -15,12 +15,12 @@ function module.echo(message)
     local buffer = protocol.create_databuffer()
     buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.ChatMessage, message))
 
-    server_echo.put_event(function (client)
+    server_echo.put_event(function(client)
         client:queue_response(buffer.bytes)
     end)
 end
 
-function module.echo_with_mentios(message)
+function module.echo_with_mentions(message)
     logger.log(message)
 
     local color = "[#CE9C5C]"
@@ -42,7 +42,7 @@ function module.echo_with_mentios(message)
     local buffer = protocol.create_databuffer()
     buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.ChatMessage, mention_message))
 
-    server_echo.put_event(function (client)
+    server_echo.put_event(function(client)
         client:queue_response(buffer.bytes)
     end, unpack(exclients))
 
@@ -63,7 +63,7 @@ function module.mention_prepare(message)
         if string.starts_with(word, '@') then
             local name = string.sub(word, 2)
             if name == "everyone" then
-                return {"everyone"}, message
+                return { "everyone" }, message
             end
 
             if sandbox.by_username.is_online(name) then
@@ -83,7 +83,7 @@ end
 function module.command(message, client)
     local state = states.get_state(client)
 
-    if message[1] ~= COMMAND_PREFIX and not state  then
+    if message[1] ~= COMMAND_PREFIX and not state then
         return false
     end
 
@@ -117,7 +117,7 @@ function module.add_command(schem, handler, is_no_logged)
         table.insert(no_logged_commands, schem[1])
     end
 
-    handlers[schem[1]] = {handler = handler, schem = schem}
+    handlers[schem[1]] = { handler = handler, schem = schem }
     return true
 end
 
@@ -126,7 +126,7 @@ function module.set_state_handler(state, handler)
         return false
     end
 
-    handlers[state.id] = {handler = handler}
+    handlers[state.id] = { handler = handler }
 end
 
 function module.get_handlers()

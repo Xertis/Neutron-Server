@@ -471,7 +471,7 @@ matches.client_online_handler:add_case(protocol.ClientMsg.ChatMessage, (
         if state == false then
             if not client.account.is_logged then return end
 
-            chat.echo_with_mentios(message)
+            chat.echo_with_mentions(message)
         end
     end
 ))
