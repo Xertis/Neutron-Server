@@ -193,17 +193,24 @@ function table.freeze(original)
             error("table is read-only", 2)
         end,
         __pairs = function()
-            return next, original
-        end,
-        __ipairs = function()
-            local function iter(tbl, i)
-                i = i + 1
-                local v = tbl[i]
+            local function iter(_, k)
+                local v
+                k, v = next(original, k)
                 if v ~= nil then
-                    return i, v
+                    return k, table.freeze(v)
                 end
             end
-            return iter, original, 0
+            return iter, nil, nil
+        end,
+        __ipairs = function()
+            local idx = 0
+            return function()
+                idx = idx + 1
+                local v = original[idx]
+                if v ~= nil then
+                    return idx, table.freeze(v)
+                end
+            end
         end
     })
 
@@ -228,7 +235,6 @@ function ipairs(tbl)
     end
     return original_ipairs(tbl)
 end
-
 
 function table.freeze_unpack(arr)
     local i = 1
