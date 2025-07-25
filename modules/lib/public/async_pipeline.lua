@@ -45,13 +45,22 @@ function Pipeline:process(clients, max_iterations)
     local execution_quota = {}
     local active_coroutines = {}
 
-    for _, client in ipairs(clients) do
+    for i=1, #clients do
+        local client = clients[i]
+        client.meta = client.meta or {}
         client.meta.quota = self.quota_function(client)
         execution_quota[client] = client.meta.quota
-        local co = coroutine.create(function()
-            return run_client(client, self._middlewares)
-        end)
-        table.insert(active_coroutines, { co = co, client = client })
+
+        if not client.meta.pipe_co then
+            client.meta.pipe_co = coroutine.create(function()
+                return run_client(client, self._middlewares)
+            end)
+        end
+
+        table.insert(active_coroutines, {
+            pipe_co = client.meta.pipe_co,
+            client = client
+        })
     end
 
     local iterations = 0
@@ -64,27 +73,30 @@ function Pipeline:process(clients, max_iterations)
 
         for i = #active_coroutines, 1, -1 do
             local entry = active_coroutines[i]
-            local co, client = entry.co, entry.client
+            local co, client = entry.pipe_co, entry.client
 
             local success, result = coroutine.resume(co)
 
             if not success then
                 table.remove(active_coroutines, i)
+                client.meta.pipe_co = nil
             else
                 local status = coroutine.status(co)
                 if status == "dead" then
+
+                    execution_quota[client] = execution_quota[client] - 1
+
                     if result == "break" then
                         table.remove(active_coroutines, i)
+                        client.meta.pipe_co = nil
+                    elseif execution_quota[client] <= 0 then
+                        table.remove(active_coroutines, i)
+                        client.meta.pipe_co = nil
                     else
-                        execution_quota[client] = execution_quota[client] - 1
-                        if execution_quota[client] <= 0 then
-                            table.remove(active_coroutines, i)
-                        else
-                            local new_co = coroutine.create(function()
-                                return run_client(client, self._middlewares)
-                            end)
-                            entry.co = new_co
-                        end
+                        client.meta.pipe_co = coroutine.create(function()
+                            return run_client(client, self._middlewares)
+                        end)
+                        entry.pipe_co = client.meta.pipe_co
                     end
                 end
             end
