@@ -15,7 +15,7 @@ function module.join_player(account)
     if status == CODES.players.ReviveSuccess or status == CODES.players.WithoutChanges then
         -- Ну мы его разбудили правильно, ничего делать не надо, мы молодцы
     elseif status == CODES.players.DataLoss then
-        local pid = player.create(account_player.username, table.count_pairs(metadata.players.get_all())+1)
+        local pid = player.create(account_player.username, table.count_pairs(metadata.players.get_all()) + 1)
         logger.log(string.format('Player "%s" has been created with pid: %s', account.username, pid))
         account_player:set("pid", pid)
         account_player:set("entity_id", player.get_entity(account_player.pid))
@@ -27,8 +27,8 @@ function module.join_player(account)
             block_id = block.get(0, y, 0)
         end
 
-        player.set_pos(account_player.pid, 0, y+1, 0)
-        player.set_spawnpoint(account_player.pid, 0, y+1, 0)
+        player.set_pos(account_player.pid, 0, y + 1, 0)
+        player.set_spawnpoint(account_player.pid, 0, y + 1, 0)
         account_player:set("world", CONFIG.game.main_world)
         account_player:set("active", true)
 
@@ -40,14 +40,14 @@ function module.join_player(account)
         container.player_online.put(account_player.username, account_player)
     end
 
-    logger.log(string.format('Player "%s" is join.', account_player.username))
+    logger.log(string.format('Player "%s" joined.', account_player.username))
     account_player:save()
 
     local is_suspended = player.is_suspended(account_player.pid)
-    logger.log(string.format('Suspended player "%s" is %s', account_player.username, tostring(is_suspended)))
+    logger.log(string.format('Suspend state of player %s is %s', account_player.username, tostring(is_suspended)))
     if is_suspended then
         player.set_suspended(account_player.pid, false)
-        logger.log(string.format('Suspended player "%s" changed to false', account_player.username))
+        logger.log(string.format('Suspend state of player "%s" changed to false', account_player.username))
     end
 
     return account_player
@@ -56,12 +56,12 @@ end
 function module.leave_player(account_player)
     account_player:abort()
 
-    logger.log(string.format('Player "%s" is leave.', account_player.username))
+    logger.log(string.format('Player "%s" left.', account_player.username))
 
     container.player_online.put(account_player.username, nil)
 
     player.set_suspended(account_player.pid, true)
-    logger.log(string.format('Suspended player "%s" is true', account_player.username))
+    logger.log(string.format('Suspend state of player "%s" is true', account_player.username))
 
     return account_player
 end
@@ -186,7 +186,6 @@ function module.set_selected_slot(_player, slot_id)
 end
 
 function module.by_invid.get(invid)
-
     for _, player in pairs(module.get_players()) do
         if player.invid == invid then
             return player
@@ -198,15 +197,18 @@ end
 --TODO: В СРОЧНОМ ПОРЯДКЕ ЗАСУНУТЬ ЭТО В БОЛЕЕ ПРАВИЛЬНОЕ МЕСТО
 do
     local inventory_funcs = {
-        set = inventory.set, set_count = inventory.set_count,
-        add = inventory.add, remove = inventory.remove,
-        set_data = inventory.set_data, decrement = inventory.decrement,
+        set = inventory.set,
+        set_count = inventory.set_count,
+        add = inventory.add,
+        remove = inventory.remove,
+        set_data = inventory.set_data,
+        decrement = inventory.decrement,
         use = inventory.use
     }
 
     for name, func in pairs(inventory_funcs) do
-        inventory[name] = function (invid, ...)
-            local res = {func(invid, ...)}
+        inventory[name] = function(invid, ...)
+            local res = { func(invid, ...) }
 
             local prefix = parse_path(debug.getinfo(2, "S").source)
 
