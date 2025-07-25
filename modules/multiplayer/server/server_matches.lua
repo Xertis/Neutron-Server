@@ -381,7 +381,7 @@ matches.joining_fsm:add_state("joining", {
                 local timestamp = os.time(session.timestamp);
                 local cur_time = os.time();
 
-                local diff = os.difftime(timestamp, cur_time)
+                local diff = os.difftime(cur_time, timestamp)
                 local session_lifetime = (CONFIG.server.last_session_lifetime or 30) * 60;
 
                 if session.ip == client.address and diff <= session_lifetime then
