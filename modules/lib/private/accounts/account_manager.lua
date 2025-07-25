@@ -43,8 +43,19 @@ function module.by_username.get_account(name)
     return container.accounts.get(name)
 end
 
-function module.leave(account)
+function module.leave(client)
+    local account = client.account;
+
     logger.log(string.format('account "%s" left...', account.username))
+
+    local date = os.date("*t");
+    date.yday, date.wday, date.isdst, date.sec = nil, nil, nil, nil;
+
+    account:set("last_session", {
+        ip = client.address,
+        timestamp = date,
+    });
+
     account:abort()
 
     local player = container.player_online.get(account.username)

@@ -3,8 +3,7 @@
     "content_packs": ["base"],
     "plugins": [],
     "worlds": {
-      "overworld":
-      {
+      "overworld": {
         "seed": "86935665463",
         "generator": "base:demo"
       }
@@ -21,6 +20,7 @@
     "chunks_loading_distance": 4,
     "chunks_loading_speed": 4,
     "password_auth": false,
+    "client_session_lifetime": 30,
     "dev_mode": false,
     "shallow_dev_mode": true,
     "shutdown_timeout": -1,

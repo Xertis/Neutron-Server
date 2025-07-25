@@ -376,6 +376,21 @@ matches.joining_fsm:add_state("joining", {
                 "Please register using the command /register <password> <confirm password> to secure your account.",
                 client)
         elseif not account.is_logged then
+            if account.last_session then
+                local session = account.last_session;
+                local timestamp = os.time(session.timestamp);
+                local cur_time = os.time();
+
+                local diff = os.difftime(timestamp, cur_time)
+                local session_lifetime = (CONFIG.server.client_session_lifetime or 30) * 60;
+
+                if session.ip == client.address and diff <= session_lifetime then
+                    client.account.is_logged = true;
+                    chat.tell(string.format("You have logged in via last session. (%s)", os.date(nil, timestamp)), client);
+                    return close();
+                end
+            end
+
             chat.tell("Please log in using the command /login <password> to access your account.", client)
         end
 

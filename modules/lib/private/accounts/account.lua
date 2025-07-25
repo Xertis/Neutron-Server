@@ -13,6 +13,7 @@ function account.new(username)
 
     self.username = username
     self.active = false
+    self.last_session = nil
     self.is_logged = false
     self.role = nil
     self.password = nil
@@ -86,7 +87,8 @@ function account:to_save()
     return {
         username = self.username,
         password = self.password,
-        role = self.role
+        role = self.role,
+        last_session = self.last_session
     }
 end
 
