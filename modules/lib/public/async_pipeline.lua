@@ -4,38 +4,67 @@ Pipeline.__index = Pipeline
 function Pipeline.new()
     local self = setmetatable({}, Pipeline)
     self._middlewares = {}
-    self._values = {}
+    self.quota_function = function() return 1 end
     return self
 end
 
 function Pipeline:add_middleware(func)
-    if type(func) == "function" then
-        table.insert(self._middlewares, func)
-    end
+    table.insert(self._middlewares, func)
 end
 
-function Pipeline:process(values)
-    table.map(values, function (_, value)
-        return {state = 1, val = value}
-    end)
+function Pipeline:set_quota_function(func)
+    self.quota_function = func
+end
 
-    while #values > 0 do
-        for i=#values, 1, -1 do
-            local item = values[i]
+function Pipeline:process(clients, max_iterations)
+    max_iterations = max_iterations or 1024
+    local active_clients = {}
+    local execution_quota = {}
 
-            local res, reload = self._middlewares[item.state](item.val)
+    for _, client in ipairs(clients) do
+        client.meta.quota = self.quota_function(client)
+        table.insert(active_clients, client)
+        execution_quota[client] = client.meta.quota
+    end
 
-            if res ~= nil and not reload then
-                item.state = item.state + 1
-            elseif res ~= nil then
-                item.val = res
+    for _ = 1, max_iterations do
+        if #active_clients == 0 then break end
+
+        table.sort(active_clients, function(a, b)
+            return execution_quota[a] > execution_quota[b]
+        end)
+
+        for i = #active_clients, 1, -1 do
+            local client = active_clients[i]
+
+            local ctx = { client = client, awaited = false }
+            function ctx.await()
+                ctx.awaited = true
             end
 
-            if item.state > #self._middlewares or res == nil then
-                table.remove(values, i)
+            for _, middleware in ipairs(self._middlewares) do
+                local status, result = pcall(middleware, ctx)
+
+                if not status or result == "break" then
+                    table.remove(active_clients, i)
+                    break
+                end
+
+                if ctx.awaited then
+                    break
+                end
+            end
+
+            if not ctx.awaited then
+                execution_quota[client] = execution_quota[client] - 1
+            end
+
+            if execution_quota[client] <= 0 then
+                table.remove(active_clients, i)
             end
         end
     end
 end
+
 
 return Pipeline
