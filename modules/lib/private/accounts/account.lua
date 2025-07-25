@@ -13,7 +13,7 @@ function account.new(username)
 
     self.username = username
     self.active = false
-    self.ip = nil
+    self.last_session = nil
     self.is_logged = false
     self.role = nil
     self.password = nil
@@ -70,9 +70,9 @@ function account:revive()
     if not CONFIG.roles[self.role] then
         local default_role = CONFIG.roles.default_role
         logger.log(string.format(
-            [["%s" account has a non-existent "%s" role, his role has been changed to: "%s"]],
-            self.username, self.role, default_role),
-        "W")
+                [["%s" account has a non-existent "%s" role, his role has been changed to: "%s"]],
+                self.username, self.role, default_role),
+            "W")
         self.role = default_role
     end
 
@@ -88,7 +88,7 @@ function account:to_save()
         username = self.username,
         password = self.password,
         role = self.role,
-        ip = self.ip
+        last_session = self.last_session
     }
 end
 

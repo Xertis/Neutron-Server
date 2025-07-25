@@ -9,7 +9,7 @@ local module = {
 }
 
 function module.login(username)
-    logger.log(string.format('account "%s" is logging...', username))
+    logger.log(string.format('account "%s" is logging in...', username))
 
     if table.has(table.freeze_unpack(RESERVED_USERNAMES), username:lower()) then
         logger.log(string.format('The username "%s" is reserved for the system and cannot be used by a client.', username))
@@ -43,8 +43,19 @@ function module.by_username.get_account(name)
     return container.accounts.get(name)
 end
 
-function module.leave(account)
-    logger.log(string.format('account "%s" is leaving...', account.username))
+function module.leave(client)
+    local account = client.account;
+
+    logger.log(string.format('account "%s" left...', account.username))
+
+    local date = os.date("*t");
+    date.yday, date.wday, date.isdst, date.sec = nil, nil, nil, nil;
+
+    account:set("last_session", {
+        ip = client.address,
+        timestamp = date,
+    });
+
     account:abort()
 
     local player = container.player_online.get(account.username)
@@ -83,7 +94,6 @@ end
 
 function module.by_username.get_client(username)
     for _, client in pairs(container.clients_all.get()) do
-
         if client.account.username == username then
             return client
         end
