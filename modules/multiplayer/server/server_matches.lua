@@ -382,7 +382,7 @@ matches.joining_fsm:add_state("joining", {
                 local cur_time = os.time();
 
                 local diff = os.difftime(timestamp, cur_time)
-                local session_lifetime = (CONFIG.server.client_session_lifetime or 30) * 60;
+                local session_lifetime = (CONFIG.server.last_session_lifetime or 30) * 60;
 
                 if session.ip == client.address and diff <= session_lifetime then
                     client.account.is_logged = true;
