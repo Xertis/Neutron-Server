@@ -189,14 +189,46 @@ function table.freeze(original)
             end
             return table.freeze(original[key])
         end,
-        __metatable = false,
         __newindex = function()
-            error("table is read-only")
+            error("table is read-only", 2)
         end,
+        __pairs = function()
+            return next, original
+        end,
+        __ipairs = function()
+            local function iter(tbl, i)
+                i = i + 1
+                local v = tbl[i]
+                if v ~= nil then
+                    return i, v
+                end
+            end
+            return iter, original, 0
+        end
     })
 
     return proxy
 end
+
+local original_pairs = pairs
+local original_ipairs = ipairs
+
+function pairs(tbl)
+    local mt = getmetatable(tbl)
+    if mt and mt.__pairs then
+        return mt.__pairs(tbl)
+    end
+    return original_pairs(tbl)
+end
+
+function ipairs(tbl)
+    local mt = getmetatable(tbl)
+    if mt and mt.__ipairs then
+        return mt.__ipairs(tbl)
+    end
+    return original_ipairs(tbl)
+end
+
 
 function table.freeze_unpack(arr)
     local i = 1
