@@ -564,7 +564,7 @@ local function chunks_responce_optimizate(packet, client, await)
             chunk_responce(pseudo_packet, client)
         end
 
-        if indx % 512 == 1 then
+        if indx % 256 == 1 then
             await()
         end
     end
