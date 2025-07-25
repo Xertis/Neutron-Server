@@ -18,6 +18,7 @@ function server.new(port)
 
     self.clients = {}
     self.server_socket = nil
+    self.tps = { timestamp = time.uptime(), tick = 0, target_tps = TARGET_TPS }
     self.tasks = {}
     container.clients_all.set(self.clients)
 
@@ -39,7 +40,7 @@ function server:start()
                 local tb = debug.get_traceback(1)
                 local s = "app.quit() traceback:"
                 for i, frame in ipairs(tb) do
-                    s = s .. "\n\t"..tb_frame_tostring(frame)
+                    s = s .. "\n\t" .. tb_frame_tostring(frame)
                 end
                 debug.log(s)
                 core.quit()
@@ -55,14 +56,14 @@ function server:start()
 end
 
 function server:do_tasks()
-    for j=#self.tasks, 1, -1 do
+    for j = #self.tasks, 1, -1 do
         local client_socket = self.tasks[j]
 
-        local network = Network.new( client_socket )
+        local network = Network.new(client_socket)
         local address, port = client_socket:get_address()
         local client = Player.new(false, network, address, port)
 
-        for i=#self.clients, 1, -1 do
+        for i = #self.clients, 1, -1 do
             local server_client = self.clients[i]
             if server_client.address == client.address and not server_client.active then
                 logger.log("Reconnection from the client side was detected")
@@ -91,10 +92,30 @@ function server:stop()
     self.server_socket:close()
 end
 
+function server:calculate_tps()
+    local tps_data = self.tps;
+    local tps = TPS;
+
+    tps_data.tick = tps_data.tick + 1;
+
+    if tps_data.tick == tps_data.target_tps then
+        tps_data.tick = 0;
+
+        local cur_time = time.uptime();
+        local diff = os.difftime(cur_time, tps_data.timestamp);
+
+        tps.tps = tps_data.target_tps / diff;
+        tps.mspt = diff / tps_data.target_tps * 1000;
+
+        tps_data.timestamp = time.uptime();
+    end
+end
+
 function server:tick()
+    self:calculate_tps()
     self:do_tasks()
 
-    for index=#self.clients, 1, -1 do
+    for index = #self.clients, 1, -1 do
         local client = self.clients[index]
         local socket = client.network.socket
 
@@ -107,7 +128,7 @@ function server:tick()
 
             server_matches.client_online_handler:switch(
                 protocol.ClientMsg.Disconnect,
-                {packet_type = protocol.ClientMsg.Disconnect},
+                { packet_type = protocol.ClientMsg.Disconnect },
                 client
             )
 

@@ -1,12 +1,11 @@
-app.config_packs({"server"})
+app.config_packs({ "server" })
 app.load_content()
 require "server:std/stdboot"
 
 LAUNCH_ATTEMPTS = 1
 
 local function main()
-
-    require "server:constants"
+    require "server:globals"
     require "server:std/stdmin"
 
     local protect = require "server:lib/private/protect"
@@ -34,7 +33,8 @@ local function main()
 
     if IS_FIRST_RUN then
         logger.log("The first startup was detected, server has been stopped.")
-        logger.log("A configuration file was created on the config:server_config.json. Please configure the settings and restart.")
+        logger.log(
+            "A configuration file was created on the config:server_config.json. Please configure the settings and restart.")
         return
     end
 
