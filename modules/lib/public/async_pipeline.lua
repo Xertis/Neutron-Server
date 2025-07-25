@@ -43,9 +43,49 @@ end
 function Pipeline:process(clients, max_iterations)
     max_iterations = max_iterations or 1024
     local execution_quota = {}
-    local active_coroutines = {}
+    local heap = {}
 
-    for i=1, #clients do
+    local function heap_insert(entry)
+        table.insert(heap, entry)
+        local idx = #heap
+        while idx > 1 do
+            local parent = math.floor(idx / 2)
+            if execution_quota[heap[parent].client] >= execution_quota[heap[idx].client] then
+                break
+            end
+            heap[parent], heap[idx] = heap[idx], heap[parent]
+            idx = parent
+        end
+    end
+
+    local function heap_extract_max()
+        if #heap == 0 then return nil end
+        local max = heap[1]
+        heap[1] = heap[#heap]
+        heap[#heap] = nil
+
+        local size = #heap
+        local idx = 1
+        while true do
+            local left = 2 * idx
+            local right = left + 1
+            local largest = idx
+
+            if left <= size and execution_quota[heap[left].client] > execution_quota[heap[largest].client] then
+                largest = left
+            end
+            if right <= size and execution_quota[heap[right].client] > execution_quota[heap[largest].client] then
+                largest = right
+            end
+            if largest == idx then break end
+
+            heap[idx], heap[largest] = heap[largest], heap[idx]
+            idx = largest
+        end
+        return max
+    end
+
+    for i = 1, #clients do
         local client = clients[i]
         client.meta = client.meta or {}
         client.meta.quota = self.quota_function(client)
@@ -57,48 +97,43 @@ function Pipeline:process(clients, max_iterations)
             end)
         end
 
-        table.insert(active_coroutines, {
+        heap_insert({
             pipe_co = client.meta.pipe_co,
             client = client
         })
     end
 
     local iterations = 0
-    while iterations < max_iterations and #active_coroutines > 0 do
+    while iterations < max_iterations and #heap > 0 do
         iterations = iterations + 1
 
-        table.sort(active_coroutines, function(a, b)
-            return execution_quota[a.client] > execution_quota[b.client]
-        end)
+        local entry = heap_extract_max()
+        local co, client = entry.pipe_co, entry.client
+        local success, result = coroutine.resume(co)
 
-        for i = #active_coroutines, 1, -1 do
-            local entry = active_coroutines[i]
-            local co, client = entry.pipe_co, entry.client
+        if not success then
+            client.meta.pipe_co = nil
+        else
+            local status = coroutine.status(co)
+            if status == "dead" then
+                execution_quota[client] = execution_quota[client] - 1
+                client.meta.quota = execution_quota[client]
 
-            local success, result = coroutine.resume(co)
-
-            if not success then
-                table.remove(active_coroutines, i)
-                client.meta.pipe_co = nil
-            else
-                local status = coroutine.status(co)
-                if status == "dead" then
-
-                    execution_quota[client] = execution_quota[client] - 1
-
-                    if result == "break" then
-                        table.remove(active_coroutines, i)
-                        client.meta.pipe_co = nil
-                    elseif execution_quota[client] <= 0 then
-                        table.remove(active_coroutines, i)
-                        client.meta.pipe_co = nil
-                    else
-                        client.meta.pipe_co = coroutine.create(function()
-                            return run_client(client, self._middlewares)
-                        end)
-                        entry.pipe_co = client.meta.pipe_co
-                    end
+                if result == "break" then
+                    client.meta.pipe_co = nil
+                elseif execution_quota[client] > 0 then
+                    client.meta.pipe_co = coroutine.create(function()
+                        return run_client(client, self._middlewares)
+                    end)
+                    heap_insert({
+                        pipe_co = client.meta.pipe_co,
+                        client = client
+                    })
+                else
+                    client.meta.pipe_co = nil
                 end
+            else
+                heap_insert(entry)
             end
         end
     end
