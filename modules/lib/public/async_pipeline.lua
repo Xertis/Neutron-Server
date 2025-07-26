@@ -47,7 +47,7 @@ function Pipeline:process(process_clients)
 
         local client_co = client.meta.pipe_co
 
-        if not client_co then
+        if not client_co or coroutine.status(client_co) == "dead" then
             client_co = coroutine.create(function ()
                 while true do
                     client.meta.pipe_finish = false
@@ -62,7 +62,6 @@ function Pipeline:process(process_clients)
         coroutine.resume(client_co)
         local status = client.meta.pipe_finish
         if status then
-            client.meta.pipe_co = nil
             table.remove(clients, client_index)
             size = size - 1
         end
