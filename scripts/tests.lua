@@ -94,7 +94,7 @@ local function tests()
 end
 
 local function main()
-    require "server:constants"
+    require "server:globals"
     require "server:std/stdmin"
 
     local protect = require "server:lib/private/protect"
