@@ -412,7 +412,7 @@ matches.client_online_handler:add_case(protocol.ClientMsg.PlayerPositionChecksum
             local checksum = checksums[i]
 
             local x, y, z = player.get_pos(pid)
-            local cur_checksum = vec3.checksum(math.round(x), math.round(y), math.round(z))
+            local cur_checksum = vec3.checksum(math.round(x, 1), math.round(y, 1), math.round(z, 1))
 
             if checksum ~= cur_checksum then
                 client:push_packet(protocol.ServerMsg.PlayerMoved, pid, {

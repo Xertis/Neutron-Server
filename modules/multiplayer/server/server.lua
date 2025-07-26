@@ -34,6 +34,11 @@ function server:start()
             return
         end
 
+        if table.has(self.tasks, client_socket) then
+            client_socket:close()
+            return
+        end
+
         table.insert(self.tasks, client_socket)
     end)
 end
