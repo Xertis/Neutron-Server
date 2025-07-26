@@ -60,8 +60,7 @@ function Pipeline:process(process_clients)
         end
 
         coroutine.resume(client_co)
-        local status = client.meta.pipe_finish
-        if status then
+        if client.meta.pipe_finish then
             table.remove(clients, client_index)
             size = size - 1
         end
