@@ -691,6 +691,33 @@ function vec3.culling(view_dir, pos, target_pos, fov_degrees)
     return angle_deg <= (fov_degrees+30) / 2
 end
 
+function vec3.checksum(x, y, z)
+    if type(x) == "table" then
+        x, y, z = unpack(x)
+    end
+
+    local ix, fx = math.modf(x)
+    local iy, fy = math.modf(y)
+    local iz, fz = math.modf(z)
+
+    local bx = math.floor(math.abs(fx) * 65535) % 65535
+    local by = math.floor(math.abs(fy) * 65535) % 65535
+    local bz = math.floor(math.abs(fz) * 65535) % 65535
+
+    local tx = math.floor(math.abs(ix)) % 65535
+    local ty = math.floor(math.abs(iy)) % 65535
+    local tz = math.floor(math.abs(iz)) % 65535
+
+    local sum = (bx + by * 3 + bz * 5 + tx * 7 + ty * 11 + tz * 13)
+
+    local sign_bit = 0
+    if x < 0 then sign_bit = sign_bit + 1 end
+    if y < 0 then sign_bit = sign_bit + 4 end
+    if z < 0 then sign_bit = sign_bit + 16 end
+
+    return (sum + sign_bit * 65531) % 65535
+end
+
 -- OTHER
 
 function cached_require(path)

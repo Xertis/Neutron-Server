@@ -12,6 +12,7 @@
         ["PlayerCheats", "noclip:boolean", "flight:boolean"],
         ["PlayerInventory", "inventory:Inventory"],
         ["PlayerHandSlot", "slot:uint8"],
+        ["PlayerPositionChecksum",  "players:array<var>", "checksums:array<uint16>"],
         ["RequestChunk", "x:int16", "z:int16"],
         ["RequestChunks", "chunks:array<int16>"],
         ["ChatMessage", "message:string"],

@@ -50,14 +50,14 @@ local function check_mods(client_hashes)
 
         for _, pack_name in ipairs(packs) do
             if not client_hashes[pack_name] then
-                table.insert(incorrect, string.format("\n%s: %s (missing)", i, pack_name))
+                table.insert(incorrect, string.format("\n%s. %s (missing)", i, pack_name))
                 i = i + 1
             end
         end
 
         for pack_name, _ in pairs(client_hashes) do
             if not server_packs_lookup[pack_name] then
-                table.insert(incorrect, string.format("\n%s: %s (extra)", i, pack_name))
+                table.insert(incorrect, string.format("\n%s. %s (extra)", i, pack_name))
                 logger.log(string.format('Client has extra pack "%s" in shallow_dev_mode', pack_name), '!')
                 i = i + 1
             end
@@ -72,14 +72,14 @@ local function check_mods(client_hashes)
 
         for pack_name, hash in pairs(hashed_packs) do
             if hash ~= client_hashes[pack_name] then
-                table.insert(incorrect, string.format("\n%s: %s (hash mismatch)", i, pack_name))
+                table.insert(incorrect, string.format("\n%s. %s (hash mismatch)", i, pack_name))
                 i = i + 1
             end
             client_hashes[pack_name] = nil
         end
 
         for pack_name, _ in pairs(client_hashes) do
-            table.insert(incorrect, string.format("\n%s: %s (extra)", i, pack_name))
+            table.insert(incorrect, string.format("\n%s. %s (extra)", i, pack_name))
             logger.log(string.format('Client has extra pack "%s" in standard mode', pack_name), '!')
             i = i + 1
         end
@@ -401,6 +401,31 @@ matches.joining_fsm:add_state("joining", {
 matches.general_fsm:set_default_state("idle")
 
 --- CASES
+matches.client_online_handler:add_case(protocol.ClientMsg.PlayerPositionChecksum, (
+    function(packet, client)
+
+        local players = packet.players
+        local checksums = packet.checksums
+
+        for i=1, #packet.checksums do
+            local pid = players[i]
+            local checksum = checksums[i]
+
+            local x, y, z = player.get_pos(pid)
+            local cur_checksum = vec3.checksum(math.round(x), math.round(y), math.round(z))
+
+            if checksum ~= cur_checksum then
+                client:push_packet(protocol.ServerMsg.PlayerMoved, pid, {
+                    pos = {
+                        x = x,
+                        y = y,
+                        z = z
+                    }
+                })
+            end
+        end
+    end
+))
 
 matches.client_online_handler:add_case(protocol.ClientMsg.PlayerCheats, (
     function(packet, client)
