@@ -539,7 +539,7 @@ end
 
 matches.client_online_handler:add_case(protocol.ClientMsg.RequestChunk, chunk_responce)
 
-local function chunks_responce_optimizate(packet, client, await)
+local function chunks_responce_optimizate(packet, client)
     local chunks_packet = packet.chunks
     local chunks_list = {}
 
@@ -562,10 +562,6 @@ local function chunks_responce_optimizate(packet, client, await)
             }
 
             chunk_responce(pseudo_packet, client)
-        end
-
-        if indx % 256 == 1 then
-            await()
         end
     end
 
