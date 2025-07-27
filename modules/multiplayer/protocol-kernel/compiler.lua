@@ -3,6 +3,7 @@ local tokenizer = require "server:multiplayer/protocol-kernel/tokenizer"
 
 local bincode = require "server:lib/public/common/bincode"
 local bson = require "server:lib/private/files/bson"
+local edd = require "server:lib/private/files/edd"
 
 local module = {}
 
@@ -26,7 +27,6 @@ local function find_foreign_call(code)
     local start_pos, end_pos, arg1, arg2 = code:find(pattern)
 
     if start_pos then
-        -- Удаляем возможные пробелы вокруг аргументов
         arg1 = arg1 and arg1:match("^%s*(.-)%s*$") or ""
         arg2 = arg2 and arg2:match("^%s*(.-)%s*$") or ""
 
@@ -201,6 +201,7 @@ function module.load(code)
         unpack = unpack,
         type = type,
         bit = bit,
+        edd = edd,
 
         MAX_UINT16 = 65535,
         MIN_UINT16 = 0,

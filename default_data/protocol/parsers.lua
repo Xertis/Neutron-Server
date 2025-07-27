@@ -805,3 +805,17 @@ do
         end
     end
 end--@
+
+-- @Edd.write
+-- VARIABLES 
+-- TO_SAVE val
+do
+    edd.encode(buf, val)
+end--@
+
+-- @Edd.read
+-- VARIABLES 
+-- TO_LOAD result
+do
+    result = edd.decode(buf)
+end--@

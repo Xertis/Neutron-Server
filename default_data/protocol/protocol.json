@@ -61,10 +61,10 @@
         ["PackEvent", "pack:string", "event:string", "bytes:array<uint8>"],
         ["PackEnv", "pack:string", "env:string", "key:string", "value:any"],
 
-        ["EntityUpdate", "uid:uint32", "entity_def:uint16", "dirty:bson"],
+        ["EntityUpdate", "uid:uint32", "entity_def:uint16", "dirty:Edd"],
         ["EntityDespawn", "uid:uint32"],
 
-        ["PlayerFieldsUpdate", "pid:uint32", "dirty:bson"],
+        ["PlayerFieldsUpdate", "pid:uint32", "dirty:Edd"],
 
         ["ParticleEmit", "particle:particle"],
         ["ParticleOrigin", "origin:particle_origin"],
