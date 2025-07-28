@@ -42,4 +42,15 @@ api.sandbox.players.sync_states(player: Player, states: {pos={...}, rot={...}, c
       cheats = {noclip = false, flight = false}
    }
    ```
-
+---
+5. **Синхронизация инвентарей блоков**
+```lua
+api.sandbox.blocks.sync_inventory(pos: {x=0,y=0,z=0}, client: Client)
+```
+   - Отправляет данные инвентаря с сервера на клиент
+---
+6. **Синхронизация слотов блоков**
+```lua
+api.sandbox.blocks.sync_inventory(pos: {x=0,y=0,z=0}, slot: number, client: Client)
+```
+   - Отправляет данные слота из инвентаря блока на позиции pos клиенту
