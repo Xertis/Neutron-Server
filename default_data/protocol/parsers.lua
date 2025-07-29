@@ -626,18 +626,20 @@ do
 end--@
 
 -- @PlayerEntity.write
--- VARIABLES has_pos has_rot has_cheats is_compressed
+-- VARIABLES has_pos has_rot has_cheats has_item is_compressed
 -- TO_SAVE player
 
 do
     has_pos = player.pos ~= nil
     has_rot = player.rot ~= nil
     has_cheats = player.cheats ~= nil
+    has_item = player.hand_item ~= nil
     is_compressed = player.compressed or false
 
     buf:put_bit(has_pos)
     buf:put_bit(has_rot)
     buf:put_bit(has_cheats)
+    buf:put_bit(has_item)
     buf:put_bit(is_compressed)
 
     if has_pos and is_compressed then
@@ -659,6 +661,10 @@ do
         buf:put_bit(player.cheats.noclip)
         buf:put_bit(player.cheats.flight)
     end
+
+    if has_item then
+        buf:put_uint16(player.hand_item)
+    end
 end--@
 
 -- @PlayerEntity.read
@@ -669,6 +675,7 @@ do
     has_pos = buf:get_bit()
     has_rot = buf:get_bit()
     has_cheats = buf:get_bit()
+    has_item = buf:get_bit()
     is_compressed = buf:get_bit()
 
     player.compressed = is_compressed
@@ -699,6 +706,10 @@ do
             noclip = buf:get_bit(),
             flight = buf:get_bit()
         }
+    end
+
+    if has_item then
+        player.hand_item = buf:get_uint16()
     end
 end--@
 
