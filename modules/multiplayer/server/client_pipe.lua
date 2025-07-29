@@ -520,14 +520,15 @@ ClientPipe:add_middleware(function(client)
             changed_data[2].hand_item = current_hand_item
         end
 
-        if changed_data[2].pos or changed_data[2].rot or changed_data[2].cheats then
+        if changed_data[2].pos or changed_data[2].rot or changed_data[2].cheats or changed_data[2].hand_item then
 
             client:push_packet(protocol.ServerMsg.PlayerMoved, unpack(changed_data))
 
             prev_states[player.pid] = table.deep_copy({
                 pos = current_pos or prev_state.pos,
                 rot = current_rot or prev_state.rot,
-                cheats = current_cheats or prev_state.cheats
+                cheats = current_cheats or prev_state.cheats,
+                hand_item = current_hand_item or prev_state.hand_item
             })
         end
 
