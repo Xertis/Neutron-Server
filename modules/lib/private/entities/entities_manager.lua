@@ -112,7 +112,7 @@ local function __create_data(entity, is_player)
 
     local custom_fields = {}
     for field_name, field in pairs(conf.custom_fields or conf) do
-        if (conf == player_fields and field_name ~= "textures" and field_name ~= "models" and field_name ~= "components") 
+        if (conf == player_fields and field_name ~= "textures" and field_name ~= "models" and field_name ~= "components")
         or (conf ~= player_fields and conf.custom_fields) then
             local val = field.provider(uid, field_name)
             local val_type = type(val)

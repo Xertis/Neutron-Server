@@ -51,10 +51,12 @@ function module.leave(client)
     local date = os.date("*t");
     date.yday, date.wday, date.isdst, date.sec = nil, nil, nil, nil;
 
-    account:set("last_session", {
-        ip = client.address,
-        timestamp = date,
-    });
+    if account.is_logged then
+        account:set("last_session", {
+            ip = client.address,
+            timestamp = date,
+        });
+    end
 
     account:abort()
 

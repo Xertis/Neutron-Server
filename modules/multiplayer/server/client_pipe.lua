@@ -457,7 +457,7 @@ ClientPipe:add_middleware(function(client)
 
     local client_states = sandbox.get_player_state(client.player)
     local prev_states = table.set_default(client.player.temp, "player-prev-states", {})
-
+    local lib_player = player
     for _, player in pairs(sandbox.get_players()) do
         if table.has(RESERVED_USERNAMES, player.username) or player.username == client.player.username then
             goto continue
@@ -514,14 +514,21 @@ ClientPipe:add_middleware(function(client)
             changed_data[2].cheats = current_cheats
         end
 
-        if changed_data[2].pos or changed_data[2].rot or changed_data[2].cheats then
+        local current_invid, current_slot = lib_player.get_inventory(player.pid)
+        local current_hand_item = inventory.get(current_invid, current_slot)
+        if not prev_state.hand_item or prev_state.hand_item ~= current_hand_item then
+            changed_data[2].hand_item = current_hand_item
+        end
+
+        if changed_data[2].pos or changed_data[2].rot or changed_data[2].cheats or changed_data[2].hand_item then
 
             client:push_packet(protocol.ServerMsg.PlayerMoved, unpack(changed_data))
 
             prev_states[player.pid] = table.deep_copy({
                 pos = current_pos or prev_state.pos,
                 rot = current_rot or prev_state.rot,
-                cheats = current_cheats or prev_state.cheats
+                cheats = current_cheats or prev_state.cheats,
+                hand_item = current_hand_item or prev_state.hand_item
             })
         end
 

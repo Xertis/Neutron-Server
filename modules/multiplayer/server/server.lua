@@ -28,28 +28,17 @@ end
 function server:start()
     self.server_socket = socketlib.create_server(self.port, function(client_socket)
         local address, _ = client_socket:get_address()
+
         if (not table.has(table.freeze_unpack(CONFIG.server.whitelist_ip), address) and #table.freeze_unpack(CONFIG.server.whitelist_ip) > 0) then
             client_socket:close()
             return
         end
 
-        if LAST_SERVER_UPDATE > 0 then
-            if os.time() - LAST_SERVER_UPDATE > 20 then
-                logger.log('The "pending problem" has been detected. The server is stopped', 'P')
-
-                local tb = debug.get_traceback(1)
-                local s = "app.quit() traceback:"
-                for i, frame in ipairs(tb) do
-                    s = s .. "\n\t" .. tb_frame_tostring(frame)
-                end
-                debug.log(s)
-                core.quit()
-            end
+        if table.has(self.tasks, client_socket) then
+            client_socket:close()
+            logger.log("The client is trying to reconnect while the previous session is still alive. Aborted", "W")
+            return
         end
-
-        print("Pending problem info:")
-        print(LAST_SERVER_UPDATE)
-        print(os.time())
 
         table.insert(self.tasks, client_socket)
     end)
