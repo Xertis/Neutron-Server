@@ -36,6 +36,7 @@ function server:start()
 
         if table.has(self.tasks, client_socket) then
             client_socket:close()
+            logger.log("The client is trying to reconnect while the previous session is still alive. Aborted", "W")
             return
         end
 
