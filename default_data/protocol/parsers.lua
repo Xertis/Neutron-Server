@@ -788,7 +788,7 @@ do
         for i = 1, size do
             inv[i] = {id = 0, count = 0}
         end
-        return
+        goto inv_over
     end
 
     needed_bits_id = buf:get_uint(4)
@@ -799,6 +799,7 @@ do
     min_count = buf:get_uint(min_count_bits)
 
     inv = {}
+
     for i = 1, size do
         has_item = buf:get_bit()
         if has_item then
@@ -815,6 +816,8 @@ do
             inv[i] = {id = 0, count = 0}
         end
     end
+
+    ::inv_over::
 end--@
 
 -- @Edd.write
