@@ -768,6 +768,21 @@ matches.client_online_handler:add_case(protocol.ClientMsg.EntitySpawnTry, (
     end
 ))
 
+matches.client_online_handler:add_case( protocol.ClientMsg.BlockInventory, function (packet, client)
+    local invid = inventory.get_block(packet.x, packet.y, packet.z)
+    if invid ~= 0 then
+        inventory.set_inv(invid, packet.inventory)
+    end
+end)
+
+matches.client_online_handler:add_case( protocol.ClientMsg.BlockInventorySlot, function (packet, client)
+    local invid = inventory.get_block(packet.x, packet.y, packet.z)
+
+    if invid ~= 0 then
+        inventory.set(invid, packet.slot_id, packet.item_id, packet.item_count)
+    end
+end)
+
 
 
 return protect.protect_return(matches)
