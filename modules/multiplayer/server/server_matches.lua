@@ -734,6 +734,8 @@ matches.client_online_handler:add_case(protocol.ClientMsg.KeepAlive, (
 
         local wait_time = time.uptime() - client.ping.last_upd
         client.ping.ping = wait_time * 1000
+
+        client.ping.waiting = false
     end
 ))
 

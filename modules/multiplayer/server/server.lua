@@ -104,11 +104,18 @@ function server:tick()
     self:calculate_tps()
     self:do_tasks()
 
+    local cur_time = time.uptime()
+    local max_timeout = CONFIG.server.kick_threshold_timeout or 30
+
     for index = #self.clients, 1, -1 do
         local client = self.clients[index]
         local socket = client.network.socket
 
-        if not socket or not socket:is_alive() or client.is_kicked then
+        if  not socket or
+            not socket:is_alive() or
+            client.is_kicked or
+            cur_time - client.ping.last_upd > max_timeout then
+
             if client.active then
                 client.active = false
             end
