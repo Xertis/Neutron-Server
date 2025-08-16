@@ -25,7 +25,7 @@ end)
 ClientPipe:add_middleware(function(client)
     local cur_time = time.uptime()
 
-    if client.ping.waiting then
+    if client.ping.waiting or cur_time - client.ping.last_upd < 5 then
         return client
     end
 
