@@ -135,7 +135,7 @@ function server:tick()
     end
 
     server_pipe:process(self.clients)
-  
+
     server_echo.proccess(self.clients)
 end
 

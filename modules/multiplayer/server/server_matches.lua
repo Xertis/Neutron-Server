@@ -813,6 +813,4 @@ matches.client_online_handler:add_case( protocol.ClientMsg.BlockInventorySlot, f
     end
 end)
 
-
-
 return protect.protect_return(matches)
