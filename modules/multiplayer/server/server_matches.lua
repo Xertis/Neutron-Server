@@ -327,7 +327,7 @@ matches.joining_fsm:add_state("joining", {
 
         ---
 
-        local message = string.format("[%s] %s", account_player.username, "joined the game")
+        local message = string.format("[#ffff00] [%s] %s", account_player.username, "joined the game")
         chat.echo(message)
 
         ---
@@ -491,7 +491,27 @@ matches.client_online_handler:add_case(protocol.ClientMsg.ChatMessage, (
         end
 
         local player = sandbox.get_player(client.player)
-        local message = string.format("[%s] %s", player.username, packet.message)
+
+        local name_in_message = player.username
+        if EVENT then
+            local colors = EVENT.colors
+            local result = ""
+            local color_index = 1
+
+            for i = 1, #name_in_message do
+                local char = name_in_message:sub(i, i)
+                if char ~= " " then 
+                    result = result .. colors[color_index] .. char
+                    color_index = math.in_range(color_index+1, {1, #EVENT.colors})
+                else
+                    result = result .. char
+                end
+            end
+
+            name_in_message = result .. "[#FFFFFF]"
+        end
+
+        local message = string.format("[%s] %s", name_in_message, packet.message)
         local state = chat.command(packet.message, client)
         if state == false then
             if not client.account.is_logged then return end
@@ -512,7 +532,7 @@ matches.client_online_handler:add_case(protocol.ClientMsg.Disconnect, (
         local pid = client.player.pid
         local username = client.player.username
 
-        local message = string.format("[%s] %s", username, "left the game")
+        local message = string.format("[#ffff00] [%s] %s", username, "left the game")
         account_manager.leave(client)
 
         chat.echo(message)

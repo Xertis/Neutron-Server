@@ -55,3 +55,9 @@ TPS = {
 --Прочее
 USER_ICON_PATH = "user:icon.png"
 DEFAULT_ICON_PATH = "server:default_data/server-icon.png"
+HAPPY_NEW_YEAR = true
+EVENT = nil
+
+__system_events = {
+    {month = 12, day = 31, colors = {"[#DC143C]", "[#FFFFFF]"}}
+}
