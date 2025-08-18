@@ -16,7 +16,7 @@ function Player.new(active, network, address, port, username)
     self.client_id = max_id
     self.account = nil
     self.player = nil
-    self.ping = {ping = 0, last_upd = 0, waiting = false}
+    self.ping = {ping = 0, last_upd = time.uptime(), waiting = false}
     self.meta = {}
     self.is_kicked = false
 

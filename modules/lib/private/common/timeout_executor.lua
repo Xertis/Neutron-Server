@@ -15,7 +15,8 @@ function module.push(func, args, time_out, step)
 end
 
 function module.process()
-    for i, responce in ipairs(delayed_responses) do
+    for i=#delayed_responses, 1, -1 do
+        local responce = delayed_responses[i]
         local cur_time = time.uptime()
         if cur_time - responce.time_create > responce.time_out then
             table.insert(responce.args, true)
