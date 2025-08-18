@@ -39,31 +39,32 @@ ServerPipe:add_middleware(function(client)
     end
 
     coroutine.resume(co)
+
     return client
 end)
 
 ServerPipe:add_middleware(function(client)
-    if List.is_empty(client.received_packets) then
-        return client
-    end
+    for _=1, List.size(client.received_packets) do
+        local packet = List.popleft(client.received_packets)
 
-    local packet = List.popleft(client.received_packets)
+        local success, err = pcall(function()
+            if client.active == false then
+                local status = middlewares.receive.__fsm_emit(packet.packet_type, packet, client)
+                if status then matches.general_fsm:handle_event(client, packet) end
+            elseif client.active == true then
+                matches.client_online_handler:switch(packet.packet_type, packet, client)
+            end
+        end)
 
-    local success, err = pcall(function()
-        if client.active == false then
-            local status = middlewares.receive.__fsm_emit(packet.packet_type, packet, client)
-            if status then matches.general_fsm:handle_event(client, packet) end
-        elseif client.active == true then
-            matches.client_online_handler:switch(packet.packet_type, packet, client)
+        if not success then
+            client:kick()
+            logger.log("Error while reading packet: " .. err .. '\n' .. "Client disconnected", 'E')
         end
-    end)
 
-    if not success then
-        client:kick()
-        logger.log("Error while reading packet: " .. err .. '\n' .. "Client disconnected", 'E')
+        coroutine.yield()
     end
 
-    return client, not List.is_empty(client.received_packets)
+    return client
 end)
 
 ServerPipe:add_middleware(function(client)
@@ -72,8 +73,9 @@ ServerPipe:add_middleware(function(client)
         ClientPipe:process(client)
     end
 
-    while not List.is_empty(client.response_queue) do
+    for _=1, List.size(client.response_queue) do
         local packet = List.popleft(client.response_queue)
+
         local success, err = pcall(function()
             client.network:send(packet)
         end)
@@ -81,8 +83,9 @@ ServerPipe:add_middleware(function(client)
             logger.log("Error when sending a packet: " .. err, 'E')
             break
         end
+
+        coroutine.yield()
     end
-    return client
 end)
 
 return protect.protect_return(ServerPipe)

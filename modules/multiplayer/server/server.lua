@@ -134,7 +134,8 @@ function server:tick()
         end
     end
 
-    server_pipe:process(table.copy(self.clients))
+    server_pipe:process(self.clients)
+  
     server_echo.proccess(self.clients)
 end
 

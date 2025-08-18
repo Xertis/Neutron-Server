@@ -14,7 +14,7 @@ function List.is_empty(list)
 end
 
 function List.size(list)
-    return list.last - list.first
+    return list.last - list.first + 1
 end
 
 -- Добавляет элемент в начало списка
