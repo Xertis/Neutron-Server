@@ -107,6 +107,7 @@ end
 matches.general_fsm:add_state("idle", {
     on_event = function(client, event)
         if event.packet_type == protocol.ClientMsg.HandShake then
+            matches.joining_fsm:set_data(client, "handshake", event)
             if event.protocol_version ~= protocol.Version then
                 return "idle"
             end
@@ -148,7 +149,6 @@ matches.status_fsm:add_state("awaiting_status_request", {
 matches.status_fsm:add_state("sending_status", {
     on_enter = function(client)
         logger.log("The expected package has been received, sending the status...")
-        local buffer = protocol.create_databuffer()
         local icon = nil
 
         if file.exists(USER_ICON_PATH) then
@@ -197,8 +197,6 @@ matches.joining_fsm:add_state("awaiting_join_game", {
 
 matches.joining_fsm:add_state("sending_packs_list", {
     on_enter = function(client)
-        local buffer = protocol.create_databuffer()
-
         local packs = pack.get_installed()
         local plugins = table.freeze_unpack(CONFIG.game.plugins)
 
@@ -232,6 +230,7 @@ matches.joining_fsm:add_state("joining", {
             matches.general_fsm:transition_to(client, "idle")
         end
 
+        local handshake = matches.joining_fsm:get_data(client, "handshake")
         local packet = matches.joining_fsm:get_data(client, "join_game")
         local hashes = matches.joining_fsm:get_data(client, "packs_hashes")
 
@@ -241,6 +240,15 @@ matches.joining_fsm:add_state("joining", {
         if not hash_status and (not CONFIG.server.dev_mode or CONFIG.server.shallow_dev_mode) then
             logger.log("JoinSuccess has been aborted")
             matches.actions.Disconnect(client, "Inconsistencies in mods:" .. hash_reason)
+            close()
+            return
+        elseif handshake.version ~= CONFIG.server.version then
+            logger.log("JoinSuccess has been aborted")
+            matches.actions.Disconnect(client, string.format([[
+Incorrect VoxelCore version:
+    Your version: %s
+    Server version: %s
+            ]], handshake.version, CONFIG.server.version))
             close()
             return
         elseif not lib.validate.username(packet.username) then
@@ -327,7 +335,7 @@ matches.joining_fsm:add_state("joining", {
 
         ---
 
-        local message = string.format("[%s] %s", account_player.username, "joined the game")
+        local message = string.format("[#ffff00] [%s] %s", account_player.username, "joined the game")
         chat.echo(message)
 
         ---
@@ -491,7 +499,27 @@ matches.client_online_handler:add_case(protocol.ClientMsg.ChatMessage, (
         end
 
         local player = sandbox.get_player(client.player)
-        local message = string.format("[%s] %s", player.username, packet.message)
+
+        local name_in_message = player.username
+        if EVENT then
+            local colors = EVENT.colors
+            local result = ""
+            local color_index = 1
+
+            for i = 1, #name_in_message do
+                local char = name_in_message:sub(i, i)
+                if char ~= " " then 
+                    result = result .. colors[color_index] .. char
+                    color_index = math.in_range(color_index+1, {1, #EVENT.colors})
+                else
+                    result = result .. char
+                end
+            end
+
+            name_in_message = result .. "[#FFFFFF]"
+        end
+
+        local message = string.format("[%s] %s", name_in_message, packet.message)
         local state = chat.command(packet.message, client)
         if state == false then
             if not client.account.is_logged then return end
@@ -512,7 +540,7 @@ matches.client_online_handler:add_case(protocol.ClientMsg.Disconnect, (
         local pid = client.player.pid
         local username = client.player.username
 
-        local message = string.format("[%s] %s", username, "left the game")
+        local message = string.format("[#ffff00] [%s] %s", username, "left the game")
         account_manager.leave(client)
 
         chat.echo(message)
@@ -734,6 +762,8 @@ matches.client_online_handler:add_case(protocol.ClientMsg.KeepAlive, (
 
         local wait_time = time.uptime() - client.ping.last_upd
         client.ping.ping = wait_time * 1000
+
+        client.ping.waiting = false
     end
 ))
 

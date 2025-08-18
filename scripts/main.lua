@@ -74,6 +74,19 @@ local function main()
 
     logger.log("server is started")
 
+    timeout_executor.push(
+        function ()
+            local today = os.date("*t")
+            EVENT = nil
+
+            for _, event in ipairs(__system_events) do
+                if today.month == event.month and today.day == event.day then
+                    EVENT = event
+                end
+            end
+        end, {}, math.huge, 10
+    )
+
     while IS_RUNNING do
         local ctime = math.round(time.uptime())
         LAST_SERVER_UPDATE = os.time()

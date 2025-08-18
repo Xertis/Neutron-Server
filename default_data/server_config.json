@@ -24,6 +24,7 @@
     "dev_mode": false,
     "shallow_dev_mode": true,
     "shutdown_timeout": -1,
+    "kick_threshold_timeout": 30,
     "whitelist": [],
     "whitelist_ip": [],
     "blacklist": []

@@ -25,12 +25,13 @@ end)
 ClientPipe:add_middleware(function(client)
     local cur_time = time.uptime()
 
-    if cur_time - client.ping.last_upd < 5 then
+    if client.ping.waiting or cur_time - client.ping.last_upd < 5 then
         return client
     end
 
     client:push_packet(protocol.ServerMsg.KeepAlive, math.random(0, 200))
     client.ping.last_upd = cur_time
+    client.ping.waiting = true
     return client
 end)
 

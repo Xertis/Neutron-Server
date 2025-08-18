@@ -36,7 +36,7 @@ function server:start()
 
         if table.has(self.tasks, client_socket) then
             client_socket:close()
-            logger.log("The client is trying to reconnect while the previous session is still alive. Aborted", "W")
+            logger.log("The client is trying to reconnect while its previous session is still active and queued for processing. Aborted", "W")
             return
         end
 
@@ -55,7 +55,7 @@ function server:do_tasks()
         for i = #self.clients, 1, -1 do
             local server_client = self.clients[i]
             if server_client.address == client.address and not server_client.active then
-                logger.log("Reconnection from the client side was detected")
+                logger.log("Reconnection from the client side was detected", "W")
                 if server_client.network.socket:is_alive() then
                     server_client.network.socket:close()
                 end
@@ -72,7 +72,7 @@ function server:do_tasks()
 end
 
 function server:queue_response(event)
-    for index, client in ipairs(self.clients) do
+    for _, client in ipairs(self.clients) do
         client:queue_response(event)
     end
 end
@@ -104,11 +104,18 @@ function server:tick()
     self:calculate_tps()
     self:do_tasks()
 
+    local cur_time = time.uptime()
+    local max_timeout = CONFIG.server.kick_threshold_timeout or 30
+
     for index = #self.clients, 1, -1 do
         local client = self.clients[index]
         local socket = client.network.socket
 
-        if not socket or not socket:is_alive() or client.is_kicked then
+        if  not socket or
+            not socket:is_alive() or
+            client.is_kicked or
+            cur_time - client.ping.last_upd > max_timeout then
+
             if client.active then
                 client.active = false
             end
@@ -128,7 +135,7 @@ function server:tick()
     end
 
     server_pipe:process(self.clients)
-
+  
     server_echo.proccess(self.clients)
 end
 

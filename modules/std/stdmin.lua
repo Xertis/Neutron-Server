@@ -431,6 +431,17 @@ function math.bit_length(num)
     return count
 end
 
+function math.in_range(num, range)
+    if num < range[1] then
+        return range[2]
+    end
+
+    if num > range[2] then
+        return range[1]
+    end
+
+    return num
+end
 
 -- FUNCTIONS
 
