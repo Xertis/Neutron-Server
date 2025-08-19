@@ -51,6 +51,6 @@ api.sandbox.blocks.sync_inventory(pos: {x=0,y=0,z=0}, client: Client)
 ---
 6. **Синхронизация слотов блоков**
 ```lua
-api.sandbox.blocks.sync_inventory(pos: {x=0,y=0,z=0}, slot: number, client: Client)
+api.sandbox.blocks.sync_slot(pos: {x=0,y=0,z=0}, slot: number, client: Client)
 ```
    - Отправляет данные слота из инвентаря блока на позиции pos клиенту
