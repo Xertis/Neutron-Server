@@ -31,8 +31,8 @@ function module.players.sync_states(_player, states)
     end
 
     if states.cheats then
-        player.set_noclip(states.cheats.noclip)
-        player.set_flight(states.cheats.flight)
+        player.set_noclip(_player.pid, states.cheats.noclip)
+        player.set_flight(_player.pid, states.cheats.flight)
     end
 
     client:push_packet(protocol.ServerMsg.SynchronizePlayerPosition, states)
