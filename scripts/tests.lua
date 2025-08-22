@@ -7,6 +7,7 @@ LAUNCH_ATTEMPTS = 1
 local function tests()
     require "server:tests/player_entity"
     require "server:tests/edd"
+    require "server:tests/external_buffer"
 
     logger.log("All tests passed", "T")
 end
@@ -32,7 +33,7 @@ local function main()
         release: %s
         version: %s
     ]], PROJECT_NAME, IS_RELEASE, SERVER_VERSION))
-    
+
 
     require "server:init/server"
     require "server:multiplayer/server/chat/commands"

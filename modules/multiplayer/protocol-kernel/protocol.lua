@@ -1,6 +1,7 @@
 
 local bit_buffer = require "server:lib/public/bit_buffer"
 local compiler = require "server:multiplayer/protocol-kernel/compiler"
+local receiver = require "server:multiplayer/protocol-kernel/receiver"
 local protocol = {}
 protocol.data = json.parse(file.read("server:default_data/protocol/protocol.json"))
 
@@ -62,17 +63,11 @@ function protocol.build_packet(client_or_server, packet_type, ...)
     return buffer.bytes
 end
 
-function protocol.parse_packet(client_or_server, data)
+function protocol.parse_packet(client_or_server, external_buffer)
     local result = {}
-    local buffer = nil
-    if type(data) ~= "function" then
-        buffer = protocol.create_databuffer()
-        buffer:put_bytes(data)
-        buffer:reset()
-    else
-        buffer = protocol.create_databuffer()
-        buffer.receive_func = data
-    end
+    local buffer = protocol.create_databuffer()
+    buffer.external_buffer = external_buffer
+    buffer.recv_func = receiver.get
 
     local packet_type = buffer:get_byte() + 1
     result.packet_type = packet_type
@@ -98,15 +93,15 @@ function protocol.parse_packet(client_or_server, data)
 
         logger.log("Packet:", 'E', true)
         logger.log(table.tostring({client_or_server, packet_type}), 'E', true)
-
-        logger.log("Data:", 'E', true)
-        logger.log(table.tostring(data), 'E', true)
         error()
     end
 
     for indx, name in ipairs(names) do
         result[name] = res[indx]
     end
+
+    local consumed = math.ceil((buffer.pos - 1) / 8)
+    receiver.clear(external_buffer, consumed)
 
     return result
 end

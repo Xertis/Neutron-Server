@@ -49,26 +49,12 @@ end
 
 -- Отправка байт через сокет
 function socketlib.send(socket, bytes)
-    if socket and socket:is_alive() then
-        socket:send(bytes)
-    else
-        error("Сокет закрыт или не существует.")
-    end
+    socket:send(bytes)
 end
 
 -- Получение байт через сокет
 function socketlib.receive(socket, max_length)
-    if socket then
-        local bytes = socket:recv(max_length, true) -- Читаем как таблицу
-        bytes = bytes or {}
-        if #bytes > 0 then
-            return bytes
-        else
-            return nil
-        end
-    else
-        error("Сокет закрыт или не существует.")
-    end
+    return socket:recv(max_length, true) -- Читаем как таблицу
 end
 
 -- Закрытие сокета
