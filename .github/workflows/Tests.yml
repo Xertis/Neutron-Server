@@ -14,12 +14,12 @@ jobs:
       with:
         path: 'Neutron-Server-main'
 
-    - name: Download VoxelCore 0.28.0 (BETA)
+    - name: Download VoxelCore 0.29.0 (BETA)
       uses: dawidd6/action-download-artifact@v3
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         workflow: CI.yml
-        run_id: 15657638118
+        run_id: 17212529780
         name: Windows-Build
         path: build
         repo: MihailRis/voxelcore
