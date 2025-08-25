@@ -2,18 +2,9 @@ local module = {}
 
 local next_id = 0
 
-local function rem_elems(tbl, startIndex)
-
-    for i=#tbl, startIndex, -1 do
-        table.remove(tbl, i)
-    end
-
-    return tbl
-end
-
 function module.create_buffer()
     return {
-        storage = {},
+        storage = Bytearray(),
         next_id = next_id + 1,
         len = 0
     }
@@ -24,12 +15,8 @@ function module.recv(buffer, client)
     local socket = client.network.socket
 
     if not socket then return end
-    local count = socket:available()
-    if count == 0 then
-        return
-    end
 
-    module.__apppend(buffer, socket:recv(count, true))
+    module.__apppend(buffer, socket:recv(socket:available()))
 end
 
 function module.__apppend(buffer, bytes)
@@ -37,7 +24,7 @@ function module.__apppend(buffer, bytes)
     buffer.len = buffer.len + #bytes
 
     for i=1, #bytes do
-        table.insert(storage, 1, bytes[i])
+        storage:insert(1, bytes[i])
     end
 end
 
@@ -59,12 +46,12 @@ end
 
 function module.clear(buffer, pos)
     local start = buffer.len-pos+1
-    rem_elems(buffer.storage, start)
-    buffer.len = #buffer.storage
+    buffer.storage:remove(start, buffer.len-start+1)
+    buffer.len = start-1
 end
 
 function module.empty(buffer)
-    buffer.storage = {}
+    buffer.storage = Bytearray()
     buffer.len = 0
 end
 
