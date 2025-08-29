@@ -68,10 +68,6 @@ end)
 
 --Запрос на логин/регистрацию
 ClientPipe:add_middleware(function(client)
-    if not CONFIG.server.password_auth then
-        return client
-    end
-
     local account = client.account
 
     if not account.is_logged then
