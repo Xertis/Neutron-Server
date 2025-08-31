@@ -248,6 +248,16 @@ function table.freeze_unpack(arr)
     return res
 end
 
+function table.deep_merge(target, source)
+    for key, value in pairs(source) do
+        if target[key] == nil then
+            target[key] = value
+        elseif type(target[key]) == "table" then
+            table.deep_merge(target[key], source[key])
+        end
+    end
+end
+
 function table.to_arr(tbl, pattern)
     local res = {}
 

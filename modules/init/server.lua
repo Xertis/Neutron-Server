@@ -17,7 +17,9 @@ end
 
 --Загружаем конфиг
 do
+    local default_config = json.parse(file.read(PACK_ID .. ":default_data/server_config.json"))
     CONFIG = json.parse(file.read(CONFIG_PATH))
+    table.deep_merge(CONFIG, default_config)
 
     if CONFIG.server.chunks_loading_distance > 255 then
         CONFIG.server.chunks_loading_distance = 255
