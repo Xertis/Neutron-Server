@@ -225,9 +225,10 @@ matches.joining_fsm:add_state("awaiting_packs_hashes", {
 
 matches.joining_fsm:add_state("joining", {
     on_enter = function(client)
-        local function close()
+        local function close(call_event)
             matches.joining_fsm:clear(client)
             matches.general_fsm:transition_to(client, "idle")
+            if call_event then events.emit("server:client_connected", client) end
         end
 
         local handshake = matches.joining_fsm:get_data(client, "handshake")
@@ -371,11 +372,10 @@ Incorrect VoxelCore version:
         client:push_packet(protocol.ServerMsg.PlayerHandSlot, slot)
 
         ---
-        events.emit("server:client_connected", client)
 
         if not CONFIG.server.password_auth then
             client.account.is_logged = true
-            close()
+            close(true)
             return
         end
 
@@ -395,14 +395,14 @@ Incorrect VoxelCore version:
                 if session.ip == client.address and diff <= session_lifetime then
                     client.account.is_logged = true;
                     chat.tell(string.format("You have logged in via last session. (%s)", os.date(nil, timestamp)), client);
-                    return close();
+                    return close(true);
                 end
             end
 
             chat.tell("Please log in using the command /login <password> to access your account.", client)
         end
 
-        close()
+        close(true)
     end
 })
 
