@@ -48,6 +48,11 @@ console.set_command("register: password=<string>, rpassword=<string> -> Registra
     local account = client.account
     local passwords = { args.password, args.rpassword }
 
+    if not CONFIG.server.password_auth then
+        console.tell(string.format("%s Built-in authorization in Neutron is disabled.", console.colors.red), client)
+        return
+    end
+
     if account.is_logged then
         console.tell(string.format("%s You are already logged in.", console.colors.yellow), client)
         return
@@ -81,6 +86,11 @@ end, true)
 console.set_command("login: password=<string> -> Logging", {}, function(args, client)
     local account = client.account
     local password = args.password
+
+    if not CONFIG.server.password_auth then
+        console.tell(string.format("%s Built-in authorization in Neutron is disabled.", console.colors.red), client)
+        return
+    end
 
     if account.is_logged then
         console.tell(string.format("%s You are already logged in.", console.colors.yellow), client)
