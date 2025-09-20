@@ -15,6 +15,7 @@ local audio = require "api/v1/audio"
 local text3d = require "api/v1/text3d"
 local blockwraps = require "api/v1/blockwraps"
 local inv_dat = require "api/v1/inv_dat"
+local tasks = require "api/v1/tasks"
 
 local api = {
     events = events,
@@ -34,6 +35,7 @@ local api = {
     text3d = text3d,
     blockwraps = blockwraps,
     inventory_data = inv_dat,
+    tasks = tasks,
     constants = {
         config = CONFIG,
         render_distance = RENDER_DISTANCE,

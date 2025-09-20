@@ -20,9 +20,10 @@ api.accounts.get_client_by_name(username: String) -> Client
 
 4. **Кик аккаунта:**
 ```lua
-api.accounts.kick(account: Account, [опционально] reason: string)
+api.accounts.kick(account: Account, [опционально] reason: string, [опционально] soft: Boolean)
 ```
    - Кикает аккаунт **account** с сервера с причиной **reason**
+   - Если **soft** равен **true**, то кик произойдёт не сразу, а после обработки пакетов, что обеспечит гарантированную отправку сообщения с причиной ошибки
 
 5. **Получение роли:**
 ```lua
