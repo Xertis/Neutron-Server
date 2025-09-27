@@ -56,6 +56,8 @@ do
     for cname, sname in pairs(settings) do
         app.set_setting(sname, CONFIG.server[cname])
     end
+
+    app.set_setting("debug.do-write-lights", false)
 end
 
 --Другое
