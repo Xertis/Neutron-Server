@@ -66,6 +66,10 @@ function module.mention_prepare(message)
                 return { "everyone" }, message
             end
 
+            while not sandbox.by_username.is_online(name) and #name > 0 do
+                name = string.drop_last(name)
+            end
+
             if sandbox.by_username.is_online(name) then
                 table.insert(mentions, name)
                 words[i] = "[#5865F2]" .. word .. "[#FFFFFF]"

@@ -25,6 +25,14 @@ end
 
 --- STRING
 
+function string.drop_last(str)
+    if #str > 0 then
+        return string.sub(str, 1, -2)
+    else
+        return str
+    end
+end
+
 function string.type(str)
     if not str then
         return "nil", function (s)
