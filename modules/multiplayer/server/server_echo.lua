@@ -13,7 +13,8 @@ function ServerEcho.put_event(func, ...)
 end
 
 function ServerEcho.proccess(clients)
-    for i = #events, 1, -1 do
+    local to_remove = {}
+    for i = 1, #events do
         local event = events[i]
         for _, client in ipairs(clients) do
             local socket = client.network.socket
@@ -21,6 +22,10 @@ function ServerEcho.proccess(clients)
                 event.func(client)
             end
         end
+        to_remove[i] = true
+    end
+
+    for i, _ in pairs(to_remove) do
         table.remove(events, i)
     end
 end

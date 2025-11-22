@@ -8,6 +8,7 @@ local module = {}
 local reg_entities = {}
 local player_fields = {}
 local entities_data = {}
+local notificated_entities = {}
 
 local culling = function (pid, pos, target_pos)
     return vec3.culling(player.get_dir(pid), pos, target_pos, 120)
@@ -229,7 +230,10 @@ function module.process(client)
         local str_name = entity:def_name()
         local _data = reg_entities[str_name] or {}
         if not _data.config and not is_player then
-            logger.log("Spawn of an unregistered entity: " .. str_name)
+            if not table.has(notificated_entities, str_name) then
+                logger.log("Spawn of an unregistered entity: " .. str_name)
+                table.insert(notificated_entities, str_name)
+            end
             goto continue
         end
 

@@ -24,7 +24,7 @@ function lib.world.preparation_main()
     end
 
     table.insert(packs, "server")
-    app.reset_content()
+    app.reset_content({"server"})
     app.config_packs(table.merge(packs, plugins), {})
     app.load_content()
 

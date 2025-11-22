@@ -4,7 +4,9 @@ local LOG_ACCESS_DENIES = "Unauthorized Access attempt from "
 local ACCESS_DENIES = "Access denied"
 
 local function parse_path(path)
-    if path == "main.lua" or path == "=[C]" or path == "tests.lua" then
+    if table.has({
+        "main.lua", "=[C]", "tests.lua", "script:main.lua"
+    }, path) then
         return "server", ""
     end
 

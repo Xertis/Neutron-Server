@@ -1,4 +1,4 @@
-function start_require(path)
+local function start_require(path)
     if not string.find(path, ':') then
         local prefix, _ = parse_path(debug.getinfo(2).source)
         return start_require(prefix..':'..path)

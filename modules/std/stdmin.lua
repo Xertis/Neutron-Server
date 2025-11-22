@@ -417,6 +417,17 @@ function table.diff(tbl1, tbl2)
     return diff_tbl1, diff_tbl2
 end
 
+function table.reverse(tbl)
+    local reversed = {}
+    local length = #tbl
+
+    for i = length, 1, -1 do
+        reversed[length - i + 1] = tbl[i]
+    end
+
+    return reversed
+end
+
 function table.from_bytearray(bytearray)
     local bytes = {}
 
