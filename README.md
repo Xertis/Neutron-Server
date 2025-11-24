@@ -10,7 +10,7 @@
 #### Стабильные версии
 Последние стабильные версии можно скачать с наших страниц на **VoxelWorld**
 - [Ядро](https://voxelworld.ru/mods/120)
-- [Клиент](https://voxelworld.ru/mods/129)
+- [Клиент](https://voxelworld.ru/mods/quartz)
 
 #### Клиент
 - [Репозиторий клиента](https://github.com/Xertis/Quartz-Client)
