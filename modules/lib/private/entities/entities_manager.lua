@@ -10,8 +10,34 @@ local player_fields = {}
 local entities_data = {}
 local notificated_entities = {}
 
-local culling = function (pid, pos, target_pos)
-    return vec3.culling(player.get_dir(pid), pos, target_pos, 120)
+local culling = function (pid, target_pos, target_size)
+    local fov = 150
+    local dir = player.get_dir(pid)
+    local pos = player.get_pos(pid)
+    local half_size = {
+        target_size[1] / 2,
+        target_size[2],
+        target_size[3] / 2
+    }
+    local vertices = {
+        {target_pos[1] - half_size[1], target_pos[2] + half_size[2], target_pos[3] - half_size[3]},
+        {target_pos[1] + half_size[1], target_pos[2] + half_size[2], target_pos[3] - half_size[3]},
+        {target_pos[1] + half_size[1], target_pos[2] + half_size[2], target_pos[3] + half_size[3]},
+        {target_pos[1] - half_size[1], target_pos[2] + half_size[2], target_pos[3] + half_size[3]},
+
+        {target_pos[1] - half_size[1], target_pos[2], target_pos[3] - half_size[3]},
+        {target_pos[1] + half_size[1], target_pos[2], target_pos[3] - half_size[3]},
+        {target_pos[1] + half_size[1], target_pos[2], target_pos[3] + half_size[3]},
+        {target_pos[1] - half_size[1], target_pos[2], target_pos[3] + half_size[3]}
+    }
+
+    for _, vertex in ipairs(vertices) do
+        if vec3.culling(dir, pos, vertex, fov) then
+            return true
+        end
+    end
+
+    return vec3.culling(dir, pos, target_pos, fov)
 end
 
 function module.register(entity_name, config, handler)
@@ -249,8 +275,8 @@ function module.process(client)
 
         if not is_player then
             local cul_pos = table.get_default(data, "standart_fields", "tsf_pos") or (is_player and e_pos or tsf:get_pos())
-            local last_culling = culling(pid, p_pos, cul_pos)
-            local cur_culling = culling(pid, p_pos, e_pos)
+            local last_culling = culling(pid, cul_pos)
+            local cur_culling = culling(pid, e_pos)
 
             if not (last_culling or cur_culling) then
                 goto continue

@@ -728,7 +728,7 @@ function vec3.culling(view_dir, pos, target_pos, fov_degrees)
     local angle_rad = math.acos(dot_product)
     local angle_deg = math.deg(angle_rad)
 
-    return angle_deg <= (fov_degrees+30) / 2
+    return angle_deg <= (fov_degrees) / 2
 end
 
 function vec3.checksum(x, y, z)
