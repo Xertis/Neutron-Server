@@ -242,6 +242,7 @@ function module.process(client)
         end
 
         local tsf = entity.transform
+        local body = entity.rigidbody
 
         local id = entity:def_index()
         local is_player = PLAYER_ENTITY_ID == id
@@ -271,12 +272,13 @@ function module.process(client)
         end
 
         local e_pos = tsf:get_pos()
+        local e_size = body:get_size()
         data = data[pid]
 
         if not is_player then
             local cul_pos = table.get_default(data, "standart_fields", "tsf_pos") or (is_player and e_pos or tsf:get_pos())
-            local last_culling = culling(pid, cul_pos)
-            local cur_culling = culling(pid, e_pos)
+            local last_culling = culling(pid, cul_pos, e_size)
+            local cur_culling = culling(pid, e_pos, e_size)
 
             if not (last_culling or cur_culling) then
                 goto continue
