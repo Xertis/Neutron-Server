@@ -14,9 +14,9 @@ local function start_require(path)
     return _G["/$p"][path]
 end
 
-local server_echo = start_require("server:multiplayer/server/server_echo")
-local protocol = start_require("server:multiplayer/protocol-kernel/protocol")
-local sandbox = start_require("server:lib/private/sandbox/sandbox")
+local server_echo = nil
+local protocol = nil
+local sandbox = nil
 
 local function upd(blockid, x, y, z, playerid)
     playerid = math.max(playerid, 0)
@@ -53,6 +53,12 @@ local function upd(blockid, x, y, z, playerid)
             client.network:send(buffer.bytes)
         end
     )
+end
+
+function on_world_open()
+    server_echo = start_require("server:multiplayer/server/server_echo")
+    protocol = start_require("server:multiplayer/protocol-kernel/protocol")
+    sandbox = start_require("server:lib/private/sandbox/sandbox")
 end
 
 function on_block_placed( ... )
