@@ -13,7 +13,7 @@ local notificated_entities = {}
 local culling = function (pid, target_pos, target_size)
     local fov = 150
     local dir = player.get_dir(pid)
-    local pos = player.get_pos(pid)
+    local pos = {player.get_pos(pid)}
     local half_size = {
         target_size[1] / 2,
         target_size[2],
