@@ -27,66 +27,54 @@ local matches = {
 matches.actions = {}
 
 local function check_mods(client_hashes)
-    local packs = pack.get_installed()
+    local server_packs = pack.get_installed()
     local plugins = table.freeze_unpack(CONFIG.game.plugins)
-    table.filter(packs, function(_, p)
-        return not (p == "server" or table.has(plugins, p))
+    table.filter(server_packs, function(_, pack_name)
+        return pack_name ~= "server" and not table.has(plugins, pack_name)
     end)
 
-    local temp = {}
+    if not hashed_packs then
+        hashed_packs = {}
+        for _, pack_name in ipairs(server_packs) do
+            hashed_packs[pack_name] = lib.hash.hash_mods({ pack_name })
+        end
+    end
+
+    local client_mods = {}
     for i = 1, #client_hashes, 2 do
-        temp[client_hashes[i]] = client_hashes[i + 1]
+        client_mods[client_hashes[i]] = client_hashes[i + 1]
     end
-    client_hashes = temp
 
-    local incorrect = {}
-    local i = 1
+    local incorrect_messages = {}
+    local counter = 1
 
-    if CONFIG.server.shallow_dev_mode then
-        local server_packs_lookup = {}
-        for _, pack_name in ipairs(packs) do
-            server_packs_lookup[pack_name] = true
-        end
+    for _, pack_name in ipairs(server_packs) do
+        if not client_mods[pack_name] then
+            table.insert(incorrect_messages, string.format("\n%s. %s (missing)", counter, pack_name))
+            counter = counter + 1
+        elseif not CONFIG.server.shallow_dev_mode then
+            local server_hash = hashed_packs[pack_name]
+            local client_hash = client_mods[pack_name]
 
-        for _, pack_name in ipairs(packs) do
-            if not client_hashes[pack_name] then
-                table.insert(incorrect, string.format("\n%s. %s (missing)", i, pack_name))
-                i = i + 1
+            if server_hash ~= client_hash then
+                table.insert(incorrect_messages, string.format("\n%s. %s (hash mismatch)", counter, pack_name))
+                counter = counter + 1
             end
-        end
 
-        for pack_name, _ in pairs(client_hashes) do
-            if not server_packs_lookup[pack_name] then
-                table.insert(incorrect, string.format("\n%s. %s (extra)", i, pack_name))
-                logger.log(string.format('Client has extra pack "%s" in shallow_dev_mode', pack_name), '!')
-                i = i + 1
-            end
-        end
-    else
-        if not hashed_packs then
-            hashed_packs = {}
-            for _, pack_name in ipairs(packs) do
-                hashed_packs[pack_name] = lib.hash.hash_mods({ pack_name })
-            end
-        end
-
-        for pack_name, hash in pairs(hashed_packs) do
-            if hash ~= client_hashes[pack_name] then
-                table.insert(incorrect, string.format("\n%s. %s (hash mismatch)", i, pack_name))
-                i = i + 1
-            end
-            client_hashes[pack_name] = nil
-        end
-
-        for pack_name, _ in pairs(client_hashes) do
-            table.insert(incorrect, string.format("\n%s. %s (extra)", i, pack_name))
-            logger.log(string.format('Client has extra pack "%s" in standard mode', pack_name), '!')
-            i = i + 1
+            client_mods[pack_name] = nil
+        else
+            client_mods[pack_name] = nil
         end
     end
 
-    local error_msg = table.concat(incorrect)
-    return error_msg == '', error_msg
+    for pack_name, _ in pairs(client_mods) do
+        table.insert(incorrect_messages, string.format("\n%s. %s (extra)", counter, pack_name))
+        logger.log(string.format('Client has extra pack "%s" in shallow_dev_mode', pack_name), '!')
+        counter = counter + 1
+    end
+
+    local error_message = table.concat(incorrect_messages)
+    return error_message == '', error_message
 end
 
 
