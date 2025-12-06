@@ -443,6 +443,10 @@ end)
 --Обновляем позицию у других
 ClientPipe:add_middleware(function(client)
     local function can_represented_f16(vec1, vec2)
+        if true then
+            return false
+        end
+
         for key, val in pairs(vec1) do
             if math.abs(val - vec2[key]) > 100 then
                 return false
