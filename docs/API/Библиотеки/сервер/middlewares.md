@@ -50,7 +50,7 @@ api.middlewares.send.add_generic_middleware(middleware)
 Приём (receive):
 
 ```lua
-middlewares.receive.add_middleware("ClientMsg", function(client, packet)
+middlewares.receive.add_middleware("ClientMsg", function(client, original, edited)
     if not packet then return false end
     return true
 end)
@@ -60,8 +60,7 @@ end)
 
 ```lua
 middlewares.send.add_middleware("ServerMsg", function(client, original, edited)
-    -- если нужно заблокировать отправку:
-    if edited.block then return false end
+    if original.example ~= edited.example then return false end
     return true
 end)
 ```
