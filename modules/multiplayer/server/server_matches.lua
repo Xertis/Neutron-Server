@@ -6,8 +6,8 @@ local account_manager = require "lib/private/accounts/account_manager"
 local chat = require "multiplayer/server/chat/chat"
 local timeout_executor = require "lib/private/common/timeout_executor"
 local echo = require "multiplayer/server/server_echo"
-local api_events = require "api/v1/events"
-local api_env = require "api/v1/env"
+local api_events = require "api/v2/events"
+local api_env = require "api/v2/env"
 local entities_manager = require "lib/private/entities/entities_manager"
 local lib = require "lib/private/min"
 local mfsm = require "lib/public/common/multifsm"
@@ -26,7 +26,7 @@ local matches = {
 
 matches.actions = {}
 
-local function check_mods(client_hashes)
+local function check_mods(hashes)
     local server_packs = pack.get_installed()
     local plugins = table.freeze_unpack(CONFIG.game.plugins)
     table.filter(server_packs, function(_, pack_name)
@@ -41,8 +41,8 @@ local function check_mods(client_hashes)
     end
 
     local client_mods = {}
-    for i = 1, #client_hashes, 2 do
-        client_mods[client_hashes[i]] = client_hashes[i + 1]
+    for _, hash in ipairs(hashes) do
+        client_mods[hash.pack] = hash.hash
     end
 
     local incorrect_messages = {}
@@ -86,7 +86,7 @@ function matches.actions.Disconnect(client, reason)
 
     logger.log("Aborted message: " .. reason, 'W')
 
-    client:push_packet(protocol.ServerMsg.Disconnect, reason)
+    client:push_packet(protocol.ServerMsg.Disconnect, {reason = reason})
     client:kick()
 end
 
@@ -154,18 +154,22 @@ matches.status_fsm:add_state("sending_status", {
         end
 
         local STATUS = {
-            CONFIG.server.short_description or '',
-            CONFIG.server.description or '',
-            icon,
-            friends_states,
-            CONFIG.server.version,
-            "Neutron",
-            protocol.data.version,
-            CONFIG.server.max_players,
-            #players
+            short_desc = CONFIG.server.short_description or '',
+            description = CONFIG.server.description or '',
+            favicon = icon,
+            friends_states = friends_states,
+            engine_version = CONFIG.server.version,
+            protocol_reference = "Neutron",
+            protocol_version = protocol.Version,
+
+            neutron_version = SERVER_VERSION,
+            api_version = API_VERSION,
+
+            max = CONFIG.server.max_players,
+            online = #players
         }
 
-        client:push_packet(protocol.ServerMsg.StatusResponse, unpack(STATUS))
+        client:push_packet(protocol.ServerMsg.StatusResponse, STATUS)
         logger.log("Status has been sent")
 
         client:kick()
@@ -197,15 +201,15 @@ matches.joining_fsm:add_state("sending_packs_list", {
 
         local DATA = packs
 
-        client:push_packet(protocol.ServerMsg.PacksList, DATA)
+        client:push_packet(protocol.ServerMsg.PacksList, {DATA})
         return "awaiting_packs_hashes"
     end
 })
 
 matches.joining_fsm:add_state("awaiting_packs_hashes", {
     on_event = function(client, event)
-        if event.packet_type == protocol.ClientMsg.PacksHashes then
-            matches.joining_fsm:set_data(client, "packs_hashes", event)
+        if event.packet_type == protocol.ClientMsg.PackHashes then
+            matches.joining_fsm:set_data(client, "packs_hashes", event.hashes)
             return "joining"
         end
     end
@@ -223,15 +227,15 @@ matches.joining_fsm:add_state("joining", {
         local packet = matches.joining_fsm:get_data(client, "join_game")
         local hashes = matches.joining_fsm:get_data(client, "packs_hashes")
 
-        local account = account_manager.login(packet.username)
-        local hash_status, hash_reason = check_mods(hashes.packs)
+        local account = account_manager.login(packet.username, packet.identity)
+        local hash_status, hash_reason = check_mods(hashes)
 
         if not hash_status and (not CONFIG.server.dev_mode or CONFIG.server.shallow_dev_mode) then
             logger.log("JoinSuccess has been aborted")
             matches.actions.Disconnect(client, "Inconsistencies in mods:" .. hash_reason)
             close()
             return
-        elseif handshake.version ~= CONFIG.server.version then
+        elseif handshake.engine_version ~= CONFIG.server.version then
             logger.log("JoinSuccess has been aborted")
             matches.actions.Disconnect(client, string.format([[
 Incorrect VoxelCore version:
@@ -289,13 +293,13 @@ Incorrect VoxelCore version:
         end
 
         local DATA = {
-            account_player.pid,
-            time.day_time_to_uint16(world.get_day_time()),
-            array_rules,
-            math.clamp(CONFIG.server.chunks_loading_distance, 0, 255)
+            pid = account_player.pid,
+            game_time = time.day_time_to_uint16(world.get_day_time()),
+            rules = array_rules,
+            chunks_loading_distance = math.clamp(CONFIG.server.chunks_loading_distance, 0, 255)
         }
 
-        client:push_packet(protocol.ServerMsg.JoinSuccess, unpack(DATA))
+        client:push_packet(protocol.ServerMsg.JoinSuccess, DATA)
         logger.log("JoinSuccess has been sended")
 
         ---
@@ -312,7 +316,7 @@ Incorrect VoxelCore version:
                     cheats = { noclip = noclip, flight = flight }
                 }
 
-                client:push_packet(protocol.ServerMsg.SynchronizePlayerPosition, _DATA)
+                client:push_packet(protocol.ServerMsg.SynchronizePlayerPosition, {_DATA})
 
                 if is_last then
                     _client.player.is_teleported = true
@@ -329,10 +333,10 @@ Incorrect VoxelCore version:
 
         ---
 
-        local p_data = { account_player.username, account_player.pid }
+        local p_data = { username = account_player.username, pid = account_player.pid }
 
         local buffer = protocol.create_databuffer()
-        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.PlayerListAdd, unpack(p_data)))
+        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.PlayerListAdd, {p_data}))
 
         echo.put_event(
             function(c)
@@ -345,19 +349,19 @@ Incorrect VoxelCore version:
 
         table.map(player_keys, function(i, v)
             return {
-                player_online[v].pid,
-                player_online[v].username
+                pid = player_online[v].pid,
+                username = player_online[v].username
             }
         end)
 
-        client:push_packet(protocol.ServerMsg.PlayerList, player_keys)
+        client:push_packet(protocol.ServerMsg.PlayerList, {player_keys})
 
         local data = sandbox.get_inventory(account_player)
         local inv, slot = data.inventory, data.slot
 
-        client:push_packet(protocol.ServerMsg.PlayerInventory, inv)
+        client:push_packet(protocol.ServerMsg.PlayerInventory, {inv})
 
-        client:push_packet(protocol.ServerMsg.PlayerHandSlot, slot)
+        client:push_packet(protocol.ServerMsg.PlayerHandSlot, {slot})
 
         ---
 
@@ -397,32 +401,6 @@ Incorrect VoxelCore version:
 matches.general_fsm:set_default_state("idle")
 
 --- CASES
-matches.client_online_handler:add_case(protocol.ClientMsg.PlayerPositionChecksum, (
-    function(packet, client)
-
-        local players = packet.players
-        local checksums = packet.checksums
-
-        for i=1, #packet.checksums do
-            local pid = players[i]
-            local checksum = checksums[i]
-
-            local x, y, z = player.get_pos(pid)
-            local cur_checksum = vec3.checksum(math.round(x, 1), math.round(y, 1), math.round(z, 1))
-
-            if checksum ~= cur_checksum then
-                client:push_packet(protocol.ServerMsg.PlayerMoved, pid, {
-                    pos = {
-                        x = x,
-                        y = y,
-                        z = z
-                    }
-                })
-            end
-        end
-    end
-))
-
 matches.client_online_handler:add_case(protocol.ClientMsg.PlayerCheats, (
     function(packet, client)
         if not client.account or not client.account.is_logged or not client.player.is_teleported then
@@ -536,7 +514,7 @@ matches.client_online_handler:add_case(protocol.ClientMsg.Disconnect, (
         entities_manager.clear_pid(pid)
 
         local buffer = protocol.create_databuffer()
-        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.PlayerListRemove, username, pid))
+        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.PlayerListRemove, {{username = username, pid = pid}}))
         events.emit("server:client_disconnected", client)
 
         echo.put_event(
@@ -567,12 +545,12 @@ local function chunk_responce(packet, client, is_timeout)
     end
 
     local DATA = {
-        packet.x,
-        packet.z,
-        chunk
+        x = packet.x,
+        z = packet.z,
+        data = chunk
     }
 
-    client:push_packet(protocol.ServerMsg.ChunkData, unpack(DATA))
+    client:push_packet(protocol.ServerMsg.ChunkData, {chunk = DATA})
 
     return true
 end
@@ -595,7 +573,7 @@ local function chunks_responce_optimizate(packet, client)
 
         local chunk = sandbox.get_chunk({ x = x, z = z })
         if chunk then
-            table.insert(chunks_list, { x, z, chunk })
+            table.insert(chunks_list, { x = x, z = z, data = chunk })
         else
             local pseudo_packet = {
                 x = x,
@@ -606,7 +584,7 @@ local function chunks_responce_optimizate(packet, client)
         end
     end
 
-    client:push_packet(protocol.ServerMsg.ChunksData, chunks_list)
+    client:push_packet(protocol.ServerMsg.ChunksData, {chunks_list})
 
     return true
 end
@@ -621,7 +599,7 @@ matches.client_online_handler:add_case(protocol.ClientMsg.BlockInteract, (
             return
         end
 
-        local x, y, z = packet.x, packet.y, packet.z
+        local x, y, z = packet.pos.x, packet.pos.y, packet.pos.z
 
         local block_id = block.get(x, y, z)
         local block_name = block.name(block_id)
@@ -636,7 +614,7 @@ matches.client_online_handler:add_case(protocol.ClientMsg.BlockRegionInteract, (
             return
         end
 
-        local x, y, z = packet.x, packet.y, packet.z
+        local x, y, z = packet.pos.x, packet.pos.y, packet.pos.z
 
         x = client.player.region_pos.x * 32 + x
         z = client.player.region_pos.z * 32 + z
@@ -660,12 +638,14 @@ matches.client_online_handler:add_case(protocol.ClientMsg.BlockUpdate, (
             return
         end
 
+        packet = packet.block
+
         local block = {
-            x = packet.x,
-            y = packet.y,
-            z = packet.z,
-            states = packet.block_state,
-            id = packet.block_id
+            x = packet.pos.x,
+            y = packet.pos.y,
+            z = packet.pos.z,
+            states = packet.state,
+            id = packet.id
         }
 
         sandbox.place_block(block, client.player.pid)
@@ -678,7 +658,9 @@ matches.client_online_handler:add_case(protocol.ClientMsg.BlockRegionUpdate, (
             return
         end
 
-        local x, y, z = packet.x, packet.y, packet.z
+        packet = packet.block
+
+        local x, y, z = packet.pos.x, packet.pos.y, packet.pos.z
 
         x = client.player.region_pos.x * 32 + x
         z = client.player.region_pos.z * 32 + z
@@ -687,8 +669,8 @@ matches.client_online_handler:add_case(protocol.ClientMsg.BlockRegionUpdate, (
             x = x,
             y = y,
             z = z,
-            states = packet.block_state,
-            id = packet.block_id
+            states = packet.state,
+            id = packet.id
         }
 
         sandbox.place_block(block, client.player.pid)
@@ -703,6 +685,8 @@ matches.client_online_handler:add_case(protocol.ClientMsg.BlockDestroy, (
             return
         end
 
+        packet = packet.pos
+
         if table.has({ 0, -1 }, block.get(packet.x, packet.y, packet.z)) then
             return
         end
@@ -716,6 +700,8 @@ matches.client_online_handler:add_case(protocol.ClientMsg.BlockRegionDestroy, (
         if not client.account or not client.account.is_logged or not client.player.is_teleported then
             return
         end
+
+        packet = packet.pos
 
         local x, y, z = packet.x, packet.y, packet.z
 
@@ -775,9 +761,9 @@ matches.client_online_handler:add_case(protocol.ClientMsg.PlayerHandSlot, (
     end
 ))
 
-matches.client_online_handler:add_case(protocol.ClientMsg.EntitySpawnTry, (
+matches.client_online_handler:add_case(protocol.ClientMsg.EntitySpawnAttempt, (
     function(packet, client)
-        local name = entities.def_name(packet.entity_def)
+        local name = entities.def_name(packet.def)
         local conf = entities_manager.get_reg_config(name) or {}
 
         if conf.spawn_handler then
@@ -787,14 +773,14 @@ matches.client_online_handler:add_case(protocol.ClientMsg.EntitySpawnTry, (
 ))
 
 matches.client_online_handler:add_case( protocol.ClientMsg.BlockInventory, function (packet, client)
-    local invid = inventory.get_block(packet.x, packet.y, packet.z)
+    local invid = inventory.get_block(packet.pos.x, packet.pos.y, packet.pos.z)
     if invid ~= 0 then
         inventory.set_inv(invid, packet.inventory)
     end
 end)
 
 matches.client_online_handler:add_case( protocol.ClientMsg.BlockInventorySlot, function (packet, client)
-    local invid = inventory.get_block(packet.x, packet.y, packet.z)
+    local invid = inventory.get_block(packet.pos.x, packet.pos.y, packet.pos.z)
 
     if invid ~= 0 then
         inventory.set(invid, packet.slot_id, packet.item_id, packet.item_count)

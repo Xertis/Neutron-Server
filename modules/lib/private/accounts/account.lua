@@ -8,7 +8,7 @@ account.__index = account
 
 local accounts_proxy = metadata.proxy("server", "accounts")
 
-function account.new(username)
+function account.new(username, identity)
     local self = setmetatable({}, account)
 
     self.username = username
@@ -16,6 +16,7 @@ function account.new(username)
     self.last_session = nil
     self.is_logged = false
     self.role = nil
+    self.identity = identity or username
     self.password = nil
 
     return self
@@ -31,7 +32,7 @@ function account:abort()
 end
 
 function account:save()
-    accounts_proxy[self.username] = self:to_save()
+    accounts_proxy[self.identity] = self:to_save()
 end
 
 function account:set_password(password)
@@ -59,7 +60,7 @@ function account:revive()
         return CODES.accounts.WithoutChanges
     end
 
-    local data = accounts_proxy[self.username]
+    local data = accounts_proxy[self.identity]
     if not data then
         return CODES.accounts.DataLoss
     end
@@ -86,6 +87,7 @@ end
 function account:to_save()
     return {
         username = self.username,
+        identity = self.identity,
         password = self.password,
         role = self.role,
         last_session = self.last_session

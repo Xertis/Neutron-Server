@@ -1,12 +1,13 @@
 local protocol = require "multiplayer/protocol-kernel/protocol"
 local List = require "lib/public/common/list"
+local middlewares = require "api/v2/middlewares"
 
-local Player = {}
+local Client = {}
 local max_id = 0
-Player.__index = Player
+Client.__index = Client
 
-function Player.new(active, network, address, port, username)
-    local self = setmetatable({}, Player)
+function Client.new(active, network, address, port, username)
+    local self = setmetatable({}, Client)
 
     self.active = false or active
     self.network = network
@@ -28,34 +29,38 @@ function Player.new(active, network, address, port, username)
     return self
 end
 
-function Player:is_active()
+function Client:is_active()
     return self.active
 end
 
-function Player:kick()
+function Client:kick()
     self.is_kicked = true
     self.active = false
 end
 
-function Player:set_account(account)
+function Client:set_account(account)
     self.account = account
 end
 
-function Player:set_player(player)
+function Client:set_player(player)
     self.player = player
 end
 
-function Player:set_active(new_value)
+function Client:set_active(new_value)
     self.active = new_value
 end
 
-function Player:push_packet(...)
-    local bytes = protocol.build_packet("server", ...)
-    self:queue_response(bytes)
+function Client:push_packet(packet_type, data)
+    local status = middlewares.send.__process(self, packet_type, data)
+
+    if status then
+        local bytes = protocol.build_packet("server", packet_type, data)
+        self:queue_response(bytes)
+    end
 end
 
-function Player:queue_response(event)
+function Client:queue_response(event)
     List.pushright(self.response_queue, event)
 end
 
-return Player
+return Client

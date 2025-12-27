@@ -1,4 +1,4 @@
-local PATH_TO_PARSER = "server:default_data/protocol/parsers.lua"
+local PATH_TO_PARSER = PACK_ID .. ":resources/protocol/parsers.lua"
 local module = {}
 
 function module.parse_content(content)
@@ -30,20 +30,20 @@ function module.parse_content(content)
 
         local to_action, to_var = header:match("TO_([%w_]+)%s+([%w_]+)")
 
-        local to_looped = header:match("TO_LOOPED%s+([%w_]+)") or nil
+        local foreign = header:match("FOREIGN") and true or nil
 
         local entry = {
             VARIABLES = variables,
             code = code
         }
 
+        if foreign then entry.FOREIGN = foreign end
+
         if operation == "write" then
             entry.TO_SAVE = to_var or ""
-            if to_looped then entry.TO_LOOPED = to_looped end
             ENCODE[block_type] = entry
         elseif operation == "read" then
             entry.TO_LOAD = to_var or ""
-            if to_looped then entry.TO_LOOPED = to_looped end
             DECODE[block_type] = entry
         end
     end

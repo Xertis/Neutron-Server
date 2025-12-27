@@ -82,7 +82,7 @@ function module.despawn(uid)
     entities_data[uid] = nil
 
     local buffer = protocol.create_databuffer()
-    buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.EntityDespawn, uid))
+    buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.EntityDespawn, {uid}))
 
     server_echo.put_event(
         function (client)
@@ -102,7 +102,7 @@ local function __create_data(entity, is_player)
 
     if not is_player then
         conf = reg_entities[str_name].config
-        data.standart_fields = {
+        data.standard_fields = {
             tsf_rot = tsf:get_rot(),
             tsf_pos = tsf:get_pos(),
             tsf_size = tsf:get_size(),
@@ -197,8 +197,8 @@ end
 
 local function __send_dirty(entity, uid, id, dirty, client, is_player)
 
-    if table.count_pairs(dirty.standart_fields or {}) == 0 then
-        dirty.standart_fields = nil
+    if table.count_pairs(dirty.standard_fields or {}) == 0 then
+        dirty.standard_fields = nil
     end
     if table.count_pairs(dirty.custom_fields or {}) == 0 then
         dirty.custom_fields = nil
@@ -219,11 +219,11 @@ local function __send_dirty(entity, uid, id, dirty, client, is_player)
 
     local buffer = protocol.create_databuffer()
     if not is_player then
-        local data = {uid, id, dirty}
-        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.EntityUpdate, unpack(data)))
+        local data = {uid = uid, def = id, dirty = dirty}
+        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.EntityUpdate, data))
     else
-        local data = {entity:get_player(), dirty}
-        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.PlayerFieldsUpdate, unpack(data)))
+        local data = {pid = entity:get_player(), dirty = dirty}
+        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.PlayerFieldsUpdate, data))
     end
 
     client:queue_response(buffer.bytes)
@@ -276,7 +276,7 @@ function module.process(client)
         data = data[pid]
 
         if not is_player then
-            local cul_pos = table.get_default(data, "standart_fields", "tsf_pos") or (is_player and e_pos or tsf:get_pos())
+            local cul_pos = table.get_default(data, "standard_fields", "tsf_pos") or (is_player and e_pos or tsf:get_pos())
             local last_culling = culling(pid, cul_pos, e_size)
             local cur_culling = culling(pid, e_pos, e_size)
 

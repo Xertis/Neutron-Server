@@ -72,7 +72,21 @@ do
     result = buf:get_any()
 end--@
 
--- @player_pos.write
+-- @norm8.write
+-- VARIABLES 
+-- TO_SAVE val
+do
+    buf:put_norm8(val)
+end--@
+
+-- @norm8.read
+-- VARIABLES 
+-- TO_LOAD result
+do
+    result = buf:get_norm8()
+end--@
+
+-- @PlayerPos.write
 -- VARIABLES xx yy zz y_low y_high
 -- TO_SAVE val
 do
@@ -90,7 +104,7 @@ do
     buf:put_uint24(bit.bor(bit.lshift(zz, 9), y_high))
 end--@
 
--- @player_pos.read
+-- @PlayerPos.read
 -- VARIABLES i ii xx yy zz y_low y_high
 -- TO_LOAD result
 do
@@ -260,49 +274,49 @@ do
     result = buf:get_string()
 end--@
 
--- @array.write
+-- @Array.write
 -- VARIABLES i
 -- TO_SAVE value
--- TO_LOOPED data_type
+-- FOREIGN
 do
     buf:put_bytes(bincode.encode_varint(#value))
     for i = 1, #value do
-        ForeignEncode(data_type, value[i])
+        Foreign(value[i])
     end
 end--@
 
--- @array.read
+-- @Array.read
 -- VARIABLES i array_length
 -- TO_LOAD result
--- TO_LOOPED data_type
+-- FOREIGN
 do
     result = {}
     array_length = bincode.decode_varint(buf)
 
     for i = 1, array_length do
-        ForeignDecode(data_type, result[i])
+        Foreign(result[i])
     end
 end--@
 
--- @Chunk.write
--- VARIABLES
--- TO_SAVE data
+-- @bytearray.write
+-- VARIABLES i
+-- TO_SAVE arr
 do
-    buf:put_sint16(data[1])
-    buf:put_sint16(data[2])
-    buf:put_bytes(bincode.encode_varint(#data[3]))
-    buf:put_bytes(data[3])
+    buf:put_bytes(bincode.encode_varint(#arr))
+    for i = 1, #arr do
+        buf:put_byte(arr[i])
+    end
 end--@
 
--- @Chunk.read
--- VARIABLES
--- TO_LOAD chunk
+-- @bytearray.read
+-- VARIABLES i
+-- TO_LOAD result
 do
-    chunk = {
-        buf:get_sint16(),
-        buf:get_sint16(),
-        buf:get_bytes(bincode.decode_varint(buf)),
-    }
+    result = Bytearray()
+
+    for i = 1, bincode.decode_varint(buf) do
+        result:append(buf:get_byte())
+    end
 end--@
 
 -- @Rule.write
@@ -327,8 +341,8 @@ end--@
 -- VARIABLES
 -- TO_SAVE data
 do
-    buf:put_uint32(data[1])
-    buf:put_string(data[2])
+    buf:put_bytes(bincode.encode_varint(data.pid))
+    buf:put_string(data.username)
 end--@
 
 -- @Player.read
@@ -336,12 +350,54 @@ end--@
 -- TO_LOAD player
 do
     player = {
-        buf:get_uint32(),
-        buf:get_string()
+        pid = bincode.decode_varint(buf),
+        username = buf:get_string()
     }
 end--@
 
--- @particle.write
+-- @Chunk.write
+-- VARIABLES
+-- TO_SAVE chunk
+do
+    buf:put_sint16(chunk.x)
+    buf:put_sint16(chunk.z)
+
+    buf:put_bytes(bincode.encode_varint(#chunk.data))
+    buf:put_bytes(chunk.data)
+end--@
+
+-- @Chunk.read
+-- VARIABLES xx zz len
+-- TO_LOAD chunk
+do
+    xx, zz = buf:get_sint16(), buf:get_sint16()
+    len = bincode.decode_varint(buf)
+    chunk = {
+        x = xx,
+        z = zz,
+        data = buf:get_bytes(len)
+    }
+end--@
+
+-- @PackHash.write
+-- VARIABLES
+-- TO_SAVE data
+do
+    buf:put_string(data.pack)
+    buf:put_string(data.hash)
+end--@
+
+-- @PackHash.read
+-- VARIABLES
+-- TO_LOAD data
+do
+    data = {
+        pack = buf:get_string(),
+        hash = buf:get_string()
+    }
+end--@
+
+-- @Particle.write
 -- VARIABLES config
 -- TO_SAVE value
 do
@@ -374,7 +430,7 @@ do
     end
 end--@
 
--- @particle.read
+-- @Particle.read
 -- VARIABLES config
 -- TO_LOAD value
 do
@@ -490,25 +546,44 @@ do
     audio.isStream = buf:get_bit()
 end--@
 
--- @vec3.write
--- VARIABLES i
+-- @Vec3.write
+-- VARIABLES
 -- TO_SAVE vec
--- TO_LOOPED data_type
+-- FOREIGN
 do
-    for i=1, 3 do
-        ForeignEncode(data_type, vec[i])
-    end
+    Foreign(vec[1])
+    Foreign(vec[2])
+    Foreign(vec[3])
 end--@
 
--- @vec3.read
--- VARIABLES i
--- TO_LOAD result
--- TO_LOOPED data_type
+-- @Vec3.read
+-- VARIABLES
+-- TO_LOAD vec
+-- FOREIGN
 do
-    result = {}
-    for i=1, 3 do
-        ForeignDecode(data_type, result[i])
-    end
+    vec = {}
+    Foreign(vec[1])
+    Foreign(vec[2])
+    Foreign(vec[3])
+end--@
+
+-- @Vec2.write
+-- VARIABLES
+-- TO_SAVE vec
+-- FOREIGN
+do
+    Foreign(vec[1])
+    Foreign(vec[2])
+end--@
+
+-- @Vec2.read
+-- VARIABLES
+-- TO_LOAD vec
+-- FOREIGN
+do
+    vec = {}
+    Foreign(vec[1])
+    Foreign(vec[2])
 end--@
 
 -- @Inventory.write

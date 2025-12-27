@@ -1,0 +1,261 @@
+# -----------------------------------------------------------------
+# Generic Types
+# -----------------------------------------------------------------
+
+BlockPosition:
+  fields:
+    - x: int32
+    - y: uint8
+    - z: int32
+
+Block:
+  fields:
+    - id: uint16
+    - state: uint16
+    - pos: BlockPosition
+
+BlockRegionPosition:
+  fields:
+    - x: int8
+    - y: uint8
+    - z: int8
+
+BlockRegion:
+  fields:
+    - id: uint16
+    - state: uint16
+    - pos: BlockRegionPosition
+
+# -----------------------------------------------------------------
+# Server
+# -----------------------------------------------------------------
+
+# -----------------------------------------------------------------
+# Connecting
+# -----------------------------------------------------------------
+
+StatusResponse:
+  fields:
+    - protocol_reference: string
+    - protocol_version: uint16
+  
+    - short_desc: string
+    - description: string
+    - favicon: bytearray
+    - friends_states: Array<boolean>
+    - engine_version: string
+    - neutron_version: string
+    - api_version: uint16
+    - max: uint16
+    - online: uint16
+
+JoinSuccess:
+  fields:
+    - pid: var
+    - game_time: uint16
+    - rules: Array<Rule>
+    - chunks_loading_distance: uint8
+
+# -----------------------------------------------------------------
+# In-Game
+# -----------------------------------------------------------------
+
+SynchronizePlayerPosition:
+  fields:
+    - data: PlayerEntity
+
+TimeUpdate:
+  fields:
+    - game_time: uint16
+
+KeepAlive:
+  fields:
+    - challenge: uint8
+
+PlayerJoined:
+  fields:
+    - pid: var
+    - username: string
+    - data: PlayerEntity
+
+PlayerMoved:
+  fields:
+    - pid: var
+    - data: PlayerEntity
+
+PlayerList:
+  fields:
+    - list: Array<Player>
+
+PlayerListAdd:
+  fields:
+    - data: Player
+
+PlayerListRemove:
+  fields:
+    - data: Player
+
+PlayerInventory:
+  fields:
+    - inventory: Inventory
+
+PlayerHandSlot:
+  fields:
+    - slot: uint8
+
+ChunkData:
+  fields:
+    - chunk: Chunk
+
+ChunksData:
+  fields:
+    - list: Array<Chunk>
+
+ChatMessage:
+  fields:
+    - message: string
+
+BlockChanged:
+  fields:
+    - pid: var
+    - block: Block
+
+BlockInventory:
+  fields:
+    - pos: BlockPosition
+    - inventory: InventoryUnlimited
+
+BlockInventorySlot:
+  fields:
+    - pos: BlockPosition
+    - slot_id: uint16
+    - item_id: uint16
+    - item_count: uint16
+
+PacksList:
+  fields:
+    - packs: Array<string>
+
+PackEvent:
+  fields:
+    - pack: string
+    - event: string
+    - bytes: bytearray
+
+PackEnv:
+  fields:
+    - pack: string
+    - env: string
+    - key: string
+    - value: any
+
+EntityUpdate:
+  fields:
+    - uid: var
+    - def: uint16
+    - dirty: Edd
+
+EntityDespawn:
+  fields:
+    - uid: var
+
+PlayerFieldsUpdate:
+  fields:
+    - pid: var
+    - dirty: Edd
+
+ParticleEmit:
+  fields:
+    - particle: Particle
+
+ParticleOrigin:
+  fields:
+    - origin: particle_origin
+
+ParticleStop:
+  fields:
+    - pid: var
+
+AudioEmit:
+  fields:
+    - audio: Audio
+
+AudioState:
+  fields:
+    - state: bson
+
+AudioStop:
+  fields:
+    - id: var
+
+Text3DShow:
+  fields:
+    - data: bson
+
+Text3DState:
+  fields:
+    - state: bson
+
+Text3DAxis:
+  fields:
+    - id: var
+    - axis: Vec3<f32>
+    - is_x: boolean
+
+Text3DHide:
+  fields:
+    - id: var
+
+WrapShow:
+  fields:
+    - id: var
+    - pos: BlockPosition
+    - texture: string
+    - emission: norm8
+
+WrapSetPos:
+  fields:
+    - id: var
+    - pos: BlockPosition
+
+WrapSetTexture:
+  fields:
+    - id: var
+    - texture: string
+
+# (-X, +X, -Y, +Y, -Z, +Z)
+WrapSetFaces:
+  fields:
+    - id: var
+    - faceX-: string
+    - faceX+: string
+    - faceY-: string
+    - faceY+: string
+    - faceZ-: string
+    - faceZ+: string
+
+WrapSetTints:
+  fields:
+    - id: var
+    - faceX-: Vec3<norm8>
+    - faceX+: Vec3<norm8>
+    - faceY-: Vec3<norm8>
+    - faceY+: Vec3<norm8>
+    - faceZ-: Vec3<norm8>
+    - faceZ+: Vec3<norm8>
+
+WrapHide:
+  fields:
+    - id: var
+
+WeatherChanged:
+  fields:
+    - weather: bson
+    - time: uint16
+    - name: string
+
+Disconnect:
+  fields:
+    reason: string
+  
+

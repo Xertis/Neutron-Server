@@ -1,51 +1,67 @@
-# Система middlewares
+# Система `middlewares`
 
-Модуль `middlewares` позволяет добавлять промежуточные обработчики (middleware) для пакетов, которые вызываются перед их основной обработкой сервером.
+Модуль `middlewares` позволяет добавлять промежуточные обработчики (middleware) для пакетов — вызываются перед основной обработкой/отправкой.
 
-## 1. Структура модуля
+## Доступные типы пакетов
 
-### Доступные пакеты
-Модуль работает со следующими типами пакетов:
-- `packets.ServerMsg` - пакеты, отправляемые сервером
-- `packets.ClientMsg` - пакеты, отправляемые клиентом
+* `packets.ServerMsg` — пакеты, **отправляемые сервером** (идут клиенту)
+* `packets.ClientMsg` — пакеты, **отправляемые клиентом** (приходят на сервер)
 
-## 2. Добавление middleware
+> Замечание: для удобства ниже описаны *приёмные* и *отправные* middleware; между ними нет отличий по сигнатуре и логике — только направление пакета (receive — входящие от клиента; send — исходящие клиенту).
+
+## Добавление middleware (универсально)
 
 ```lua
 api.middlewares.receive.add_middleware(packet_type, middleware)
+api.middlewares.send.add_middleware(packet_type, middleware)
 ```
 
 **Параметры:**
-- `packet_type` (string) - тип пакета из `ServerMsg` или `ClientMsg`
-- `middleware` (function) - функция-обработчик
+
+* `packet_type` (string) — тип пакета (`ServerMsg` или `ClientMsg`)
+* `middleware` (function) — функция-обработчик
 
 **Сигнатура middleware:**
+
 ```lua
-function(packet, client)
+function(client, original_packet, edited_packet)
 ```
-- `packet` (table) - данные полученного пакета
-- `client` (Client) - клиент, от которого пришел пакет
+
+* `client` — Client, источник/получатель пакета
+* `original_packet` — оригинальные данные пакета
+* `edited_packet` — данные, изменённые предыдущими обработчиками; именно они будут переданы дальше при успешном прохождении всех middleware
 
 **Возвращаемое значение:**
-- `true` - продолжить обработку пакета
-- `false/nil` - прекратить обработку пакета
 
-## 3. Добавление общего обработчика для всех пакетов
+* `true` — продолжить обработку / отправку
+* `false` / `nil` — остановить (receive: пакет не будет обработан сервером; send: пакет не будет отправлен клиенту)
+
+## Добавление общего обработчика для всех пакетов
+
 ```lua
 api.middlewares.receive.add_general_middleware(middleware)
+api.middlewares.send.add_generic_middleware(middleware)
 ```
 
-## 4. Пример использования
+Работают как `add_middleware`, но применяются ко всем типам пакетов (receive — ко всем входящим; send — ко всем исходящим). Поведение возврата такое же: если хоть один общий или специфический send-middleware вернёт `false`, пакет НЕ будет отправлен клиенту.
+
+## Примеры
+
+Приём (receive):
 
 ```lua
-middlewares.receive.add_middleware("ClientMsg", function(packet, client)
-    if not packet then
-        return false
-    end
+middlewares.receive.add_middleware("ClientMsg", function(client, packet)
+    if not packet then return false end
     return true
 end)
 ```
 
-## 4. Важные примечания
+Отправка (send) — идентично, но для пакетов, которые сервер шлёт клиенту:
 
-1. Middleware не могут модифицировать содержимое пакета
+```lua
+middlewares.send.add_middleware("ServerMsg", function(client, original, edited)
+    -- если нужно заблокировать отправку:
+    if edited.block then return false end
+    return true
+end)
+```

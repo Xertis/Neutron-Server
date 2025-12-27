@@ -10,14 +10,14 @@ logger.log("std initialized")
 --Проверка на наличие файла конфига
 do
     if not file.exists(CONFIG_PATH) then
-        file.write(CONFIG_PATH, file.read(PACK_ID .. ":default_data/server_config.json"))
+        file.write(CONFIG_PATH, file.read(PACK_ID .. ":resources/server_config.json"))
         IS_FIRST_RUN = true
     end
 end
 
 --Загружаем конфиг
 do
-    local default_config = json.parse(file.read(PACK_ID .. ":default_data/server_config.json"))
+    local default_config = json.parse(file.read(PACK_ID .. ":resources/server_config.json"))
     CONFIG = json.parse(file.read(CONFIG_PATH))
     table.deep_merge(CONFIG, default_config)
 

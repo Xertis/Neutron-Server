@@ -1,0 +1,169 @@
+# -----------------------------------------------------------------
+# Generic Types
+# -----------------------------------------------------------------
+
+BlockPosition:
+  fields:
+    - x: int32
+    - y: uint8
+    - z: int32
+
+Block:
+  fields:
+    - id: uint16
+    - state: uint16
+    - pos: BlockPosition
+
+BlockRegionPosition:
+  fields:
+    - x: int8
+    - y: uint8
+    - z: int8
+
+BlockRegion:
+  fields:
+    - id: uint16
+    - state: uint16
+    - pos: BlockRegionPosition
+
+# -----------------------------------------------------------------
+# Client
+# -----------------------------------------------------------------
+
+# -----------------------------------------------------------------
+# Connecting
+# -----------------------------------------------------------------
+
+HandShake:
+  fields:
+    - protocol_reference: string
+    - protocol_version: uint16
+
+    - engine_version: string
+
+    - api_version: uint16
+
+    - friends_list: Array<string>
+
+    - next_state: uint8
+
+StatusRequest:
+  fields:
+
+JoinGame:
+  fields:
+    - username: string
+    - identity: string
+
+PackHashes:
+  fields:
+    - hashes: Array<PackHash>
+
+# -----------------------------------------------------------------
+# In-Game
+# -----------------------------------------------------------------
+
+Disconnect:
+  fields:
+
+PingRequest:
+  fields:
+    - payload: uint32
+
+KeepAlive:
+  fields:
+    - challenge: uint8
+
+PlayerPosition:
+  fields:
+    - pos: PlayerPos
+
+PlayerRotation:
+  fields:
+    - yaw: degree
+    - pitch: degree
+
+PlayerCheats:
+  fields:
+    - noclip: boolean
+    - flight: boolean
+
+PlayerInventory:
+  fields:
+    - inventory: Inventory
+
+PlayerHandSlot:
+  fields:
+    - slot: uint8
+
+PlayerRegion:
+  fields:
+    - x: int16
+    - z: int16
+
+RequestChunk:
+  fields:
+    - x: int16
+    - z: int16
+
+RequestChunks:
+  fields:
+    - chunks: Array<int16>
+
+ChatMessage:
+  fields:
+    - message: string
+
+BlockUpdate:
+  fields:
+    - block: Block
+
+BlockInteract:
+  fields:
+    - pos: BlockPosition
+
+BlockDestroy:
+  fields:
+    - pos: BlockPosition
+
+BlockRegionUpdate:
+  fields:
+    - block: BlockRegion
+
+BlockRegionInteract:
+  fields:
+    - pos: BlockRegionPosition
+
+BlockRegionDestroy:
+  fields:
+    - pos: BlockRegionPosition
+
+PackEvent:
+  fields:
+    - pack: string
+    - event: string
+    - bytes: bytearray
+
+PackEnv:
+  fields:
+    - pack: string
+    - env: string
+    - key: string
+    - value: any
+
+EntitySpawnAttempt:
+  fields:
+    - def: uint16
+    - args: bson
+
+BlockInventory:
+  fields:
+    - pos: BlockPosition
+    - inventory: InventoryUnlimited
+
+BlockInventorySlot:
+  fields:
+    - pos: BlockPosition
+    - slot_id: uint16
+    - item_id: uint16
+    - item_count: uint16

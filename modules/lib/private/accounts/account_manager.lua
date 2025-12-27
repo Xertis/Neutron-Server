@@ -5,18 +5,20 @@ local Account = require "lib/private/accounts/account"
 local sandbox = require "lib/private/sandbox/sandbox"
 local container = require "lib/private/common/container"
 local module = {
-    by_username = {}
+    by_username = {},
+    by_identity = {}
 }
 
-function module.login(username)
-    logger.log(string.format('account "%s" is logging in...', username))
+function module.login(username, identity)
+    identity = identity ~= "" and identity or username
+    logger.log(string.format('account "%s" [#%s] is logging in...', username, identity))
 
     if table.has(table.freeze_unpack(RESERVED_USERNAMES), username:lower()) then
         logger.log(string.format('The username "%s" is reserved for the system and cannot be used by a client.', username))
         return
     end
 
-    local account = Account.new(username) or container.get_all(username).account
+    local account = Account.new(username, identity) or container.get_all(identity).account
     local status = account:revive()
 
     if status == CODES.accounts.ReviveSuccess or status == CODES.accounts.WithoutChanges then
@@ -35,12 +37,12 @@ function module.login(username)
     return account
 end
 
-function module.by_username.get_account(name)
-    if not name then
+function module.by_username.get_account(identity)
+    if not identity then
         return nil
     end
 
-    return container.accounts.get(name)
+    return container.accounts.get(identity)
 end
 
 function module.leave(client)
@@ -86,7 +88,7 @@ function module.get_client(account)
             logger.log("Account information lost.", "E")
             goto continue
         end
-        if client.account.username == account.username then
+        if client.account.identity == account.identity then
             return client
         end
 
@@ -97,6 +99,14 @@ end
 function module.by_username.get_client(username)
     for _, client in pairs(container.clients_all.get()) do
         if client.account.username == username then
+            return client
+        end
+    end
+end
+
+function module.by_identity.get_client(identity)
+    for _, client in pairs(container.clients_all.get()) do
+        if client.account.identity == identity then
             return client
         end
     end

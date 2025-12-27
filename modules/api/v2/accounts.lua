@@ -1,7 +1,7 @@
 local account_manager = start_require "server:lib/private/accounts/account_manager"
 local protocol = start_require "server:multiplayer/protocol-kernel/protocol"
 local entities_manager = start_require "lib/private/entities/entities_manager"
-local tasks = require "api/v1/tasks"
+local tasks = require "api/v2/tasks"
 local lib = require "lib/private/min"
 local module = {
     roles = {}
