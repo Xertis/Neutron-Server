@@ -7,10 +7,11 @@ Player.__index = Player
 
 local players_proxy = metadata.proxy("players")
 
-function Player.new(username)
+function Player.new(username, identity)
     local self = setmetatable({}, Player)
 
     self.username = username
+    self.identity = identity
     self.active = false
     self.entity_id = nil
     self.pid = nil
@@ -34,7 +35,7 @@ function Player:abort()
 end
 
 function Player:save()
-    players_proxy[self.username] = self:to_save()
+    players_proxy[self.identity] = self:to_save()
 end
 
 function Player:revive()
@@ -42,7 +43,7 @@ function Player:revive()
         return CODES.players.WithoutChanges
     end
 
-    local data = players_proxy[self.username]
+    local data = players_proxy[self.identity]
     if not data then
         return CODES.players.DataLoss
     end
@@ -58,6 +59,7 @@ end
 
 function Player:to_save()
     return {
+        identity = self.identity,
         username = self.username,
         entity_id = self.entity_id,
         world = self.world,
@@ -68,6 +70,7 @@ function Player:to_save()
 end
 
 function Player:to_load(data)
+    self.identity = data.identity
     self.username = data.username
     self.entity_id = data.entity_id
     self.world = data.world

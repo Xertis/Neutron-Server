@@ -80,8 +80,9 @@ PlayerPosition:
 
 PlayerRotation:
   fields:
-    - yaw: degree
-    - pitch: degree
+    - x: degree
+    - y: degree
+    - x: degree
 
 PlayerCheats:
   fields:

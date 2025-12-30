@@ -3,20 +3,57 @@ local container = require "lib/private/common/container"
 local Player = require "lib/private/sandbox/classes/player"
 local metadata = require "lib/private/files/metadata"
 local module = {
+    by_identity = {},
     by_username = {},
     by_invid = {}
 }
 
-function module.join_player(account)
-    local account_player = container.player_online.get(account.username) or Player.new(account.username)
+function module.join_player(username, account)
+    local identity = account.identity
+    if table.has(table.freeze_unpack(RESERVED_USERNAMES), username:lower()) then
+        logger.log(string.format('The username "%s" is reserved for the system and cannot be used by a client.', username))
+        return
+    end
+
+    local account_player = container.player_online.get(identity) or Player.new(username, identity)
 
     local status = account_player:revive()
 
     if status == CODES.players.ReviveSuccess or status == CODES.players.WithoutChanges then
-        -- Ну мы его разбудили правильно, ничего делать не надо, мы молодцы
+        if username ~= account_player.username then
+            if not module.is_username_available(account_player.username, identity) then
+                logger.log(
+                    string.format(
+                        'The username "%s" is already taken by another user and is not available for [#%s]',
+                        username,
+                        logger.shorted(identity)
+                    ),
+                    'E'
+                )
+
+                return
+            end
+
+            player.set_name(account_player.pid, username)
+            account_player.username = username
+        end
     elseif status == CODES.players.DataLoss then
+
+        if not module.is_username_available(account_player.username, identity) then
+            logger.log(
+                string.format(
+                    'The username "%s" is already taken by another user and is not available for [#%s]',
+                    username,
+                    logger.shorted(identity)
+                ),
+                'E'
+            )
+
+            return
+        end
+
         local pid = player.create(account_player.username, table.count_pairs(metadata.players.get_all()) + 1)
-        logger.log(string.format('Player "%s" has been created with pid: %s', account.username, pid))
+        logger.log(string.format('Player [#%s] has been created with pid: %s', logger.shorted(identity), pid))
         account_player:set("pid", pid)
         account_player:set("entity_id", player.get_entity(account_player.pid))
 
@@ -37,10 +74,10 @@ function module.join_player(account)
     end
 
     if account_player:is_active() then
-        container.player_online.put(account_player.username, account_player)
+        container.player_online.put(identity, account_player)
     end
 
-    logger.log(string.format('Player "%s" joined.', account_player.username))
+    logger.log(string.format('Player "%s" [#%s] joined.', account_player.username, logger.shorted(identity)))
     account_player:save()
 
     local is_suspended = player.is_suspended(account_player.pid)
@@ -56,9 +93,9 @@ end
 function module.leave_player(account_player)
     account_player:abort()
 
-    logger.log(string.format('Player "%s" left.', account_player.username))
+    logger.log(string.format('Player "%s" [#%s] left.', account_player.username, logger.shorted(account_player.identity)))
 
-    container.player_online.put(account_player.username, nil)
+    container.player_online.put(account_player.identity, nil)
 
     player.set_suspended(account_player.pid, true)
     logger.log(string.format('Suspend state of player "%s" is true', account_player.username))
@@ -76,7 +113,7 @@ function module.get_client(player)
             logger.log("Player information lost. Client: " .. json.tostring(client), "E")
             goto continue
         end
-        if client.player.username == player.username then
+        if client.player.identity == player.identity then
             return client
         end
 
@@ -84,12 +121,42 @@ function module.get_client(player)
     end
 end
 
-function module.get_players()
-    return container.player_online.get()
+function module.is_username_available(username, identity)
+    local metadata_players = metadata.players.get_all()
+    local online_players = container.player_online.get()
+
+    for _, player in pairs(metadata_players) do
+        if player.username == username and player.identity ~= identity then
+            return false
+        end
+    end
+
+    for _, player in pairs(online_players) do
+        if player.username == username and player.identity ~= identity then
+            return false
+        end
+    end
+
+    return true
+end
+
+function module.get_players(key_is_name)
+    local players = container.player_online.get()
+
+    if not key_is_name then
+        return players
+    end
+
+    local changed = {}
+    for _, player in pairs(players) do
+        changed[player.username] = player
+    end
+
+    return changed
 end
 
 function module.get_player(account)
-    return container.player_online.get(account.username)
+    return container.player_online.get(account.identity)
 end
 
 function module.get_chunk(pos)
@@ -117,8 +184,8 @@ function module.set_player_state(account_player, state)
         player.set_pos(account_player.pid, state.x, state.y, state.z)
     end
 
-    if state.yaw and state.pitch then
-        player.set_rot(account_player.pid, state.yaw, state.pitch, 0)
+    if state.x_rot and state.y_rot and state.z_rot then
+        player.set_rot(account_player.pid, state.x_rot, state.y_rot, state.z_rot)
     end
 
     if state.noclip ~= nil and state.flight ~= nil then
@@ -129,7 +196,7 @@ end
 
 function module.get_player_state(account_player)
     local x, y, z = player.get_pos(account_player.pid)
-    local yaw, pitch = player.get_rot(account_player.pid)
+    local x_rot, y_rot, z_rot = player.get_rot(account_player.pid)
     local noclip = player.is_noclip(account_player.pid)
     local flight = player.is_flight(account_player.pid)
 
@@ -137,8 +204,9 @@ function module.get_player_state(account_player)
         x = x,
         y = y,
         z = z,
-        yaw = yaw,
-        pitch = pitch,
+        x_rot = x_rot,
+        y_rot = y_rot,
+        z_rot = z_rot,
         noclip = noclip,
         flight = flight
     }
@@ -160,12 +228,20 @@ function module.set_day_time(time)
     return true
 end
 
-function module.by_username.is_online(name)
-    if module.get_players()[name] then
+function module.by_identity.is_online(identity)
+    if container.player_online.get(identity) then
         return true
     end
 
     return false
+end
+
+function module.by_username.get(username)
+    for _, player in pairs(module.get_players()) do
+        if player.username == username then
+            return player
+        end
+    end
 end
 
 function module.set_inventory(_player, inv)

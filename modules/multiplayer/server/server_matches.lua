@@ -227,7 +227,7 @@ matches.joining_fsm:add_state("joining", {
         local packet = matches.joining_fsm:get_data(client, "join_game")
         local hashes = matches.joining_fsm:get_data(client, "packs_hashes")
 
-        local account = account_manager.login(packet.username, packet.identity)
+        local account = account_manager.login(packet.identity)
         local hash_status, hash_reason = check_mods(hashes)
 
         if not hash_status and (not CONFIG.server.dev_mode or CONFIG.server.shallow_dev_mode) then
@@ -274,14 +274,19 @@ Incorrect VoxelCore version:
             matches.actions.Disconnect(client, "You are on the blacklist")
             close()
             return
-        elseif sandbox.get_players()[packet.username] ~= nil then
+        elseif sandbox.get_players(true)[packet.username] ~= nil then
             logger.log("JoinSuccess has been aborted")
             matches.actions.Disconnect(client, "A player with that name is already online")
             close()
             return
+        elseif sandbox.by_identity.is_online(packet.identity) then
+            logger.log("JoinSuccess has been aborted")
+            matches.actions.Disconnect(client, "A player with that identity is already online")
+            close()
+            return
         end
 
-        local account_player = sandbox.join_player(account)
+        local account_player = sandbox.join_player(packet.username, account)
         client:set_account(account)
         client:set_player(account_player)
 
@@ -309,21 +314,21 @@ Incorrect VoxelCore version:
         client:set_active(true)
 
         timeout_executor.push(
-            function(_client, x, y, z, yaw, pitch, noclip, flight, is_last)
+            function(_client, x, y, z, x_rot, y_rot, z_rot, noclip, flight, is_last)
                 local _DATA = {
                     pos = { x = x, y = y, z = z },
-                    rot = { yaw = yaw, pitch = pitch },
+                    rot = { x = x_rot, y = y_rot, z = z_rot },
                     cheats = { noclip = noclip, flight = flight }
                 }
 
-                client:push_packet(protocol.ServerMsg.SynchronizePlayerPosition, {_DATA})
+                client:push_packet(protocol.ServerMsg.SynchronizePlayer, {_DATA})
 
                 if is_last then
                     _client.player.is_teleported = true
                     events.emit("server:player_ground_landing", _client)
                 end
             end,
-            { client, state.x, state.y, state.z, state.yaw, state.pitch, state.noclip, state.flight }, 3
+            { client, state.x, state.y, state.z, state.x_rot, state.y_rot, state.z_rot, state.noclip, state.flight }, 3
         )
 
         ---
@@ -421,8 +426,9 @@ matches.client_online_handler:add_case(protocol.ClientMsg.PlayerRotation, (
         end
 
         sandbox.set_player_state(client.player, {
-            yaw = packet.yaw,
-            pitch = packet.pitch
+            x_rot = packet.x,
+            y_rot = packet.y,
+            z_rot = packet.z
         })
     end
 ))

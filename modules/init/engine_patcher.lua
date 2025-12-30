@@ -9,3 +9,6 @@ entities["despawn"] = function (eid)
     entities_despawn(eid)
     entities_manager.despawn(eid)
 end
+
+-- Патчим глобальные модули
+require "api/v2/patched/patcher"

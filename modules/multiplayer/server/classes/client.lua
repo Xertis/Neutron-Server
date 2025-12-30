@@ -1,6 +1,6 @@
 local protocol = require "multiplayer/protocol-kernel/protocol"
 local List = require "lib/public/common/list"
-local middlewares = require "api/v2/middlewares"
+local interceptors = require "api/v2/interceptors"
 
 local Client = {}
 local max_id = 0
@@ -50,8 +50,12 @@ function Client:set_active(new_value)
     self.active = new_value
 end
 
+function Client:interceptor_process(packet_type, data)
+    return interceptors.send.__process(self, packet_type, data)
+end
+
 function Client:push_packet(packet_type, data)
-    local status = middlewares.send.__process(self, packet_type, data)
+    local status = interceptors.send.__process(self, packet_type, data)
 
     if status then
         local bytes = protocol.build_packet("server", packet_type, data)

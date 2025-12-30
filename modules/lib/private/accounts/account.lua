@@ -8,15 +8,14 @@ account.__index = account
 
 local accounts_proxy = metadata.proxy("server", "accounts")
 
-function account.new(username, identity)
+function account.new(identity)
     local self = setmetatable({}, account)
 
-    self.username = username
     self.active = false
     self.last_session = nil
     self.is_logged = false
     self.role = nil
-    self.identity = identity or username
+    self.identity = identity
     self.password = nil
 
     return self
@@ -86,7 +85,6 @@ end
 
 function account:to_save()
     return {
-        username = self.username,
         identity = self.identity,
         password = self.password,
         role = self.role,

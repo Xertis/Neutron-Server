@@ -1,6 +1,6 @@
 local protect = require "lib/private/protect"
 local socketlib = require "lib/public/socketlib"
-local Player = require "multiplayer/server/classes/player"
+local Client = require "multiplayer/server/classes/client"
 local Network = require "lib/public/network"
 local container = require "lib/private/common/container"
 local server_pipe = require "multiplayer/server/server_pipe"
@@ -28,6 +28,7 @@ end
 function server:start()
     self.server_socket = socketlib.create_server(self.port, function(client_socket)
        client_socket:set_nodelay(true)
+       local address, _ = client_socket:get_address()
 
         if (not table.has(table.freeze_unpack(CONFIG.server.whitelist_ip), address) and #table.freeze_unpack(CONFIG.server.whitelist_ip) > 0) then
             client_socket:close()
@@ -50,7 +51,7 @@ function server:do_tasks()
 
         local network = Network.new(client_socket)
         local address, port = client_socket:get_address()
-        local client = Player.new(false, network, address, port)
+        local client = Client.new(false, network, address, port)
 
         for i = #self.clients, 1, -1 do
             local server_client = self.clients[i]

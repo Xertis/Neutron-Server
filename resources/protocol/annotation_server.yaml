@@ -60,7 +60,7 @@ JoinSuccess:
 # In-Game
 # -----------------------------------------------------------------
 
-SynchronizePlayerPosition:
+SynchronizePlayer:
   fields:
     - data: PlayerEntity
 
@@ -102,6 +102,11 @@ PlayerInventory:
 PlayerHandSlot:
   fields:
     - slot: uint8
+
+PlayerUsername:
+  fields:
+    - pid: var
+    - username: string
 
 ChunkData:
   fields:
@@ -257,5 +262,3 @@ WeatherChanged:
 Disconnect:
   fields:
     reason: string
-  
-

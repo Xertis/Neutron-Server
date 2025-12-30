@@ -26,7 +26,7 @@ function module.players.sync_states(_player, states)
     end
 
     if states.rot then
-        player.set_rot(_player.pid, states.rot.yaw, states.rot.pitch)
+        player.set_rot(_player.pid, states.rot.x, states.rot.y, states.rot.z)
     end
 
     if states.cheats then
@@ -34,7 +34,7 @@ function module.players.sync_states(_player, states)
         player.set_flight(_player.pid, states.cheats.flight)
     end
 
-    client:push_packet(protocol.ServerMsg.SynchronizePlayerPosition, {data = states})
+    client:push_packet(protocol.ServerMsg.SynchronizePlayer, {data = states})
 end
 
 function module.players.get_in_radius(target_pos, radius)

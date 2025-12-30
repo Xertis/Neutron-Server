@@ -21,14 +21,14 @@ end
 
 function module.kick(account, reason, is_soft)
     local function kick()
-        if not account.username then
+        if not account.identity then
             error("Invalid account")
         end
 
         local client = account_manager.get_client(account)
 
         client:push_packet(protocol.ServerMsg.Disconnect, {reason = reason or "No reason"})
-        logger.log(string.format('The account "%s" was kicked for the reason: %s', account.username, reason))
+        logger.log(string.format('The account [#%s] was kicked for the reason: %s', account.identity, reason))
 
         entities_manager.clear_pid(client.player.pid)
         client:kick()

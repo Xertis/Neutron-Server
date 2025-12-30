@@ -50,7 +50,11 @@ local function upd(blockid, x, y, z, playerid)
                 return
             end
 
-            client.network:send(buffer.bytes)
+            if not client:interceptor_process(protocol.ServerMsg.BlockChanged, data) then
+                return
+            end
+
+            client:queue_response(buffer.bytes)
         end
     )
 end

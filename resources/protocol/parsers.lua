@@ -728,8 +728,9 @@ do
     end
 
     if has_rot then
-        buf:put_uint16(math.floor((math.clamp(player.rot.yaw, -180, 180) + 180) / 360 * 65535 + 0.5))
-        buf:put_uint16(math.floor((math.clamp(player.rot.pitch, -180, 180) + 180) / 360 * 65535 + 0.5))
+        buf:put_uint16(math.floor((math.clamp(player.rot.x, -180, 180) + 180) / 360 * 65535 + 0.5))
+        buf:put_uint16(math.floor((math.clamp(player.rot.y, -180, 180) + 180) / 360 * 65535 + 0.5))
+        buf:put_uint16(math.floor((math.clamp(player.rot.z, -180, 180) + 180) / 360 * 65535 + 0.5))
     end
 
     if has_cheats then
@@ -771,8 +772,9 @@ do
 
     if has_rot then
         player.rot = {
-            yaw = (buf:get_uint16() / 65535 * 360) - 180,
-            pitch = (buf:get_uint16() / 65535 * 360) - 180
+            x = (buf:get_uint16() / 65535 * 360) - 180,
+            y = (buf:get_uint16() / 65535 * 360) - 180,
+            z = (buf:get_uint16() / 65535 * 360) - 180,
         }
     end
 

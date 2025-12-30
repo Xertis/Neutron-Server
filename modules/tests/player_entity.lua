@@ -62,8 +62,9 @@ for i=1, 25 do
         end
         if math.random() > 0.5 then
             player.rot = {
-                yaw = math.random() * 360 - 180,
-                pitch = math.random() * 360 - 180,
+                x = math.random() * 360 - 180,
+                y = math.random() * 360 - 180,
+                z = math.random() * 360 - 180
             }
         end
         if math.random() > 0.7 then

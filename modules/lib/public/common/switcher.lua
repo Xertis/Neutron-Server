@@ -6,7 +6,9 @@ function switcher.new(func)
 
     self.switchs = {}
     self.func = func
-    self.middleware = nil
+    self.middleware = function ()
+        return true
+    end
 
     return self
 end
@@ -15,7 +17,7 @@ function switcher:add_case(val, func)
     self.switchs[val] = {func = func}
 end
 
-function switcher:add_middleware(val, middleware)
+function switcher:add_middleware(middleware)
     self.middleware = middleware
 end
 

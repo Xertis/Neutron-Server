@@ -9,16 +9,10 @@ local module = {
     by_identity = {}
 }
 
-function module.login(username, identity)
-    identity = identity ~= "" and identity or username
-    logger.log(string.format('account "%s" [#%s] is logging in...', username, identity))
+function module.login(identity)
+    logger.log(string.format('account [#%s] is logging in...', logger.shorted(identity)))
 
-    if table.has(table.freeze_unpack(RESERVED_USERNAMES), username:lower()) then
-        logger.log(string.format('The username "%s" is reserved for the system and cannot be used by a client.', username))
-        return
-    end
-
-    local account = Account.new(username, identity) or container.get_all(identity).account
+    local account = Account.new(identity) or container.get_all(identity).account
     local status = account:revive()
 
     if status == CODES.accounts.ReviveSuccess or status == CODES.accounts.WithoutChanges then
@@ -28,8 +22,8 @@ function module.login(username, identity)
         account:set("active", true)
     end
 
-    if account:is_active() and container.accounts.get(account.username) == nil then
-        container.accounts.put(account.username, account)
+    if account:is_active() and container.accounts.get(account.identity) == nil then
+        container.accounts.put(account.identity, account)
     end
 
     account:save()
@@ -37,18 +31,10 @@ function module.login(username, identity)
     return account
 end
 
-function module.by_username.get_account(identity)
-    if not identity then
-        return nil
-    end
-
-    return container.accounts.get(identity)
-end
-
 function module.leave(client)
     local account = client.account;
 
-    logger.log(string.format('account "%s" left...', account.username))
+    logger.log(string.format('account [#%s] left...', logger.shorted(account.identity)))
 
     local date = os.date("*t");
     date.yday, date.wday, date.isdst, date.sec = nil, nil, nil, nil;
@@ -62,10 +48,10 @@ function module.leave(client)
 
     account:abort()
 
-    local player = container.player_online.get(account.username)
+    local player = container.player_online.get(account.identity)
 
     sandbox.leave_player(player)
-    container.accounts.put(account.username, nil)
+    container.accounts.put(account.identity, nil)
 
     return account
 end
@@ -96,12 +82,12 @@ function module.get_client(account)
     end
 end
 
-function module.by_username.get_client(username)
-    for _, client in pairs(container.clients_all.get()) do
-        if client.account.username == username then
-            return client
-        end
+function module.by_identity.get_account(identity)
+    if not identity then
+        return nil
     end
+
+    return container.accounts.get(identity)
 end
 
 function module.by_identity.get_client(identity)
