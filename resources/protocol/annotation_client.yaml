@@ -102,6 +102,12 @@ PlayerRegion:
     - x: int16
     - z: int16
 
+PlayerFeatures:
+  fields:
+    - infinite_items: boolean
+    - instant_destruction: boolean
+    - interaction_distance: uint12
+
 RequestChunk:
   fields:
     - x: int16

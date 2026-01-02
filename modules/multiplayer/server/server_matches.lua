@@ -241,7 +241,7 @@ matches.joining_fsm:add_state("joining", {
 Incorrect VoxelCore version:
     Your version: %s
     Server version: %s
-            ]], handshake.version, CONFIG.server.version))
+            ]], handshake.engine_version, CONFIG.server.version))
             close()
             return
         elseif not lib.validate.username(packet.username) then
@@ -314,11 +314,14 @@ Incorrect VoxelCore version:
         client:set_active(true)
 
         timeout_executor.push(
-            function(_client, x, y, z, x_rot, y_rot, z_rot, noclip, flight, is_last)
+            function(_client, x, y, z, x_rot, y_rot, z_rot, noclip, flight, infinite_items, instant_destruction, interaction_distance, is_last)
                 local _DATA = {
                     pos = { x = x, y = y, z = z },
                     rot = { x = x_rot, y = y_rot, z = z_rot },
-                    cheats = { noclip = noclip, flight = flight }
+                    cheats = { noclip = noclip, flight = flight },
+                    infinite_items = infinite_items,
+                    instant_destruction = instant_destruction,
+                    interaction_distance = interaction_distance
                 }
 
                 client:push_packet(protocol.ServerMsg.SynchronizePlayer, {_DATA})
@@ -328,7 +331,15 @@ Incorrect VoxelCore version:
                     events.emit("server:player_ground_landing", _client)
                 end
             end,
-            { client, state.x, state.y, state.z, state.x_rot, state.y_rot, state.z_rot, state.noclip, state.flight }, 3
+            {
+                client,
+                state.x, state.y, state.z,
+                state.x_rot, state.y_rot, state.z_rot,
+                state.noclip, state.flight,
+                state.infinite_items,
+                state.instant_destruction,
+                state.interaction_distance
+            }, 3
         )
 
         ---
@@ -415,6 +426,20 @@ matches.client_online_handler:add_case(protocol.ClientMsg.PlayerCheats, (
         sandbox.set_player_state(client.player, {
             noclip = packet.noclip,
             flight = packet.flight
+        })
+    end
+))
+
+matches.client_online_handler:add_case(protocol.ClientMsg.PlayerFeatures, (
+    function(packet, client)
+        if not client.account or not client.account.is_logged or not client.player.is_teleported then
+            return
+        end
+
+        sandbox.set_player_state(client.player, {
+            infinite_items = packet.infinite_items,
+            instant_destruction = packet.instant_destruction,
+            interaction_distance = packet.interaction_distance
         })
     end
 ))

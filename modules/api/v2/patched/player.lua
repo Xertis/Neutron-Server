@@ -6,6 +6,13 @@ local global_player = _G["player"]
 
 PACK_ENV["player"] = table.deep_copy(global_player)
 
+local function get_client_by_pid(pid)
+    local player_obj = sandbox.players.get_by_pid(pid)
+
+    if not player_obj then return end
+    return sandbox.players.get_client(player_obj)
+end
+
 function global_player.set_name(pid, name)
 
     local player_obj = sandbox.players.get_by_pid(pid)
@@ -42,8 +49,8 @@ end
 function global_player.set_pos(pid, x, y, z)
     player.set_pos(pid, x, y, z)
 
-    local player_obj = sandbox.players.get_by_pid(pid)
-    local client = sandbox.players.get_client(player_obj)
+    local client = get_client_by_pid(pid)
+    if not client then return end
 
     client:push_packet(protocol.ServerMsg.SynchronizePlayer, {data = {
         pos = {x = x, y = y, z = z}
@@ -53,10 +60,43 @@ end
 function global_player.set_rot(pid, x, y, z)
     player.set_rot(pid, x, y, z)
 
-    local player_obj = sandbox.players.get_by_pid(pid)
-    local client = sandbox.players.get_client(player_obj)
+    local client = get_client_by_pid(pid)
+    if not client then return end
 
     client:push_packet(protocol.ServerMsg.SynchronizePlayer, {data = {
         rot = {x = x, y = y, z = z}
+    }})
+end
+
+function global_player.set_infinite_items(pid, val)
+    player.set_infinite_items(pid, val)
+
+    local client = get_client_by_pid(pid)
+    if not client then return end
+
+    client:push_packet(protocol.ServerMsg.SynchronizePlayer, {data = {
+        infinite_items = val
+    }})
+end
+
+function global_player.set_instant_destruction(pid, val)
+    player.set_instant_destruction(pid, val)
+
+    local client = get_client_by_pid(pid)
+    if not client then return end
+
+    client:push_packet(protocol.ServerMsg.SynchronizePlayer, {data = {
+        instant_destruction = val
+    }})
+end
+
+function global_player.set_interaction_distance(pid, val)
+    player.set_interaction_distance(pid, val)
+
+    local client = get_client_by_pid(pid)
+    if not client then return end
+
+    client:push_packet(protocol.ServerMsg.SynchronizePlayer, {data = {
+        interaction_distance = val
     }})
 end

@@ -41,6 +41,7 @@ local culling = function (pid, target_pos, target_size)
 end
 
 function module.register(entity_name, config, handler)
+    logger.log(string.format('The entity "%s" is registered.', entity_name))
     if PLAYER_ENTITY_ID == entities.def_name(entity_name) then
         error("You cannot register an entity responsible for a player, to create custom fields use entities.players.add_custom_field")
     end
@@ -218,6 +219,7 @@ local function __send_dirty(entity, uid, id, dirty, client, is_player)
     end
 
     local buffer = protocol.create_databuffer()
+
     if not is_player then
         local data = {uid = uid, def = id, dirty = dirty}
         buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.EntityUpdate, data))

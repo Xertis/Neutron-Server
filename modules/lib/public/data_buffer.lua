@@ -19,7 +19,7 @@ local MIN_INT32 = -2147483648
 local MAX_INT64 = 9223372036854775807
 local MIN_INT64 = -9223372036854775808
 
-local STANDART_TYPES = {
+local STANDARD_TYPES = {
     b = 1,
     B = 1,
     h = 2,
@@ -93,7 +93,7 @@ function data_buffer:pack(format, ...)
 end
 
 function data_buffer:unpack(format)
-	return byteutil.unpack(rep_order(self.order) .. format, self:get_bytes(STANDART_TYPES[format]))
+	return byteutil.unpack(rep_order(self.order) .. format, self:get_bytes(STANDARD_TYPES[format]))
 end
 
 function data_buffer:set_order(order)

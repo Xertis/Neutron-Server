@@ -3,7 +3,8 @@ local module = {}
 
 local defaultFunctions = {
     "unwrap",
-    "set_pos", "set_texture"
+    "set_pos", "set_texture",
+    "set_faces", "set_tints"
 }
 
 for _, key in ipairs(defaultFunctions) do
@@ -13,12 +14,15 @@ end
 local BlockWrap = {}
 BlockWrap.__index = BlockWrap
 
-function BlockWrap.new(id, pos, texture)
+function BlockWrap.new(id, pos, texture, emission)
     local self = setmetatable({}, BlockWrap)
 
     self.id = id
     self.pos = pos
     self.texture = texture
+    self.emission = emission
+    self.faces = {}
+    self.tints = {}
 
     return self
 end
@@ -52,9 +56,35 @@ function BlockWrap:get_texture()
     return self.texture
 end
 
-function module.wrap(position, texture)
-    local id = wraps.wrap(position, texture)
-    return id, BlockWrap.new(id, position, texture)
+function BlockWrap:set_faces(face1, face2, face3, face4, face5, face6)
+    self.faces = {
+        face1,
+        face2,
+        face3,
+        face4,
+        face5,
+        face6
+    }
+
+    wraps.set_faces(self.id, face1, face2, face3, face4, face5, face6)
+end
+
+function BlockWrap:set_tints(face1, face2, face3, face4, face5, face6)
+    self.tints = {
+        face1,
+        face2,
+        face3,
+        face4,
+        face5,
+        face6
+    }
+
+    wraps.set_tints(self.id, face1, face2, face3, face4, face5, face6)
+end
+
+function module.wrap(position, texture, emission)
+    local id = wraps.wrap(position, texture, emission)
+    return id, BlockWrap.new(id, position, texture, emission)
 end
 
 return module

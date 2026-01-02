@@ -180,17 +180,31 @@ function module.destroy_block(pos, pid)
 end
 
 function module.set_player_state(account_player, state)
+    local pid = account_player.pid
+
     if state.x and state.y and state.z then
-        player.set_pos(account_player.pid, state.x, state.y, state.z)
+        player.set_pos(pid, state.x, state.y, state.z)
     end
 
     if state.x_rot and state.y_rot and state.z_rot then
-        player.set_rot(account_player.pid, state.x_rot, state.y_rot, state.z_rot)
+        player.set_rot(pid, state.x_rot, state.y_rot, state.z_rot)
     end
 
     if state.noclip ~= nil and state.flight ~= nil then
-        player.set_noclip(account_player.pid, state.noclip)
-        player.set_flight(account_player.pid, state.flight)
+        player.set_noclip(pid, state.noclip)
+        player.set_flight(pid, state.flight)
+    end
+
+    if state.infinite_items then
+        player.set_infinite_items(pid, state.infinite_items)
+    end
+
+    if state.instant_destruction then
+        player.set_instant_destruction(pid, state.instant_destruction)
+    end
+
+    if state.interaction_distance then
+        player.set_interaction_distance(pid, state.interaction_distance)
     end
 end
 
@@ -199,6 +213,9 @@ function module.get_player_state(account_player)
     local x_rot, y_rot, z_rot = player.get_rot(account_player.pid)
     local noclip = player.is_noclip(account_player.pid)
     local flight = player.is_flight(account_player.pid)
+    local infinite_items = player.is_infinite_items(account_player.pid)
+    local instant_destruction = player.is_instant_destruction(account_player.pid)
+    local interaction_distance = player.get_interaction_distance(account_player.pid)
 
     return {
         x = x,
@@ -208,7 +225,10 @@ function module.get_player_state(account_player)
         y_rot = y_rot,
         z_rot = z_rot,
         noclip = noclip,
-        flight = flight
+        flight = flight,
+        infinite_items = infinite_items,
+        instant_destruction = instant_destruction,
+        interaction_distance = interaction_distance
     }
 end
 

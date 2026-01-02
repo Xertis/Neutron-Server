@@ -380,6 +380,8 @@ ClientPipe:add_middleware(function(client)
     local to_hide = {}
     local to_change_pos = {}
     local to_change_texture = {}
+    local to_change_faces = {}
+    local to_change_tints = {}
 
     for id, client_wrap in pairs(client_wraps) do
         local found = false
@@ -412,6 +414,22 @@ ClientPipe:add_middleware(function(client)
                 })
             end
 
+            if not table.deep_equals(wrap.faces or {}, client_wrap.faces or {}) then
+                client_wrap.faces = table.deep_copy(wrap.faces)
+                table.insert(to_change_faces, {
+                    id = wrap.id,
+                    faces = client_wrap.faces
+                })
+            end
+
+            if not table.deep_equals(wrap.tints or {}, client_wrap.tints or {}) then
+                client_wrap.tints = table.deep_copy(wrap.tints)
+                table.insert(to_change_tints, {
+                    id = wrap.id,
+                    faces = client_wrap.tints
+                })
+            end
+
             if wrap.texture ~= client_wrap.texture then
                 client_wrap.texture = wrap.texture
                 table.insert(to_change_texture, {
@@ -423,12 +441,31 @@ ClientPipe:add_middleware(function(client)
     end
 
     for _, wrap in ipairs(to_show) do
+        local wrap_pos = wrap.pos
         client:push_packet(protocol.ServerMsg.WrapShow, {
             id = wrap.id,
-            pos = wrap.pos,
+            pos = {
+                x = wrap_pos[1],
+                y = wrap_pos[2],
+                z = wrap_pos[3]
+            },
             texture = wrap.texture,
-            emission = 0
+            emission = wrap.emission
         })
+
+        if wrap.faces then
+            client:push_packet(protocol.ServerMsg.WrapSetFaces, {
+                id = wrap.id,
+                faces = wrap.faces
+            })
+        end
+
+        if wrap.tints then
+            client:push_packet(protocol.ServerMsg.WrapSetTints, {
+                id = wrap.id,
+                faces = wrap.tints
+            })
+        end
     end
 
     for _, wrap in ipairs(to_hide) do
@@ -436,11 +473,30 @@ ClientPipe:add_middleware(function(client)
     end
 
     for _, wrap in ipairs(to_change_pos) do
-        client:push_packet(protocol.ServerMsg.WrapSetPos, {id = wrap.id, pos = wrap.pos})
+        local wrap_pos = wrap.pos
+        client:push_packet(protocol.ServerMsg.WrapSetPos, {id = wrap.id, pos = {
+            x = wrap_pos[1],
+            y = wrap_pos[2],
+            z = wrap_pos[3]
+        }})
     end
 
     for _, wrap in ipairs(to_change_texture) do
         client:push_packet(protocol.ServerMsg.WrapSetTexture, {id = wrap.id, texture = wrap.texture})
+    end
+
+    for _, wrap in ipairs(to_change_faces) do
+        client:push_packet(protocol.ServerMsg.WrapSetFaces, {
+            id = wrap.id,
+            faces = wrap.faces
+        })
+    end
+
+    for _, wrap in ipairs(to_change_tints) do
+        client:push_packet(protocol.ServerMsg.WrapSetTints, {
+            id = wrap.id,
+            faces = wrap.tints
+        })
     end
 
     return client

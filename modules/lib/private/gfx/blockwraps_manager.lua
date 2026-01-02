@@ -19,7 +19,7 @@ local function ensureVec3(vec)
     end
 end
 
-function module.wrap(pos, texture)
+function module.wrap(pos, texture, emission)
     ensureVec3(pos)
 
     local id = NEXT_ID
@@ -27,6 +27,7 @@ function module.wrap(pos, texture)
     WRAPS[id] = {
         pos = pos,
         texture = texture,
+        emission = emission,
         id = id
     }
 
@@ -49,6 +50,30 @@ end
 function module.set_texture(id, texture)
     ensureWrap(id)
     WRAPS[id].texture = texture
+end
+
+function module.set_faces(id, face1, face2, face3, face4, face5, face6)
+    ensureWrap(id)
+    WRAPS[id].faces = {
+        face1,
+        face2,
+        face3,
+        face4,
+        face5,
+        face6
+    }
+end
+
+function module.set_tints(id, face1, face2, face3, face4, face5, face6)
+    ensureWrap(id)
+    WRAPS[id].tints = {
+        face1,
+        face2,
+        face3,
+        face4,
+        face5,
+        face6
+    }
 end
 
 function module.get_in_radius(x, z, radius)

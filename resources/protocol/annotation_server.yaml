@@ -232,22 +232,12 @@ WrapSetTexture:
 WrapSetFaces:
   fields:
     - id: var
-    - faceX-: string
-    - faceX+: string
-    - faceY-: string
-    - faceY+: string
-    - faceZ-: string
-    - faceZ+: string
+    - faces: Vec6<string>
 
 WrapSetTints:
   fields:
     - id: var
-    - faceX-: Vec3<norm8>
-    - faceX+: Vec3<norm8>
-    - faceY-: Vec3<norm8>
-    - faceY+: Vec3<norm8>
-    - faceZ-: Vec3<norm8>
-    - faceZ+: Vec3<norm8>
+    - faces: Vec6<Vec3<norm8>>
 
 WrapHide:
   fields:
@@ -261,4 +251,4 @@ WeatherChanged:
 
 Disconnect:
   fields:
-    reason: string
+    - reason: string
