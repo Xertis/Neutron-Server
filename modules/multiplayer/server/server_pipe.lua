@@ -4,7 +4,7 @@ local protect = require "lib/private/protect"
 local matches = require "multiplayer/server/server_matches"
 local ClientPipe = require "multiplayer/server/client_pipe"
 local List = require "lib/public/common/list"
-local middlewares = require "api/v1/middlewares"
+local interceptors = require "api/v2/interceptors"
 local receiver = require "server:multiplayer/protocol-kernel/receiver"
 
 local ServerPipe = Pipeline.new()
@@ -57,7 +57,7 @@ ServerPipe:add_middleware(function(client)
 
     local success, err = pcall(function()
         if client.active == false then
-            local status = middlewares.receive.__fsm_emit(packet.packet_type, packet, client)
+            local status = interceptors.receive.__process(packet, client)
             if status then matches.general_fsm:handle_event(client, packet) end
         elseif client.active == true then
             matches.client_online_handler:switch(packet.packet_type, packet, client)

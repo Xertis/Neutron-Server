@@ -98,18 +98,18 @@ local function __decode_rot(buf)
     return mat
 end
 
-local function __get_standart(buf, has_standart)
-    if not has_standart then return nil end
-    local standart = {}
+local function __get_standard(buf, has_standard)
+    if not has_standard then return nil end
+    local standard = {}
     local has_rot = buf:get_bit()
     local has_pos = buf:get_bit()
     local has_size = buf:get_bit()
     local has_body = buf:get_bit()
-    if has_rot then standart.tsf_rot = __decode_rot(buf) end
-    if has_pos then standart.tsf_pos = __decode_vec(buf) end
-    if has_size then standart.tsf_size = __decode_vec(buf) end
-    if has_body then standart.body_size = __decode_vec(buf) end
-    return standart
+    if has_rot then standard.tsf_rot = __decode_rot(buf) end
+    if has_pos then standard.tsf_pos = __decode_vec(buf) end
+    if has_size then standard.tsf_size = __decode_vec(buf) end
+    if has_body then standard.body_size = __decode_vec(buf) end
+    return standard
 end
 
 local function __get_custom(buf, has_custom)
@@ -232,19 +232,19 @@ local function __encode_rot(buf, rot)
     buf:put_float32(quaternion[4])
 end
 
-local function __encode_standart(buf, standart)
-    local has_rot = standart.tsf_rot ~= nil
-    local has_pos = standart.tsf_pos ~= nil
-    local has_size = standart.tsf_size ~= nil
-    local has_body = standart.body_size ~= nil
+local function __encode_standard(buf, standard)
+    local has_rot = standard.tsf_rot ~= nil
+    local has_pos = standard.tsf_pos ~= nil
+    local has_size = standard.tsf_size ~= nil
+    local has_body = standard.body_size ~= nil
     buf:put_bit(has_rot)
     buf:put_bit(has_pos)
     buf:put_bit(has_size)
     buf:put_bit(has_body)
-    if has_rot then __encode_rot(buf, standart.tsf_rot) end
-    if has_pos then __encode_vec(buf, standart.tsf_pos) end
-    if has_size then __encode_vec(buf, standart.tsf_size) end
-    if has_body then __encode_vec(buf, standart.body_size) end
+    if has_rot then __encode_rot(buf, standard.tsf_rot) end
+    if has_pos then __encode_vec(buf, standard.tsf_pos) end
+    if has_size then __encode_vec(buf, standard.tsf_size) end
+    if has_body then __encode_vec(buf, standard.body_size) end
 end
 
 local function __encode_custom(buf, custom)
@@ -285,12 +285,12 @@ end
 
 function module.decode(buf)
     local dirty = {}
-    local has_standart = buf:get_bit()
+    local has_standard = buf:get_bit()
     local has_custom = buf:get_bit()
     local has_textures = buf:get_bit()
     local has_models = buf:get_bit()
     local has_components = buf:get_bit()
-    dirty.standart_fields = __get_standart(buf, has_standart)
+    dirty.standard_fields = __get_standard(buf, has_standard)
     dirty.custom_fields = __get_custom(buf, has_custom)
     dirty.textures = __get_textures(buf, has_textures)
     dirty.models = __get_models(buf, has_models)
@@ -299,17 +299,17 @@ function module.decode(buf)
 end
 
 function module.encode(buf, dirty)
-    local has_standart = dirty.standart_fields ~= nil
+    local has_standard = dirty.standard_fields ~= nil
     local has_custom = dirty.custom_fields ~= nil
     local has_textures = dirty.textures ~= nil
     local has_models = dirty.models ~= nil
     local has_components = dirty.components ~= nil
-    buf:put_bit(has_standart)
+    buf:put_bit(has_standard)
     buf:put_bit(has_custom)
     buf:put_bit(has_textures)
     buf:put_bit(has_models)
     buf:put_bit(has_components)
-    if has_standart then __encode_standart(buf, dirty.standart_fields) end
+    if has_standard then __encode_standard(buf, dirty.standard_fields) end
     if has_custom then __encode_custom(buf, dirty.custom_fields) end
     if has_textures then __encode_textures(buf, dirty.textures) end
     if has_models then __encode_models(buf, dirty.models) end

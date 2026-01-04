@@ -1,51 +1,58 @@
-Система **accounts** позволяет получать и управлять аккаунтами игроков.
+## Содержание
 
-1. **Получение аккаунта игрока:**
-```lua
-api.accounts.get_account_by_name(username: string) -> Account
-```
-   - Возвращает класс типа **Account** игрока с ником **username**
+* [Получение аккаунтов и клиентов](#получение-аккаунтов-и-клиентов)
+* [Управление аккаунтами](#управление-аккаунтами)
+* [Роли и правила](#роли-и-правила)
 
-2. **Получение клиента аккаунта:**
+## Получение аккаунтов и клиентов
+
 ```lua
+-- Возвращает account игрока по identity
+api.accounts.by_identity.get_account(identity: string) -> Account
+
+
+-- Возвращает client игрока по identity
+api.accounts.by_identity.get_client(identity: String) -> Client
+
+
+-- Возвращает client игрока по account
 api.accounts.get_client(account: Account) -> Client
 ```
-   - Возвращает класс типа **Client** игрока с аккаунтом **account**.
 
-3. **Получение клиента аккаунта по имени:**
+## Управление аккаунтами
+
 ```lua
-api.accounts.get_client_by_name(username: String) -> Client
+-- Кикает аккаунт с сервера по причине reason
+-- Если soft == true, кик произойдёт после обработки пакетов
+api.accounts.kick(
+    account: Account,
+    reason: string,
+    soft: Boolean
+)
 ```
-   - Возвращает класс типа **Client** игрока с ником **username**.
 
-4. **Кик аккаунта:**
-```lua
-api.accounts.kick(account: Account, [опционально] reason: string, [опционально] soft: Boolean)
-```
-   - Кикает аккаунт **account** с сервера с причиной **reason**
-   - Если **soft** равен **true**, то кик произойдёт не сразу, а после обработки пакетов, что обеспечит гарантированную отправку сообщения с причиной ошибки
+## Роли и правила
 
-5. **Получение роли:**
 ```lua
+-- Возвращает конфиг роли по аккаунту
 api.accounts.roles.get(account: Account) -> table
-```
-   - Возвращает конфиг роли по аккаунту
 
-6. **Получение правил аккаунта:**
-```lua
-api.accounts.roles.get_rules(account: Account, [опционально] category: boolean) -> table
-```
-   - Возвращает таблицу правил роли по аккаунту
-   - Category - категория тех правил, которые надо вернуть (false -> game_rules / true  -> server_rules)
 
-7. **Сравнение приоритета ролей:**
-```lua
+-- Возвращает таблицу правил роли по аккаунту
+-- category:
+-- false -> game_rules
+-- true  -> server_rules
+-- или можно строчкой прописать нужную category
+api.accounts.roles.get_rules(
+    account: Account,
+    category: boolean | string
+) -> table
+
+
+-- Возвращает true если первая роль имеет больший приоритет, чем вторая
 api.accounts.roles.is_higher(role1: table, role2: table) -> boolean
-```
-   - Возвращает `true` если первая роль имеет больший приоритет, чем вторая
 
-8. **Проверка на существование роли:**
-```lua
+
+-- Возвращает true если роль существует
 api.accounts.roles.exists(role: table) -> boolean
 ```
-   - Возвращает `true` если роль существует

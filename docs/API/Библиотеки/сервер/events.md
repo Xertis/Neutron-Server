@@ -1,19 +1,39 @@
-Система **events** позволяет обмениваться сообщениями между серверными и клиентскими модами.
+## Содержание
 
-1. **Отправка события конкретному клиенту:**
-```lua
-api.events.tell(pack: string, event: string, client: Client, bytes: table<bytes>)
-```
-   - Отправляет событие **event** с данными **bytes** моду **pack** на сторону указанного клиента **client**.
+* [Отправка событий](#отправка-событий)
+* [Обработчики событий](#обработчики-событий)
 
-2. **Отправка события всем клиентам:**
-```lua
-api.events.echo(pack: string, event: string, bytes: table<bytes>)
-```
-   - Отправляет событие **event** с данными **bytes** моду **pack** всем подключённым клиентам.
+## Отправка событий
 
-3. **Регистрация обработчика события:**
 ```lua
-api.events.on(pack: string, event: string, func: function(Client, table<bytes>))
+-- Отправляет событие event с данными bytes моду pack
+-- на сторону указанного клиента.
+api.events.tell(
+    pack: string,
+    event: string,
+    client: Client,
+    bytes: Bytearray
+)
+
+
+-- Отправляет событие event с данными bytes моду pack
+-- всем подключённым клиентам.
+api.events.echo(
+    pack: string,
+    event: string,
+    bytes: Bytearray
+)
 ```
-   - Регистрирует функцию **func**, которая будет вызвана при получении события **event** от мода **pack**. В функцию передаются данные **bytes** и **Client**, с которого пришло сообщение
+
+## Обработчики событий
+
+```lua
+-- Регистрирует функцию, которая будет вызвана
+-- при получении события event от мода pack.
+-- В функцию передаются Client и данные bytes.
+api.events.on(
+    pack: string,
+    event: string,
+    handler: function(Client, table<bytes>)
+)
+```

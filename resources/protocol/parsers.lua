@@ -72,7 +72,35 @@ do
     result = buf:get_any()
 end--@
 
--- @player_pos.write
+-- @norm8.write
+-- VARIABLES 
+-- TO_SAVE val
+do
+    buf:put_norm8(val)
+end--@
+
+-- @norm8.read
+-- VARIABLES 
+-- TO_LOAD result
+do
+    result = buf:get_norm8()
+end--@
+
+-- @uint12.write
+-- VARIABLES 
+-- TO_SAVE val
+do
+    buf:put_uint(val, 12)
+end--@
+
+-- @uint12.read
+-- VARIABLES 
+-- TO_LOAD result
+do
+    result = buf:get_uint(12)
+end--@
+
+-- @PlayerPos.write
 -- VARIABLES xx yy zz y_low y_high
 -- TO_SAVE val
 do
@@ -90,7 +118,7 @@ do
     buf:put_uint24(bit.bor(bit.lshift(zz, 9), y_high))
 end--@
 
--- @player_pos.read
+-- @PlayerPos.read
 -- VARIABLES i ii xx yy zz y_low y_high
 -- TO_LOAD result
 do
@@ -260,49 +288,49 @@ do
     result = buf:get_string()
 end--@
 
--- @array.write
+-- @Array.write
 -- VARIABLES i
 -- TO_SAVE value
--- TO_LOOPED data_type
+-- FOREIGN
 do
     buf:put_bytes(bincode.encode_varint(#value))
     for i = 1, #value do
-        ForeignEncode(data_type, value[i])
+        Foreign(value[i])
     end
 end--@
 
--- @array.read
+-- @Array.read
 -- VARIABLES i array_length
 -- TO_LOAD result
--- TO_LOOPED data_type
+-- FOREIGN
 do
     result = {}
     array_length = bincode.decode_varint(buf)
 
     for i = 1, array_length do
-        ForeignDecode(data_type, result[i])
+        Foreign(result[i])
     end
 end--@
 
--- @Chunk.write
--- VARIABLES
--- TO_SAVE data
+-- @bytearray.write
+-- VARIABLES i
+-- TO_SAVE arr
 do
-    buf:put_sint16(data[1])
-    buf:put_sint16(data[2])
-    buf:put_bytes(bincode.encode_varint(#data[3]))
-    buf:put_bytes(data[3])
+    buf:put_bytes(bincode.encode_varint(#arr))
+    for i = 1, #arr do
+        buf:put_byte(arr[i])
+    end
 end--@
 
--- @Chunk.read
--- VARIABLES
--- TO_LOAD chunk
+-- @bytearray.read
+-- VARIABLES i
+-- TO_LOAD result
 do
-    chunk = {
-        buf:get_sint16(),
-        buf:get_sint16(),
-        buf:get_bytes(bincode.decode_varint(buf)),
-    }
+    result = Bytearray()
+
+    for i = 1, bincode.decode_varint(buf) do
+        result:append(buf:get_byte())
+    end
 end--@
 
 -- @Rule.write
@@ -327,8 +355,8 @@ end--@
 -- VARIABLES
 -- TO_SAVE data
 do
-    buf:put_uint32(data[1])
-    buf:put_string(data[2])
+    buf:put_bytes(bincode.encode_varint(data.pid))
+    buf:put_string(data.username)
 end--@
 
 -- @Player.read
@@ -336,12 +364,54 @@ end--@
 -- TO_LOAD player
 do
     player = {
-        buf:get_uint32(),
-        buf:get_string()
+        pid = bincode.decode_varint(buf),
+        username = buf:get_string()
     }
 end--@
 
--- @particle.write
+-- @Chunk.write
+-- VARIABLES
+-- TO_SAVE chunk
+do
+    buf:put_sint16(chunk.x)
+    buf:put_sint16(chunk.z)
+
+    buf:put_bytes(bincode.encode_varint(#chunk.data))
+    buf:put_bytes(chunk.data)
+end--@
+
+-- @Chunk.read
+-- VARIABLES xx zz len
+-- TO_LOAD chunk
+do
+    xx, zz = buf:get_sint16(), buf:get_sint16()
+    len = bincode.decode_varint(buf)
+    chunk = {
+        x = xx,
+        z = zz,
+        data = buf:get_bytes(len)
+    }
+end--@
+
+-- @PackHash.write
+-- VARIABLES
+-- TO_SAVE data
+do
+    buf:put_string(data.pack)
+    buf:put_string(data.hash)
+end--@
+
+-- @PackHash.read
+-- VARIABLES
+-- TO_LOAD data
+do
+    data = {
+        pack = buf:get_string(),
+        hash = buf:get_string()
+    }
+end--@
+
+-- @Particle.write
 -- VARIABLES config
 -- TO_SAVE value
 do
@@ -374,7 +444,7 @@ do
     end
 end--@
 
--- @particle.read
+-- @Particle.read
 -- VARIABLES config
 -- TO_LOAD value
 do
@@ -490,24 +560,140 @@ do
     audio.isStream = buf:get_bit()
 end--@
 
--- @vec3.write
--- VARIABLES i
+-- @Vec6.write
+-- VARIABLES
 -- TO_SAVE vec
--- TO_LOOPED data_type
+-- FOREIGN
 do
-    for i=1, 3 do
-        ForeignEncode(data_type, vec[i])
+    Foreign(vec[1])
+    Foreign(vec[2])
+    Foreign(vec[3])
+    Foreign(vec[4])
+    Foreign(vec[5])
+    Foreign(vec[6])
+end--@
+
+-- @Vec6.read
+-- VARIABLES
+-- TO_LOAD vec
+-- FOREIGN
+do
+    vec = {}
+    Foreign(vec[1])
+    Foreign(vec[2])
+    Foreign(vec[3])
+    Foreign(vec[4])
+    Foreign(vec[5])
+    Foreign(vec[6])
+end--@
+
+-- @Vec5.write
+-- VARIABLES
+-- TO_SAVE vec
+-- FOREIGN
+do
+    Foreign(vec[1])
+    Foreign(vec[2])
+    Foreign(vec[3])
+    Foreign(vec[4])
+    Foreign(vec[5])
+end--@
+
+-- @Vec5.read
+-- VARIABLES
+-- TO_LOAD vec
+-- FOREIGN
+do
+    vec = {}
+    Foreign(vec[1])
+    Foreign(vec[2])
+    Foreign(vec[3])
+    Foreign(vec[4])
+    Foreign(vec[5])
+end--@
+
+-- @Vec4.write
+-- VARIABLES
+-- TO_SAVE vec
+-- FOREIGN
+do
+    Foreign(vec[1])
+    Foreign(vec[2])
+    Foreign(vec[3])
+    Foreign(vec[4])
+end--@
+
+-- @Vec4.read
+-- VARIABLES
+-- TO_LOAD vec
+-- FOREIGN
+do
+    vec = {}
+    Foreign(vec[1])
+    Foreign(vec[2])
+    Foreign(vec[3])
+    Foreign(vec[4])
+end--@
+
+-- @Vec3.write
+-- VARIABLES
+-- TO_SAVE vec
+-- FOREIGN
+do
+    Foreign(vec[1])
+    Foreign(vec[2])
+    Foreign(vec[3])
+end--@
+
+-- @Vec3.read
+-- VARIABLES
+-- TO_LOAD vec
+-- FOREIGN
+do
+    vec = {}
+    Foreign(vec[1])
+    Foreign(vec[2])
+    Foreign(vec[3])
+end--@
+
+-- @Vec2.write
+-- VARIABLES
+-- TO_SAVE vec
+-- FOREIGN
+do
+    Foreign(vec[1])
+    Foreign(vec[2])
+end--@
+
+-- @Vec2.read
+-- VARIABLES
+-- TO_LOAD vec
+-- FOREIGN
+do
+    vec = {}
+    Foreign(vec[1])
+    Foreign(vec[2])
+end--@
+
+-- @NullAble.write
+-- VARIABLES
+-- TO_SAVE val
+-- FOREIGN
+do
+    buf:put_bit(val == nil)
+    if val ~= nil then
+        Foreign(val)
     end
 end--@
 
--- @vec3.read
--- VARIABLES i
--- TO_LOAD result
--- TO_LOOPED data_type
+-- @NullAble.read
+-- VARIABLES
+-- TO_LOAD val
+-- FOREIGN
 do
-    result = {}
-    for i=1, 3 do
-        ForeignDecode(data_type, result[i])
+    val = nil
+    if not buf:get_bit() then
+        Foreign(val)
     end
 end--@
 
@@ -626,7 +812,7 @@ do
 end--@
 
 -- @PlayerEntity.write
--- VARIABLES has_pos has_rot has_cheats has_item is_compressed
+-- VARIABLES has_pos has_rot has_cheats has_item has_additional_information
 -- TO_SAVE player
 
 do
@@ -634,27 +820,27 @@ do
     has_rot = player.rot ~= nil
     has_cheats = player.cheats ~= nil
     has_item = player.hand_item ~= nil
-    is_compressed = player.compressed or false
+    has_additional_information = 
+        player.infinite_items ~= nil or
+        player.interaction_distance ~= nil or
+        player.instant_destruction ~= nil
 
     buf:put_bit(has_pos)
     buf:put_bit(has_rot)
     buf:put_bit(has_cheats)
     buf:put_bit(has_item)
-    buf:put_bit(is_compressed)
+    buf:put_bit(has_additional_information)
 
-    if has_pos and is_compressed then
-        buf:put_float16(player.pos.x)
-        buf:put_float16(player.pos.y)
-        buf:put_float16(player.pos.z)
-    elseif has_pos then
+    if has_pos then
         buf:put_float32(player.pos.x)
         buf:put_float32(player.pos.y)
         buf:put_float32(player.pos.z)
     end
 
     if has_rot then
-        buf:put_uint16(math.floor((math.clamp(player.rot.yaw, -180, 180) + 180) / 360 * 65535 + 0.5))
-        buf:put_uint16(math.floor((math.clamp(player.rot.pitch, -180, 180) + 180) / 360 * 65535 + 0.5))
+        buf:put_uint16(math.floor((math.clamp(player.rot.x, -180, 180) + 180) / 360 * 65535 + 0.5))
+        buf:put_uint16(math.floor((math.clamp(player.rot.y, -180, 180) + 180) / 360 * 65535 + 0.5))
+        buf:put_uint16(math.floor((math.clamp(player.rot.z, -180, 180) + 180) / 360 * 65535 + 0.5))
     end
 
     if has_cheats then
@@ -665,10 +851,16 @@ do
     if has_item then
         buf:put_uint16(player.hand_item)
     end
+
+    if has_additional_information then
+        buf:put_uint(player.infinite_items == nil and 2 or (player.infinite_items == true and 1 or 0), 2)
+        buf:put_uint(player.instant_destruction == nil and 2 or (player.instant_destruction == true and 1 or 0), 2)
+        buf:put_uint((player.interaction_distance or -1) + 1, 12)
+    end
 end--@
 
 -- @PlayerEntity.read
--- VARIABLES has_pos has_rot has_cheats is_compressed
+-- VARIABLES has_pos has_rot has_cheats has_additional_information inf_items inst_destruct interact_dist
 -- TO_LOAD player
 do
     player = {}
@@ -676,17 +868,10 @@ do
     has_rot = buf:get_bit()
     has_cheats = buf:get_bit()
     has_item = buf:get_bit()
-    is_compressed = buf:get_bit()
+    has_additional_information = buf:get_bit()
 
-    player.compressed = is_compressed
 
-    if has_pos and is_compressed then
-        player.pos = {
-            x = buf:get_float16(),
-            y = buf:get_float16(),
-            z = buf:get_float16()
-        }
-    elseif has_pos then
+    if has_pos then
         player.pos = {
             x = buf:get_float32(),
             y = buf:get_float32(),
@@ -696,8 +881,9 @@ do
 
     if has_rot then
         player.rot = {
-            yaw = (buf:get_uint16() / 65535 * 360) - 180,
-            pitch = (buf:get_uint16() / 65535 * 360) - 180
+            x = (buf:get_uint16() / 65535 * 360) - 180,
+            y = (buf:get_uint16() / 65535 * 360) - 180,
+            z = (buf:get_uint16() / 65535 * 360) - 180,
         }
     end
 
@@ -710,6 +896,24 @@ do
 
     if has_item then
         player.hand_item = buf:get_uint16()
+    end
+
+    if has_additional_information then
+        inf_items = buf:get_uint(2)
+        inst_destruct = buf:get_uint(2)
+        interact_dist = buf:get_uint(12) - 1
+
+        if inf_items ~= 2 then
+            player.infinite_items = inf_items == 1 and true or false
+        end
+
+        if inst_destruct ~= 2 then
+            player.instant_destruction = inst_destruct == 1 and true or false
+        end
+
+        if interact_dist > -1 then
+            player.interaction_distance = interact_dist
+        end
     end
 end--@
 

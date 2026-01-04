@@ -1,5 +1,5 @@
-local types_parser = require "server:multiplayer/protocol-kernel/types_parser"
-local tokenizer = require "server:multiplayer/protocol-kernel/tokenizer"
+local types_parser = require "multiplayer/protocol-kernel/types_parser"
+local tokenizer = require "multiplayer/protocol-kernel/tokenizer"
 
 local bincode = require "server:lib/public/common/bincode"
 local bson = require "server:lib/private/files/bson"
@@ -8,6 +8,7 @@ local edd = require "server:lib/private/files/edd"
 local module = {}
 
 local PARSED_INFO = types_parser.get_info()
+
 local FUNCTION_PATTERN_ENCODER = [[
 return function (buf, %s) 
 %s
@@ -21,86 +22,104 @@ return function (buf)
 end
 ]]
 
-local function find_foreign_call(code)
-    local pattern = "Foreign[%w_]*%s*%(%s*([^,)]+)%s*,?%s*([^)]*)%s*%)"
+local function replace_substr(str, replacement, start_pos, end_pos)
+    return str:sub(1, start_pos - 1) .. replacement .. str:sub(end_pos + 1)
+end
 
-    local start_pos, end_pos, arg1, arg2 = code:find(pattern)
+local function find_foreign_call(code)
+    local pattern = "Foreign%s*%(%s*([^)]*)%s*%)"
+
+    local start_pos, end_pos, arg = code:find(pattern)
 
     if start_pos then
-        arg1 = arg1 and arg1:match("^%s*(.-)%s*$") or ""
-        arg2 = arg2 and arg2:match("^%s*(.-)%s*$") or ""
+        arg = arg and arg:match("^%s*(.-)%s*$") or ""
 
         return {
             start = start_pos,
             finish = end_pos,
-            type_token = arg1,
-            res_token = arg2
+            res_token = arg
         }
     else
         return nil
     end
 end
 
-local function parse_type(str)
-    local outer_type, inner_type = str:match("^([^<>]+)<([^<>]+)>$")
-
-    if outer_type and inner_type then
-        return outer_type, inner_type
-    else
-        return str
+local function parse_type_tree(str)
+    local outer, inner_str = str:match("^([^<>]+)<(.*)>$")
+    if not outer then
+        return {type_name = str, inner = nil}
     end
+    return {type_name = outer, inner = parse_type_tree(inner_str)}
 end
 
-local function loop_encode(cur_index, outer, inner)
-    local outer_info, inner_info = PARSED_INFO.encode[outer], PARSED_INFO.encode[inner]
-    local outer_code = outer_info.code
-    local inner_code = inner_info.code
-    local sum_vars_outer = table.merge({outer_info.TO_SAVE, outer_info.TO_LOOPED}, outer_info.VARIABLES)
+local function compile_encode_type(type_node, cur_index, override_save_token)
+    local type_name = type_node.type_name
+    local info = PARSED_INFO.encode[type_name]
+    local to_save = info.TO_SAVE
+    local vars = info.VARIABLES
+    local sum_vars_to_gen = override_save_token and vars or table.merge({to_save}, vars)
 
-    local tokens_outer = nil
-    tokens_outer, cur_index = tokenizer.get_tokens(cur_index, sum_vars_outer)
+    local tokens = {}
+    tokens, cur_index = tokenizer.get_tokens(cur_index, sum_vars_to_gen)
 
-    outer_code = tokenizer.variables_replace(outer_code, tokens_outer)
-    local foreign = find_foreign_call(outer_code)
-    local result_token = foreign.res_token
+    if override_save_token then
+        tokens[to_save] = override_save_token
+    end
 
-    local inner_to_save = inner_info.TO_SAVE
-    local sum_vars_inner = table.merge({inner.TO_SAVE}, inner_info.VARIABLES or {})
+    local code = tokenizer.variables_replace(info.code, tokens)
+    local save_token = tokens[to_save]
 
-    local tokens_inner = nil
-    tokens_inner, cur_index = tokenizer.get_tokens(cur_index, sum_vars_inner)
-    tokens_inner[inner_to_save] = result_token
+    if type_node.inner then
+        local replaced = true
+        while replaced do
+            replaced = false
+            local foreign = find_foreign_call(code)
+            if foreign then
+                replaced = true
+                local res_token = foreign.res_token
+                local inner_code, _, new_cur_index = compile_encode_type(type_node.inner, cur_index, res_token)
+                code = replace_substr(code, inner_code, foreign.start, foreign.finish)
+                cur_index = new_cur_index
+            end
+        end
+    end
 
-    inner_code = tokenizer.variables_replace(inner_code, tokens_inner)
-    outer_code = string.replace_substr(outer_code, inner_code, foreign.start, foreign.finish)
-
-    return outer_code, tokens_outer[outer_info.TO_SAVE], cur_index
+    return code, save_token, cur_index
 end
 
-local function loop_decode(cur_index, outer, inner)
-    local outer_info, inner_info = PARSED_INFO.decode[outer], PARSED_INFO.decode[inner]
-    local outer_code = outer_info.code
-    local inner_code = inner_info.code
-    local sum_vars_outer = table.merge({outer_info.TO_LOAD, outer_info.TO_LOOPED}, outer_info.VARIABLES)
+local function compile_decode_type(type_node, cur_index, override_load_token)
+    local type_name = type_node.type_name
+    local info = PARSED_INFO.decode[type_name]
+    local to_load = info.TO_LOAD
+    local vars = info.VARIABLES
+    local sum_vars_to_gen = override_load_token and vars or table.merge({to_load}, vars)
 
-    local tokens_outer = nil
-    tokens_outer, cur_index = tokenizer.get_tokens(cur_index, sum_vars_outer)
+    local tokens = {}
+    tokens, cur_index = tokenizer.get_tokens(cur_index, sum_vars_to_gen)
 
-    outer_code = tokenizer.variables_replace(outer_code, tokens_outer)
-    local foreign = find_foreign_call(outer_code)
-    local result_token = foreign.res_token
+    if override_load_token then
+        tokens[to_load] = override_load_token
+    end
 
-    local inner_to_load = inner_info.TO_LOAD
-    local sum_vars_inner = table.merge({inner.TO_LOAD}, inner_info.VARIABLES or {})
+    local code = tokenizer.variables_replace(info.code, tokens)
+    local load_token = tokens[to_load]
 
-    local tokens_inner = nil
-    tokens_inner, cur_index = tokenizer.get_tokens(cur_index, sum_vars_inner)
-    tokens_inner[inner_to_load] = result_token
+    if type_node.inner then
+        local replaced = true
+        while replaced do
+            replaced = false
+            local foreign = find_foreign_call(code)
+            if foreign then
+                replaced = true
+                local res_token = foreign.res_token
+                local inner_code, _, new_cur_index = compile_decode_type(type_node.inner, cur_index, res_token)
+                code = replace_substr(code, inner_code, foreign.start, foreign.finish)
+                cur_index = new_cur_index
+            end
+        end
+    end
 
-    inner_code = tokenizer.variables_replace(inner_code, tokens_inner)
-    outer_code = string.replace_substr(outer_code, inner_code, foreign.start, foreign.finish)
-
-    return outer_code, tokens_outer[outer_info.TO_LOAD], cur_index
+    return code, load_token, cur_index
 end
 
 function module.compile_encoder(types)
@@ -112,33 +131,13 @@ function module.compile_encoder(types)
         return "return function () end"
     end
 
-    for _, type in ipairs(types) do
-        local outer, inner = parse_type(type)
-        local type_info = PARSED_INFO.encode[outer]
+    for _, typestr in ipairs(types) do
+        local type_node = parse_type_tree(typestr)
+        local code, to_save, cur_indx = compile_encode_type(type_node, cur_index, nil)
+        cur_index = cur_indx
+        table.insert(sum_tokens, to_save)
 
-        if inner then
-            local code, to_save, cur_indx = loop_encode(cur_index, outer, inner)
-            cur_index = cur_indx
-            table.insert(sum_tokens, to_save)
-
-            concated_code = string.format("%s%s ", concated_code, code)
-            goto continue
-        end
-
-        local code = type_info.code
-        local to_save = type_info.TO_SAVE
-
-        local vars = type_info.VARIABLES
-        local sum_vars = table.merge({to_save}, vars)
-
-        local tokens = nil
-        tokens, cur_index = tokenizer.get_tokens(cur_index, sum_vars)
-
-        table.insert(sum_tokens, tokens[to_save])
-
-        code = tokenizer.variables_replace(code, tokens)
         concated_code = string.format("%s%s ", concated_code, code)
-        ::continue::
     end
 
     local args = table.concat(sum_tokens, ', ')
@@ -154,37 +153,13 @@ function module.compile_decoder(types)
         return "return function () end"
     end
 
-    for _, type in ipairs(types) do
-        local outer, inner = parse_type(type)
-        local type_info = PARSED_INFO.decode[outer]
+    for _, typestr in ipairs(types) do
+        local type_node = parse_type_tree(typestr)
+        local code, to_load, cur_indx = compile_decode_type(type_node, cur_index, nil)
+        cur_index = cur_indx
+        table.insert(sum_tokens, to_load)
 
-        if inner then
-            local code, to_load, cur_indx = loop_decode(cur_index, outer, inner)
-            cur_index = cur_indx
-            table.insert(sum_tokens, to_load)
-
-            concated_code = string.format("%s%s ", concated_code, code)
-            goto continue
-        end
-
-        local to_load = type_info.TO_LOAD
-        local vars = type_info.VARIABLES
-        local code = type_info.code
-        local sum_vars = table.merge({to_load}, vars)
-
-        local tokens = nil
-        tokens, cur_index = tokenizer.get_tokens(cur_index, sum_vars)
-
-        for var, token in pairs(tokens) do
-            if var == to_load then
-                table.insert(sum_tokens, token)
-                break
-            end
-        end
-
-        code = tokenizer.variables_replace(code, tokens)
         concated_code = string.format("%s%s ", concated_code, code)
-        ::continue::
     end
 
     local returns = table.concat(sum_tokens, ', ')
@@ -193,14 +168,16 @@ end
 
 function module.load(code)
     local env = {
-        bson = bson,
-        bincode = bincode,
         math = math,
         table = table,
         string = string,
         unpack = unpack,
         type = type,
         bit = bit,
+        Bytearray = Bytearray,
+        compression = compression,
+        bson = bson,
+        bincode = bincode,
         edd = edd,
 
         MAX_UINT16 = 65535,

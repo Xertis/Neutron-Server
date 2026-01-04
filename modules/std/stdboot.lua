@@ -1,5 +1,4 @@
 -- STRING
-
 function string.replace_substr(str1, str2, start, finish)
     if start < 1 or finish > #str1 or start > finish then
         return nil
@@ -81,4 +80,12 @@ end
 
 function logger.blank()
     print()
+end
+
+local sha256 = require "lib/private/sha256"
+function logger.shorted(str, size)
+    size = size or 10
+
+    local hashed = sha256.sha256(str)
+    return string.sub(hashed, 1, size)
 end

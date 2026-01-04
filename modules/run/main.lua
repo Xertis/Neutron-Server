@@ -44,21 +44,10 @@ local function main()
     local world = lib.world
 
     _G["/$p"] = table.copy(package.loaded)
-    local events_handlers = table.deep_copy(events.handlers)
 
     IS_RUNNING = true
     world.open_main()
     logger.log("world loop is started")
-
-    local neutron_events = {
-        "server:save", "server:main_tick",
-        "server:client_connected", "server:client_disconnected",
-        "server:client_pipe_start", "server:player_ground_landing"
-    }
-
-    for _, event_name in ipairs(neutron_events) do
-        events.handlers[event_name] = table.merge(events_handlers[event_name] or {}, events.handlers[event_name] or {})
-    end
 
     local save_interval = CONFIG.server.auto_save_interval * 60
     local shutdown_timeout = (CONFIG.server.shutdown_timeout or -1) * 60

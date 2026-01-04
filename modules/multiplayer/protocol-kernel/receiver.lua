@@ -20,8 +20,13 @@ function module.recv(buffer, client)
 end
 
 function module.__apppend(buffer, bytes)
+    bytes = bytes or {}
+    local len_bytes_line = #bytes
+
+    if len_bytes_line == 0 then return end
+
     local storage = buffer.storage
-    buffer.len = buffer.len + #bytes
+    buffer.len = buffer.len + len_bytes_line
 
     for i=1, #bytes do
         storage:insert(1, bytes[i])

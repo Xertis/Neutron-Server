@@ -1,7 +1,6 @@
 local sandbox = start_require("server:lib/private/sandbox/sandbox")
 local account_manager = start_require("server:lib/private/accounts/account_manager")
 local protocol = start_require("server:multiplayer/protocol-kernel/protocol")
-local inv_dat = require "server:api/v1/inv_dat"
 
 local module = {
     players = {},
@@ -27,7 +26,7 @@ function module.players.sync_states(_player, states)
     end
 
     if states.rot then
-        player.set_rot(_player.pid, states.rot.yaw, states.rot.pitch)
+        player.set_rot(_player.pid, states.rot.x, states.rot.y, states.rot.z)
     end
 
     if states.cheats then
@@ -35,7 +34,7 @@ function module.players.sync_states(_player, states)
         player.set_flight(_player.pid, states.cheats.flight)
     end
 
-    client:push_packet(protocol.ServerMsg.SynchronizePlayerPosition, states)
+    client:push_packet(protocol.ServerMsg.SynchronizePlayer, {data = states})
 end
 
 function module.players.get_in_radius(target_pos, radius)
@@ -76,11 +75,19 @@ function module.blocks.sync_inventory(pos, client)
     local invid = inventory.get_block(pos.x, pos.y, pos.z)
     local inv = inventory.get_inv(invid)
 
-    client:push_packet(protocol.ServerMsg.BlockInventory, pos.x, pos.y, pos.z, inv)
+    client:push_packet(protocol.ServerMsg.BlockInventory, {
+        pos = {x = pos.x, y = pos.y, z = pos.z},
+        inventory = inv
+    })
 end
 
 function module.blocks.sync_slot(pos, slot, client)
-    client:push_packet(protocol.ServerMsg.BlockInventorySlot, pos.x, pos.y, pos.z, slot.slot_id, slot.item_id, slot.item_count)
+    client:push_packet(protocol.ServerMsg.BlockInventorySlot, {
+        pos = {x = pos.x, y = pos.y, z = pos.z},
+        slot_id = slot.slot_id,
+        item_id = slot.item_id,
+        item_count = slot.item_count
+    })
 end
 
 return module

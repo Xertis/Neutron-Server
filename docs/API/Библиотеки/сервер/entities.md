@@ -5,7 +5,7 @@
 ### 1.1. Структура модуля
 
 #### Доступные поля сущностей
-- **standart_fields**:
+- **standard_fields**:
   - `tsf_pos` (vec3): позиция сущности `{x, y, z}`.
   - `tsf_rot` (number): вращение сущности.
   - `tsf_size` (vec3): размер трансформации.
@@ -30,7 +30,7 @@ entities.register(entity_name, config, spawn_handler)
 **Сигнатура config:**
 ```lua
 {
-    standart_fields = {
+    standard_fields = {
         tsf_pos = {
             maximum_deviation = number, -- Максимальное отклонение
             evaluate_deviation = function(dist, cur_val, client_val) -- Оценка отклонения
@@ -109,7 +109,7 @@ entities.eval.Never -- Всегда возвращает 0
 ```lua
 types = {
     Custom = "custom_fields",
-    Standart = "standart_fields",
+    Standard = "standard_fields",
     Models = "models",
     Textures = "textures",
     Components = "components"

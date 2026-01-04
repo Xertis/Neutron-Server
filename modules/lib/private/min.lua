@@ -75,6 +75,7 @@ end
 function lib.world.open_main()
 
     logger.log("Discovery of the main world")
+    app.reset_content({"server"})
     app.open_world(CONFIG.game.main_world)
 
     player.set_suspended(ROOT, false)

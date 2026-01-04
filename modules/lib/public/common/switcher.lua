@@ -6,7 +6,9 @@ function switcher.new(func)
 
     self.switchs = {}
     self.func = func
-    self.general_middlewares = {}
+    self.middleware = function ()
+        return true
+    end
 
     return self
 end
@@ -15,40 +17,21 @@ function switcher:add_case(val, func)
     self.switchs[val] = {func = func}
 end
 
-function switcher:add_middleware(val, middleware)
-    if self.switchs[val] then
-        local middlewares = table.set_default(self.switchs[val], "middlewares", {})
-
-        table.insert(middlewares, middleware)
-        return true
-    else
-        return false
-    end
+function switcher:add_middleware(middleware)
+    self.middleware = middleware
 end
 
-function switcher:add_general_middleware(middleware)
-    table.insert(self.general_middlewares, middleware)
+function switcher:add_generic_middleware(middleware)
+    table.insert(self.generic_middlewares, middleware)
 end
 
 function switcher:switch(key, ...)
-    if self.switchs[key] == nil then
-        return self.func(...)
-    elseif #self.general_middlewares ~= 0 then
-        for _, middleware in ipairs(self.general_middlewares) do
-            local args = table.deep_copy({...})
-            if not middleware(unpack(args)) then
-                return
-            end
-        end
+    if not self.middleware(...) then
+        return
     end
 
-    if self.switchs[key].middlewares then
-        for _, middleware in ipairs(self.switchs[key].middlewares) do
-            local args = table.deep_copy({...})
-            if not middleware(unpack(args)) then
-                return
-            end
-        end
+    if self.switchs[key] == nil then
+        return self.func(...)
     end
 
     return self.switchs[key].func(...)

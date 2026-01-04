@@ -22,16 +22,16 @@ local function upd(blockid, x, y, z, playerid)
     playerid = math.max(playerid, 0)
 
     local data = {
-        x,
-        y,
-        z,
-        block.get_states(x, y, z),
-        block.get(x, y, z),
-        playerid
+        block = {
+            pos = {x = x, y = y, z = z},
+            state = block.get_states(x, y, z),
+            id = block.get(x, y, z)
+        },
+        pid = playerid
     }
 
     local buffer = protocol.create_databuffer()
-    buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.BlockChanged, unpack(data)))
+    buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.BlockChanged, data))
 
     server_echo.put_event(
         function (client)
@@ -50,7 +50,11 @@ local function upd(blockid, x, y, z, playerid)
                 return
             end
 
-            client.network:send(buffer.bytes)
+            if not client:interceptor_process(protocol.ServerMsg.BlockChanged, data) then
+                return
+            end
+
+            client:queue_response(buffer.bytes)
         end
     )
 end

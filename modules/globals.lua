@@ -11,7 +11,7 @@ PLAYER_ENTITY_ID = nil
 ROOT_PID = 0
 COMMAND_PREFIX = "/"
 CODES = {
-    codes_path = "server:default_data/codes.json"
+    codes_path = "server:resources/codes.json"
 }
 
 --Аккаунты
@@ -25,6 +25,13 @@ RESERVED_USERNAMES = {
 IS_RUNNING = false
 IS_FIRST_RUN = false
 IS_RELEASE = false
+PROTOCOL_VERSION = 3
+API_VERSION = 2
+PROTOCOL_STATES = {
+    Status = 0,
+    Login = 1,
+    Active = 2
+}
 SERVER_VERSION = json.parse(file.read("server:package.json")).version
 PROJECT_NAME = "Neutron"
 LOGO = [[
@@ -54,7 +61,7 @@ TPS = {
 
 --Прочее
 USER_ICON_PATH = "user:icon.png"
-DEFAULT_ICON_PATH = "server:default_data/server-icon.png"
+DEFAULT_ICON_PATH = "server:resources/server-icon.png"
 HAPPY_NEW_YEAR = true
 EVENT = nil
 
