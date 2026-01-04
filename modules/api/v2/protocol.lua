@@ -3,7 +3,6 @@ local server_echo = start_require "server:multiplayer/server/server_echo"
 
 local module = {
     ServerMsg = protocol.ServerMsg,
-    protocol = {}
 }
 
 function module.tell(client, packet_type, data)
@@ -27,6 +26,10 @@ function module.echo(packet_type, data)
     server_echo.put_event(
         function (client)
             if client.active ~= true then
+                return
+            end
+
+            if not client:interceptor_process(packet_type, data) then
                 return
             end
 
