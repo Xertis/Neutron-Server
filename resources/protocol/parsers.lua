@@ -13,6 +13,43 @@ ForeignDecode = function () end
 
 --@READ_START
 
+-- @http_get.write
+-- VARIABLES
+-- TO_SAVE val
+do
+    buf:put_string(val)
+end--@
+
+-- @http_get.read
+-- VARIABLES bytes current max str_byte val
+-- TO_LOAD data
+do
+    bytes = {71}
+    current = utf8.tobytes("\r\n\r\n", true)
+    max = 4*1024
+
+    while not table.deep_equals(table.sub(bytes, #bytes-3), current) do
+        str_byte = buf:get_byte()
+
+        bytes[#bytes+1] = str_byte
+
+        if #bytes > max then
+            break
+        end
+    end
+
+    val = utf8.tostring(bytes)
+
+    data = http.toJsonString(val)
+end--@
+
+-- @degree.read
+-- VARIABLES
+-- TO_LOAD a
+do
+    a = (buf:get_uint24() / 16777215) * 360 - 180
+end--@
+
 -- @degree.write
 -- VARIABLES deg
 -- TO_SAVE val

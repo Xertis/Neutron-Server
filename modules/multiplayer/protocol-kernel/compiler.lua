@@ -4,6 +4,7 @@ local tokenizer = require "multiplayer/protocol-kernel/tokenizer"
 local bincode = require "server:lib/public/common/bincode"
 local bson = require "server:lib/private/files/bson"
 local edd = require "server:lib/private/files/edd"
+local http = require "server:lib/private/http/httprequestparser"
 
 local module = {}
 
@@ -176,6 +177,8 @@ function module.load(code)
         bit = bit,
         Bytearray = Bytearray,
         compression = compression,
+        http = http,
+        utf8 = utf8,
         bson = bson,
         bincode = bincode,
         edd = edd,

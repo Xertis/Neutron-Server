@@ -65,7 +65,6 @@ function protocol.parse_packet(client_or_server, external_buffer)
 
     if not state then
         logger.log("Packet parsing crash, additional information in server.log", 'E')
-
         logger.log("Error: " .. res, 'E', true)
 
         logger.log("Traceback:", 'E', true)

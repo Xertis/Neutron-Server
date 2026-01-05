@@ -5,7 +5,7 @@ local Network = require "lib/public/network"
 local container = require "lib/private/common/container"
 local server_pipe = require "multiplayer/server/server_pipe"
 local server_echo = require "multiplayer/server/server_echo"
-local server_matches = require "multiplayer/server/server_matches"
+local server_matches = require "multiplayer/server/handlers/general_matches"
 local protocol = require "multiplayer/protocol-kernel/protocol"
 
 local server = {}

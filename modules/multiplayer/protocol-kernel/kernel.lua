@@ -18,18 +18,53 @@ local compiled = {
     client = {}
 }
 
-local function sort(arr)
-    local result = table.copy(arr)
-    table.sort(result)
-    return result
-end
-
 local function gen_ids(side)
-    local keys = sort(table.keys(compiled[side]))
+    local packets = compiled[side]
+    local name_to_id = {}
+    local id_to_name = {}
+    local used_ids = {}
 
-    for id, packet_name in ipairs(keys) do
-        module[side].ids[packet_name] = id-1
-        module[side].ids[id-1] = packet_name
+    for name, data in pairs(packets) do
+        if data.packet_id then
+            local id = nil
+            if type(data.packet_id) == "number" then
+                id = data.packet_id
+            else
+                id = utf8.codepoint(data.packet_id)
+            end
+
+            if id_to_name[id] then
+                error(string.format("Duplicate packet_id! ID %d is used by '%s' and '%s'", id, id_to_name[id], name))
+            end
+            name_to_id[name] = id
+            id_to_name[id] = name
+            used_ids[id] = true
+        end
+    end
+
+    local auto_packets = {}
+    for name, data in pairs(packets) do
+        if not data.packet_id then
+            table.insert(auto_packets, name)
+        end
+    end
+    table.sort(auto_packets)
+
+    local current_id = 0
+    for _, name in ipairs(auto_packets) do
+        while used_ids[current_id] do
+            current_id = current_id + 1
+        end
+        name_to_id[name] = current_id
+        id_to_name[current_id] = name
+        used_ids[current_id] = true
+        current_id = current_id + 1
+    end
+
+    module[side].ids = name_to_id
+
+    for id, name in pairs(id_to_name) do
+        module[side].ids[id] = name
     end
 end
 
@@ -52,10 +87,7 @@ local function get_fields(annotation, letter, name)
                 error("Stack overflow detected inside the " .. name)
             end
 
-            local inner_key2index,
-                  inner_index2key,
-                  inner_types_compiler_types
-                  = get_fields(annotation, annotation[val], val)
+            local _, _, inner_types_compiler_types = get_fields(annotation, annotation[val], val)
 
             for _, t in ipairs(inner_types_compiler_types) do
                 table.insert(types_compiler_types, t)
@@ -73,14 +105,10 @@ end
 
 function module.__compilation(side, path)
     local letters = module[side].letters
-    local annotation = yaml.parse(
-        file.read(path)
-    )
+    local annotation = yaml.parse(file.read(path))
 
     for name, letter in pairs(annotation) do
-        local key2index,
-              index2key,
-              types_compiler_types = get_fields(annotation, letter, name)
+        local _, _, types_compiler_types = get_fields(annotation, letter, name)
 
         local encoder = compiler.load(compiler.compile_encoder(types_compiler_types))
         local decoder = compiler.load(compiler.compile_decoder(types_compiler_types))
@@ -88,11 +116,10 @@ function module.__compilation(side, path)
         letters[name] = name
 
         compiled[side][name] = {
+            packet_id = letter.packet_id,
             encode = function (buf, data)
                 local flat_data = {}
-                if data[1] then
-                    flat_data = data
-                end
+                if data[1] then flat_data = data end
 
                 local function flatten(fields, d)
                     for _, f in ipairs(fields) do
@@ -111,7 +138,6 @@ function module.__compilation(side, path)
             end,
             decode = function (buf)
                 local flat_data = decoder(buf)
-
                 local idx = 1
                 local function unflatten(fields)
                     local d = {}

@@ -2,7 +2,7 @@ local Pipeline = require "lib/public/pipeline"
 local protocol = require "multiplayer/protocol-kernel/protocol"
 local protect = require "lib/private/protect"
 local sandbox = require "lib/private/sandbox/sandbox"
-local matches = require "multiplayer/server/server_matches"
+local matches = require "multiplayer/server/handlers/general_matches"
 
 local entities_manager = require "lib/private/entities/entities_manager"
 local weather_manager = require "lib/private/gfx/weather_manager"

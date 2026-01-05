@@ -11,6 +11,8 @@ local api_env = require "api/v2/env"
 local entities_manager = require "lib/private/entities/entities_manager"
 local lib = require "lib/private/min"
 local mfsm = require "lib/public/common/multifsm"
+local http = require "server:lib/private/http/httprequestparser"
+local http_matches = require "multiplayer/server/handlers/http_matches"
 
 local hashed_packs = nil
 
@@ -110,6 +112,24 @@ matches.general_fsm:add_state("idle", {
                 matches.joining_fsm:transition_to(client, "awaiting_join_game")
                 return "joining"
             end
+        elseif event.packet_type == protocol.ClientMsg.HTTPGet then
+            local handler = function ()
+                http_matches:switch(event.request.path, event, client)
+            end
+
+            local success, res = pcall(handler)
+            if not success then
+                logger.log(string.format("http handler error: %s, additional information in server.log", res), "E")
+                logger.log(debug.traceback(), "E", true)
+                logger.log(json.tostring(event), "E", true)
+                client:queue_response(utf8.tobytes(
+                    http.buildResponse(500, {
+                        message = "Internal Server Error"
+                    })
+                ))
+            end
+
+            client:kick()
         end
     end
 })
@@ -136,7 +156,7 @@ matches.status_fsm:add_state("awaiting_status_request", {
 
 matches.status_fsm:add_state("sending_status", {
     on_enter = function(client)
-        logger.log("The expected package has been received, sending the status...")
+        logger.log("The expected packet has been received, sending the status...")
         local icon = nil
 
         if file.exists(USER_ICON_PATH) then
