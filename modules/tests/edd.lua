@@ -24,7 +24,7 @@ end
 
 run_test("empty structure", function()
   local decoded = roundtrip({})
-  assert(decoded.standart_fields == nil, "standart_fields должно быть nil")
+  assert(decoded.standard_fields == nil, "standard_fields должно быть nil")
   assert(decoded.custom_fields == nil, "custom_fields должно быть nil")
   assert(decoded.textures == nil, "textures должно быть nil")
   assert(decoded.eddels == nil, "eddels должно быть nil")
@@ -61,16 +61,16 @@ run_test("nested tables in custom_fields", function()
   assert(table.deep_equals(decoded.custom_fields, dirty.custom_fields), "вложенные таблицы не совпадают")
 end)
 
-run_test("standart_fields transforms", function()
-  local dirty = { standart_fields = {
+run_test("standard_fields transforms", function()
+  local dirty = { standard_fields = {
     tsf_pos = {1.0, 2.0, 3.0},
     tsf_size = {4.0, 5.0, 6.0},
     body_size = {7.0, 8.0, 9.0}
   }}
   local decoded = roundtrip(dirty)
-  assert(table.deep_equals(decoded.standart_fields.tsf_pos, dirty.standart_fields.tsf_pos), "tsf_pos не совпадает")
-  assert(table.deep_equals(decoded.standart_fields.tsf_size, dirty.standart_fields.tsf_size), "tsf_size не совпадает")
-  assert(table.deep_equals(decoded.standart_fields.body_size, dirty.standart_fields.body_size), "body_size не совпадает")
+  assert(table.deep_equals(decoded.standard_fields.tsf_pos, dirty.standard_fields.tsf_pos), "tsf_pos не совпадает")
+  assert(table.deep_equals(decoded.standard_fields.tsf_size, dirty.standard_fields.tsf_size), "tsf_size не совпадает")
+  assert(table.deep_equals(decoded.standard_fields.body_size, dirty.standard_fields.body_size), "body_size не совпадает")
 end)
 
 run_test("textures, models and components", function()
