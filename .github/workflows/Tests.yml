@@ -19,7 +19,7 @@ jobs:
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         workflow: CI.yml
-        run_id: 18059006751
+        run_id: 20745926109
         name: Windows-Build
         path: build
         repo: MihailRis/voxelcore

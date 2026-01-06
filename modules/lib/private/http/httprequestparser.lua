@@ -244,7 +244,7 @@ function httprequestparser.toJsonString(requestBodyBuffer)
 end
 
 function httprequestparser.buildResponse(status, bodyData, extraHeaders)
-    local extraHeaders = extraHeaders or {}
+    extraHeaders = extraHeaders or {}
     local statusText = statusMessages[status] or "Unknown"
     local responseLine = string.format("HTTP/1.1 %d %s\r\n", status, statusText)
 
