@@ -52,7 +52,7 @@ end
 
 for i=1, 25 do
     run_test("PlayerEntity random test", function()
-        local player = { compressed = false }
+        local player = {}
         if math.random() > 0.5 then
             player.pos = {
                 x = math.random() * 200 - 100,

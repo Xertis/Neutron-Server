@@ -857,7 +857,7 @@ do
     has_rot = player.rot ~= nil
     has_cheats = player.cheats ~= nil
     has_item = player.hand_item ~= nil
-    has_additional_information = 
+    has_additional_information =
         player.infinite_items ~= nil or
         player.interaction_distance ~= nil or
         player.instant_destruction ~= nil

@@ -5,7 +5,7 @@ local ACCESS_DENIES = "Access denied"
 
 local function parse_path(path)
     if table.has({
-        "main.lua", "=[C]", "tests.lua", "script:main.lua"
+        "main.lua", "=[C]", "tests.lua", "script:main.lua", "script:tests.lua"
     }, path) then
         return "server", ""
     end
