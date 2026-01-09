@@ -11,7 +11,7 @@
     "main_world": "overworld"
   },
   "server": {
-    "version": "0.28.0",
+    "version": "0.31.0",
     "max_players": 16,
     "short_description": "MasterServer",
     "description": "",
