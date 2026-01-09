@@ -89,6 +89,14 @@ function lib.world.open_main()
     PLAYER_ENTITY_ID = root_entity:def_index()
 end
 
+function lib.world.open_main_in_local()
+    ROOT = hud.get_player()
+    logger.log("Discovery of the main world")
+    local root_entity = entities.get(player.get_entity(ROOT))
+
+    PLAYER_ENTITY_ID = root_entity:def_index()
+end
+
 function lib.world.close_main()
     player.set_suspended(ROOT, true)
 

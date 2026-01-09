@@ -4,11 +4,12 @@ local function start_require(path)
         return start_require(prefix..':'..path)
     end
 
+    local old_path = path
     local prefix, file = parse_path(path)
     path = prefix..":modules/"..file..".lua"
 
     if not _G["/$p"] then
-        return
+        return require(old_path)
     end
 
     return _G["/$p"][path]
@@ -19,6 +20,11 @@ local protocol = nil
 local sandbox = nil
 
 local function upd(blockid, x, y, z, playerid)
+
+    if not server_echo or not protocol or not sandbox then
+        return
+    end
+
     playerid = math.max(playerid, 0)
 
     local data = {
@@ -60,9 +66,34 @@ local function upd(blockid, x, y, z, playerid)
 end
 
 function on_world_open()
-    server_echo = start_require("server:multiplayer/server/server_echo")
-    protocol = start_require("server:multiplayer/protocol-kernel/protocol")
-    sandbox = start_require("server:lib/private/sandbox/sandbox")
+    local init = function ()
+        server_echo = start_require("server:multiplayer/server/server_echo")
+        protocol = start_require("server:multiplayer/protocol-kernel/protocol")
+        sandbox = start_require("server:lib/private/sandbox/sandbox")
+    end
+
+    if IS_RUNNING then
+        init()
+        return
+    end
+
+    events.on("server:__initialization_completed", function ()
+        init()
+    end)
+end
+
+function on_world_tick()
+    events.emit("server:__world_tick")
+
+    debug.print({
+        pos = {player.get_pos(1)},
+        flight = player.is_flight(1),
+        suspend = player.is_suspended(1)
+    })
+end
+
+function on_world_save()
+    events.emit("server:__world_save")
 end
 
 function on_block_placed( ... )
