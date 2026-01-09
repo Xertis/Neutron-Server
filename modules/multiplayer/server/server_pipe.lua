@@ -49,20 +49,30 @@ ServerPipe:add_middleware(function(client)
 end)
 
 ServerPipe:add_middleware(function(client)
+    print("Принят клиент: " .. client.client_id)
     if List.is_empty(client.received_packets) then
+        print("пакетов нет у клиента")
         return client
     end
 
+    print("активность клиента: " ..  tostring(client.active))
+
     local packet = List.popleft(client.received_packets)
+
+    print("пакет имеет тип: " .. tostring(packet.packet_type))
 
     local success, err = pcall(function()
         if client.active == false then
             local status = interceptors.receive.__process(packet, client)
+            print("Обрабатываем пакет со статусом: " .. tostring(status))
             if status then matches.general_fsm:handle_event(client, packet) end
         elseif client.active == true then
+            print("Обрабатываем пакет: " .. tostring(client.client_id))
             matches.client_online_handler:switch(packet.packet_type, packet, client)
         end
     end)
+
+    print("некст стейт\n")
 
     if not success then
         client:kick()
