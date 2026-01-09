@@ -59,7 +59,12 @@ function protocol.parse_packet(client_or_server, external_buffer)
     buffer.external_buffer = external_buffer
     buffer.recv_func = receiver.get
 
+    print("Читаем пакет")
+
     local packet_type = buffer:get_byte()
+
+    print("Тип у пакета", packet_type)
+
 
     local state, res = pcall(kernel.read, buffer, client_or_server, kernel[client_or_server].ids[packet_type])
 
