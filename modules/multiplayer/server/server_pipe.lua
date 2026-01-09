@@ -56,6 +56,7 @@ ServerPipe:add_middleware(function(client)
     end
 
     print("активность клиента: " ..  tostring(client.active))
+    print("статус fsm клиента: " .. tostring(matches.general_fsm:get_current_state(client)))
 
     local packet = List.popleft(client.received_packets)
 
