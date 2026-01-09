@@ -37,15 +37,16 @@ BlockRegion:
 StatusResponse:
   fields:
     - protocol_reference: string
-    - protocol_version: uint16
+    - protocol_version: string
+
+    - engine_version: string
+    - api_version: string
+    - neutron_version: string
   
     - short_desc: string
     - description: string
     - favicon: bytearray
     - friends_states: Array<boolean>
-    - engine_version: string
-    - neutron_version: string
-    - api_version: uint16
     - max: uint16
     - online: uint16
 
