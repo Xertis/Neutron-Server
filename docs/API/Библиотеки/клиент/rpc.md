@@ -9,5 +9,5 @@ api.rpc.emitter.create_send(pack: string, event: string) -> function (...)
 ## Методы чтения
 ```lua
 -- Регистрирует обработчик на ивент пака, в отличии от events.on, в обработчик поступает десериализованный bson из полученных байт
-api.rpc.handler.on(pack: string, event: string, handler: function (bson))
+api.rpc.handler.on(pack: string, event: string, handler: function (...))
 ```
