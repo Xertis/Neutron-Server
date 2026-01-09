@@ -550,6 +550,7 @@ matches.client_online_handler:add_case(protocol.ClientMsg.ChatMessage, (
 
 matches.client_online_handler:add_case(protocol.ClientMsg.Disconnect, (
     function(packet, client)
+        client:kick()
         if not client.account then
             return
         end
