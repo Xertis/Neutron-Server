@@ -30,11 +30,11 @@ function module.players.sync_states(_player, states)
     local client = account_manager.by_username.get_client(_player.username)
 
     if states.pos then
-        player.set_pos(_player.pid, states.pos.x, states.pos.y, states.pos.z)
+        player.set_pos(_player.pid, states.pos[1], states.pos[2], states.pos[3])
     end
 
     if states.rot then
-        player.set_rot(_player.pid, states.rot.x, states.rot.y, states.rot.z)
+        player.set_rot(_player.pid, states.rot[1], states.rot[2], states.rot[3])
     end
 
     if states.cheats then
@@ -53,7 +53,7 @@ function module.players.get_in_radius(target_pos, radius)
     end
 
     local res = {}
-    local x, y, z = target_pos.x, target_pos.y, target_pos.z
+    local x, y, z = unpack(target_pos)
 
     for key, _player in pairs(sandbox.get_players()) do
         local x2, y2, z2 = player.get_pos(_player.pid)
@@ -80,18 +80,18 @@ function module.players.get_by_pid(pid)
 end
 
 function module.blocks.sync_inventory(pos, client)
-    local invid = inventory.get_block(pos.x, pos.y, pos.z)
+    local invid = inventory.get_block(pos[1], pos[2], pos[3])
     local inv = inventory.get_inv(invid)
 
     client:push_packet(protocol.ServerMsg.BlockInventory, {
-        pos = {x = pos.x, y = pos.y, z = pos.z},
+        pos = {x = pos[1], y = pos[2], z = pos[3]},
         inventory = inv
     })
 end
 
 function module.blocks.sync_slot(pos, slot, client)
     client:push_packet(protocol.ServerMsg.BlockInventorySlot, {
-        pos = {x = pos.x, y = pos.y, z = pos.z},
+        pos = {x = pos[1], y = pos[2], z = pos[3]},
         slot_id = slot.slot_id,
         item_id = slot.item_id,
         item_count = slot.item_count

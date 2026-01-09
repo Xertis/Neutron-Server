@@ -95,7 +95,7 @@ PlayerRotation:
   fields:
     - x: degree
     - y: degree
-    - x: degree
+    - z: degree
 
 PlayerCheats:
   fields:

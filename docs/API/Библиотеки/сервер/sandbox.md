@@ -17,7 +17,7 @@ api.sandbox.players.get_all() -> Table<Identity: Player>
 
 -- Возвращает таблицу игроков в определённом радиусе.
 api.sandbox.players.get_in_radius(
-    pos: {x=x, y=y, z=z},
+    pos: {x, y, z},
     radius: num
 ) -> Table<Identity: Player>
 
@@ -45,8 +45,8 @@ api.sandbox.players.sync_states(
 
 -- Сигнатура таблицы states:
 -- {
---    pos = {x = 0, y = 0, z = 0},
---    rot = {x = 0, y = 0, z = 0},
+--    pos = {x, y, z},
+--    rot = {x, y, z},
 --    cheats = {noclip = false, flight = false}
 -- }
 ```
@@ -56,14 +56,14 @@ api.sandbox.players.sync_states(
 ```lua
 -- Отправляет данные инвентаря блока с сервера на клиент.
 api.sandbox.blocks.sync_inventory(
-    pos: {x=0,y=0,z=0},
+    pos: {x, y, z},
     client: Client
 )
 
 
 -- Отправляет данные слота инвентаря блока на позиции pos клиенту.
 api.sandbox.blocks.sync_slot(
-    pos: {x=0,y=0,z=0},
+    pos: {x, y, z},
     slot: {slot_id=0, item_id=0, item_count=0},
     client: Client
 )
