@@ -41,7 +41,9 @@ ServerPipe:add_middleware(function(client)
         client.meta.recieve_co = co
     end
 
+    print("Принят клиент: " .. client.client_id)
     receiver.recv(client.meta.buffer, client)
+    print(client.meta.buffer.len)
 
     coroutine.resume(co)
 
@@ -49,7 +51,6 @@ ServerPipe:add_middleware(function(client)
 end)
 
 ServerPipe:add_middleware(function(client)
-    print("Принят клиент: " .. client.client_id)
     if List.is_empty(client.received_packets) then
         print("пакетов нет у клиента")
         return client
