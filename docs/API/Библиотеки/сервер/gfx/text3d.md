@@ -35,9 +35,9 @@ text3d.update_settings(id, preset)
 
 Объект, возвращаемый функцией `show()`, предоставляет методы для управления текстом.
 
-## Получение объекта по id
+### Получение объекта по id
 ```lua
-text3d.get_obj(id) -> TextObject
+text3d.get_obj(id) -> TextObject | nil
 ```
 
 ### Основные методы
