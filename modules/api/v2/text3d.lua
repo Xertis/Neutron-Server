@@ -5,7 +5,8 @@ local defaultFunctions = {
     "get_pos", "set_pos",
     "get_axis_x", "get_axis_y",
     "set_axis_x", "set_axis_y",
-    "set_rotation", "update_settings"
+    "set_rotation", "update_settings",
+    "hide"
 }
 
 local module = {}
