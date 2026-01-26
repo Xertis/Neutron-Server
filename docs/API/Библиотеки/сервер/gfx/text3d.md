@@ -13,16 +13,12 @@ text3d.show(position: vec3, text: string, preset: table, [extension: table]) -> 
 
 Параметры `preset` и `extension` содержат настройки отображения (см. документацию движка).
 
-```lua
-text3d.hide(id: number)
-```
-Удаляет 3D текст по его ID.
-
 ### Прямой доступ к функциям
 
 Модуль также предоставляет прямые аналоги всех методов объекта Text:
 
 ```lua
+text3d.hide(id)
 text3d.get_text(id)
 text3d.set_text(id, text)
 text3d.get_pos(id)
@@ -38,6 +34,11 @@ text3d.update_settings(id, preset)
 ## Объект Text
 
 Объект, возвращаемый функцией `show()`, предоставляет методы для управления текстом.
+
+## Получение объекта по id
+```lua
+text3d.get_obj(id) -> TextObject
+```
 
 ### Основные методы
 

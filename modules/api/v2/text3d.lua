@@ -77,4 +77,10 @@ function module.show(...)
     return id, Text.new(id)
 end
 
+function module.get_obj(id)
+    if text3d_manager.exists(id) then
+        return Text.new(id)
+    end
+end
+
 return module
