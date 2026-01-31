@@ -48,7 +48,7 @@ end
 function module.players.get_in_radius(target_pos, radius)
     target_pos = target_pos or {}
 
-    if not target_pos.x or not radius then
+    if not target_pos[1] or not radius then
         error("missing position or radius")
     end
 
