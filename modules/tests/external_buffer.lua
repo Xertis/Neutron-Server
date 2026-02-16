@@ -57,5 +57,14 @@ run_test("len", function()
   assert(receiver.len(buffer) == 245, "len() должен быть 245")
 end)
 
+run_test("empty", function ()
+  roundtrip()
+  receiver.empty(buffer)
+  assert(receiver.len(buffer) == 0, "len() должен быть 0")
+  roundtrip()
+  receiver.empty(buffer)
+  assert(receiver.get(buffer, 1) == nil, "get() должен быть nil")
+end)
+
 print(string.format("Passed %d/%d tests", passed, total))
 if passed ~= total then error() end

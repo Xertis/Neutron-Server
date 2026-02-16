@@ -14,9 +14,9 @@ ServerPipe:add_middleware(function(client)
     if not co then
         client.meta.buffer = receiver.create_buffer()
         co = coroutine.create(function()
+            local buffer = client.meta.buffer
             while true do
                 local received_any = false
-                local buffer = client.meta.buffer
                 while true do
                     local success, packet = pcall(function()
                         return protocol.parse_packet("client", buffer)
@@ -44,7 +44,6 @@ ServerPipe:add_middleware(function(client)
     receiver.recv(client.meta.buffer, client)
 
     coroutine.resume(co)
-
     return client
 end)
 

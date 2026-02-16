@@ -85,6 +85,11 @@ function lib.world.open_main()
     local root_entity = entities.get(player.get_entity(ROOT))
 
     PLAYER_ENTITY_ID = root_entity:def_index()
+
+    -- Загружаем команды
+    do
+        require "init/cmd"
+    end
 end
 
 function lib.world.close_main()
