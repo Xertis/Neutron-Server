@@ -5,7 +5,9 @@ local ACCESS_DENIES = "Access denied"
 
 local function parse_path(path)
     if table.has({
-        "main.lua", "=[C]", "tests.lua", "script:main.lua", "script:tests.lua"
+        "main.lua",
+        "tests.lua", "script:main.lua", "script:tests.lua",
+        "[string]",  "=[C]",
     }, path) then
         return "server", ""
     end
@@ -44,7 +46,6 @@ end
 function module.protect_return(val)
     for call=1, get_traceback_length() do
         local source = debug.getinfo(call).source
-
         local prefix, path = parse_path(source)
         if prefix == "server" and path:find("api") then
             break

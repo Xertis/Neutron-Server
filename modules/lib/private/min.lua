@@ -11,7 +11,19 @@ local lib = {
 
 ROOT = 0
 
+local player_exists = function(pid)
+    return player.get_name(pid) ~= nil
+end
+
 ---WORLD---
+local function create_root_player(pid)
+    player.create("root", pid)
+    player.set_noclip(pid, true)
+    player.set_flight(pid, true)
+    player.set_pos(pid, 0, 230, 0)
+
+    logger.log("Root player was created with pid: " .. pid)
+end
 
 function lib.world.preparation_main()
     --Загружаем мир
@@ -24,7 +36,7 @@ function lib.world.preparation_main()
     end
 
     table.insert(packs, "server")
-    app.reset_content({"server"})
+    app.reset_content({ "server" })
     app.config_packs(table.merge(packs, plugins), {})
     app.load_content()
 
@@ -37,14 +49,9 @@ function lib.world.preparation_main()
             CONFIG.game.worlds[name].generator
         )
 
-        player.create("root", ROOT)
-        player.set_noclip(ROOT, true)
-        player.set_flight(ROOT, true)
-        player.set_pos(ROOT, 0, 262, 0)
+        create_root_player(ROOT)
 
-        logger.log("Root player was created")
-
-        local expected = 3*(CONFIG.server.chunks_loading_distance^2)
+        local expected = 3 * (CONFIG.server.chunks_loading_distance ^ 2)
         logger.log("Loading chunks... Expected number of chunks: " .. expected)
 
         local ctime = time.uptime()
@@ -73,9 +80,8 @@ function lib.world.preparation_main()
 end
 
 function lib.world.open_main()
-
     logger.log("Discovery of the main world")
-    app.reset_content({"server"})
+    app.reset_content({ "server" })
     app.open_world(CONFIG.game.main_world)
 
     player.set_noclip(ROOT, true)
@@ -90,6 +96,19 @@ function lib.world.open_main()
     do
         require "init/cmd"
     end
+end
+
+function lib.world.open_main_in_local()
+    local main_player_pid = hud.get_player()
+    ROOT = main_player_pid + 1
+
+    if not player_exists(ROOT) then create_root_player(ROOT) end
+
+    PLAYER_ENTITY_ID = entities.get(player.get_entity(main_player_pid)):def_index()
+    player.set_loading_chunks(ROOT, false)
+    player.set_suspended(ROOT, true)
+
+    logger.log("Discovery of the main world")
 end
 
 function lib.world.close_main()
@@ -121,7 +140,7 @@ function lib.validate.username(name)
         'ъ', 'ы', 'ь', 'э', 'ю', 'я'
     }
 
-    local numbers = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'}
+    local numbers = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' }
 
     if #name > 16 then
         return false
@@ -131,7 +150,7 @@ function lib.validate.username(name)
         return false
     end
 
-    for i=2, #name do
+    for i = 2, #name do
         local char = name[i]
 
         if not table.has(alphabet, char) and not table.has(numbers, char) then

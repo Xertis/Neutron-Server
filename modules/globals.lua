@@ -2,6 +2,11 @@ PACK_ID = "server"
 
 --Конфиг
 CONFIG_PATH = "config:server_config.json"
+
+if hud then
+    CONFIG_PATH = "world:server_config.json"
+end
+
 CONFIG = {} --Инициализируется в std
 LAST_SERVER_UPDATE = -1
 

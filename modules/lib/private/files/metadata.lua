@@ -13,6 +13,10 @@ local PATHS = {
     server = "config:server.dat"
 }
 
+if hud then
+    PATHS.server = "world:server.dat"
+end
+
 local PLAYERS_META = {}
 local SERVER_META = {
     accounts = {}
