@@ -42,6 +42,8 @@ function lib.world.preparation_main()
         player.set_flight(ROOT, true)
         player.set_pos(ROOT, 0, 262, 0)
 
+        logger.log("Root player was created")
+
         local expected = 3*(CONFIG.server.chunks_loading_distance^2)
         logger.log("Loading chunks... Expected number of chunks: " .. expected)
 
@@ -66,8 +68,6 @@ function lib.world.preparation_main()
 
         logger.log(string.format("Chunks loaded successfully. %s chunks loaded", count_chunks))
 
-        player.set_suspended(ROOT, true)
-
         app.close_world(true)
     end
 end
@@ -78,8 +78,6 @@ function lib.world.open_main()
     app.reset_content({"server"})
     app.open_world(CONFIG.game.main_world)
 
-    player.set_suspended(ROOT, false)
-
     player.set_noclip(ROOT, true)
     player.set_flight(ROOT, true)
     player.set_pos(ROOT, 0, 262, 0)
@@ -87,6 +85,11 @@ function lib.world.open_main()
     local root_entity = entities.get(player.get_entity(ROOT))
 
     PLAYER_ENTITY_ID = root_entity:def_index()
+
+    -- Загружаем команды
+    do
+        require "init/cmd"
+    end
 end
 
 function lib.world.open_main_in_local()

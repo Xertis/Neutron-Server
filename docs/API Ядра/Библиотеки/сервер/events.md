@@ -34,6 +34,6 @@ api.events.echo(
 api.events.on(
     pack: string,
     event: string,
-    handler: function(Client, table<bytes>)
+    handler: function(Client, Bytearray)
 )
 ```

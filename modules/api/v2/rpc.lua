@@ -27,7 +27,7 @@ function module.handler.on(pack, event, handler)
     events.on(pack, event, function (client, bytes)
         local data = bson.deserialize(bytes)
 
-        handler(client, data)
+        handler(client, unpack(data))
     end)
 end
 

@@ -50,11 +50,10 @@ HTTPost:
 HandShake:
   fields:
     - protocol_reference: string
-    - protocol_version: uint16
+    - protocol_version: string
 
     - engine_version: string
-
-    - api_version: uint16
+    - api_version: string
 
     - friends_list: Array<string>
 

@@ -5,7 +5,8 @@ local defaultFunctions = {
     "get_pos", "set_pos",
     "get_axis_x", "get_axis_y",
     "set_axis_x", "set_axis_y",
-    "set_rotation", "update_settings"
+    "set_rotation", "update_settings",
+    "hide"
 }
 
 local module = {}
@@ -74,6 +75,12 @@ function module.show(...)
     local id = text3d_manager.show(...)
 
     return id, Text.new(id)
+end
+
+function module.get_obj(id)
+    if text3d_manager.exists(id) then
+        return Text.new(id)
+    end
 end
 
 return module

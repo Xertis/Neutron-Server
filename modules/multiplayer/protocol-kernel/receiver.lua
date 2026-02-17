@@ -28,16 +28,12 @@ function module.__apppend(buffer, bytes)
     local storage = buffer.storage
     buffer.len = buffer.len + len_bytes_line
 
-    for i=1, #bytes do
-        storage:insert(1, bytes[i])
-    end
+    storage:append(bytes)
 end
 
 function module.get(buffer, pos)
-    local inverse_pos = buffer.len-pos+1
-    if inverse_pos > 0 and inverse_pos <= buffer.len then
-        local byte = buffer.storage[inverse_pos]
-        return byte
+    if pos > 0 and pos <= buffer.len then
+        return buffer.storage[pos]
     end
 end
 
@@ -50,13 +46,26 @@ function module.print(buffer)
 end
 
 function module.clear(buffer, pos)
-    local start = buffer.len-pos+1
-    buffer.storage:remove(start, buffer.len-start+1)
-    buffer.len = start-1
+    local storage = buffer.storage
+    local n = #storage
+    local new_len = n - pos
+
+    buffer.len = new_len
+
+    if pos <= 0 then return storage end
+    if pos >= n then
+        storage:remove(1, n)
+        return storage
+    end
+    for i = 1, new_len do
+        storage[i] = storage[i + pos]
+    end
+
+    storage:remove(new_len + 1, n - new_len)
 end
 
 function module.empty(buffer)
-    buffer.storage = Bytearray()
+    buffer.storage:clear()
     buffer.len = 0
 end
 

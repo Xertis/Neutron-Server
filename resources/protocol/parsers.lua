@@ -354,20 +354,14 @@ end--@
 -- TO_SAVE arr
 do
     buf:put_bytes(bincode.encode_varint(#arr))
-    for i = 1, #arr do
-        buf:put_byte(arr[i])
-    end
+    buf:put_bytes(arr)
 end--@
 
 -- @bytearray.read
 -- VARIABLES i
 -- TO_LOAD result
 do
-    result = Bytearray()
-
-    for i = 1, bincode.decode_varint(buf) do
-        result:append(buf:get_byte())
-    end
+    result = buf:get_bytes(bincode.decode_varint(buf))
 end--@
 
 -- @Rule.write

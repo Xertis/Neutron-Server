@@ -10,25 +10,25 @@ local player_fields = {}
 local entities_data = {}
 local notificated_entities = {}
 
-local culling = function (pid, target_pos, target_size)
+local culling = function(pid, target_pos, target_size)
     local fov = 150
     local dir = player.get_dir(pid)
-    local pos = {player.get_pos(pid)}
+    local pos = { player.get_pos(pid) }
     local half_size = {
         target_size[1] / 2,
         target_size[2],
         target_size[3] / 2
     }
     local vertices = {
-        {target_pos[1] - half_size[1], target_pos[2] + half_size[2], target_pos[3] - half_size[3]},
-        {target_pos[1] + half_size[1], target_pos[2] + half_size[2], target_pos[3] - half_size[3]},
-        {target_pos[1] + half_size[1], target_pos[2] + half_size[2], target_pos[3] + half_size[3]},
-        {target_pos[1] - half_size[1], target_pos[2] + half_size[2], target_pos[3] + half_size[3]},
+        { target_pos[1] - half_size[1], target_pos[2] + half_size[2], target_pos[3] - half_size[3] },
+        { target_pos[1] + half_size[1], target_pos[2] + half_size[2], target_pos[3] - half_size[3] },
+        { target_pos[1] + half_size[1], target_pos[2] + half_size[2], target_pos[3] + half_size[3] },
+        { target_pos[1] - half_size[1], target_pos[2] + half_size[2], target_pos[3] + half_size[3] },
 
-        {target_pos[1] - half_size[1], target_pos[2], target_pos[3] - half_size[3]},
-        {target_pos[1] + half_size[1], target_pos[2], target_pos[3] - half_size[3]},
-        {target_pos[1] + half_size[1], target_pos[2], target_pos[3] + half_size[3]},
-        {target_pos[1] - half_size[1], target_pos[2], target_pos[3] + half_size[3]}
+        { target_pos[1] - half_size[1], target_pos[2],                target_pos[3] - half_size[3] },
+        { target_pos[1] + half_size[1], target_pos[2],                target_pos[3] - half_size[3] },
+        { target_pos[1] + half_size[1], target_pos[2],                target_pos[3] + half_size[3] },
+        { target_pos[1] - half_size[1], target_pos[2],                target_pos[3] + half_size[3] }
     }
 
     for _, vertex in ipairs(vertices) do
@@ -41,15 +41,25 @@ local culling = function (pid, target_pos, target_size)
 end
 
 function module.register(entity_name, config, handler)
-    logger.log(string.format('The entity "%s" is registered.', entity_name))
     if PLAYER_ENTITY_ID == entities.def_name(entity_name) then
-        error("You cannot register an entity responsible for a player, to create custom fields use entities.players.add_custom_field")
+        error(
+            "You cannot register an entity responsible for a player, to create custom fields use entities.players.add_custom_field")
+    end
+
+    if config.models then
+        local new_models = {}
+        for index, value in pairs(config.models) do
+            new_models[tonumber(index)] = value
+            logger.log("Entity model indexes must be of type number", "W")
+        end
+        config.models = new_models
     end
 
     reg_entities[entity_name] = {
         config = config,
         spawn_handler = handler
     }
+    logger.log(string.format('The entity "%s" is registered.', entity_name))
 end
 
 function module.get_reg_config(entity_name)
@@ -65,7 +75,7 @@ function module.clear_pid(pid)
 end
 
 function module.add_field(type, key, field)
-    if not table.has({"custom_fields", "models", "textures", "components"}, type) then
+    if not table.has({ "custom_fields", "models", "textures", "components" }, type) then
         error("Incorrect type for entity field")
     end
 
@@ -83,10 +93,10 @@ function module.despawn(uid)
     entities_data[uid] = nil
 
     local buffer = protocol.create_databuffer()
-    buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.EntityDespawn, {uid}))
+    buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.EntityDespawn, { uid }))
 
     server_echo.put_event(
-        function (client)
+        function(client)
             client:queue_response(buffer.bytes)
         end
     )
@@ -141,10 +151,10 @@ local function __create_data(entity, is_player)
     local custom_fields = {}
     for field_name, field in pairs(conf.custom_fields or conf) do
         if (conf == player_fields and field_name ~= "textures" and field_name ~= "models" and field_name ~= "components")
-        or (conf ~= player_fields and conf.custom_fields) then
+            or (conf ~= player_fields and conf.custom_fields) then
             local val = field.provider(uid, field_name)
             local val_type = type(val)
-            if not table.has({"number", "string", "boolean", "table"}, val_type) then
+            if not table.has({ "number", "string", "boolean", "table" }, val_type) then
                 error("Non-serializable data type got: " .. val_type)
             end
             custom_fields[field_name] = val
@@ -197,7 +207,6 @@ local function __update_data(data, dirty, cur_data)
 end
 
 local function __send_dirty(entity, uid, id, dirty, client, is_player)
-
     if table.count_pairs(dirty.standard_fields or {}) == 0 then
         dirty.standard_fields = nil
     end
@@ -221,10 +230,10 @@ local function __send_dirty(entity, uid, id, dirty, client, is_player)
     local buffer = protocol.create_databuffer()
 
     if not is_player then
-        local data = {uid = uid, def = id, dirty = dirty}
+        local data = { uid = uid, def = id, dirty = dirty }
         buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.EntityUpdate, data))
     else
-        local data = {pid = entity:get_player(), dirty = dirty}
+        local data = { pid = entity:get_player(), dirty = dirty }
         buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.PlayerFieldsUpdate, data))
     end
 
@@ -234,7 +243,7 @@ end
 function module.process(client)
     local c_player = client.player
     local pid = c_player.pid
-    local p_pos = {player.get_pos(pid)}
+    local p_pos = { player.get_pos(pid) }
 
     for _, uid in pairs(entities.get_all_in_radius(p_pos, RENDER_DISTANCE)) do
         local entity = entities.get(uid)
@@ -278,7 +287,8 @@ function module.process(client)
         data = data[pid]
 
         if not is_player then
-            local cul_pos = table.get_default(data, "standard_fields", "tsf_pos") or (is_player and e_pos or tsf:get_pos())
+            local cul_pos = table.get_default(data, "standard_fields", "tsf_pos") or
+                (is_player and e_pos or tsf:get_pos())
             local last_culling = culling(pid, cul_pos, e_size)
             local cur_culling = culling(pid, e_pos, e_size)
 

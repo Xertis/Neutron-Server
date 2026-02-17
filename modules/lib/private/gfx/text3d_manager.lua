@@ -36,6 +36,10 @@ function module.show(position, text, preset, extension)
     return id
 end
 
+function module.exists(id)
+    return TEXTS[id] ~= nil
+end
+
 function module.hide(id)
     ensureText(id)
     TEXTS[id] = nil
