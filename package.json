@@ -1,7 +1,12 @@
 {
-    "id": "server",
-    "title": "Neutron",
-    "version": "1.2.2",
-    "description": "Server",
-    "creators": ["Murka124", "Ghost", "Xertis", "Onran"]
+  "id": "server",
+  "title": "Neutron",
+  "version": "1.2.3",
+  "description": "Server",
+  "creators": [
+    "Murka124",
+    "Ghost",
+    "Xertis",
+    "Onran"
+  ]
 }
