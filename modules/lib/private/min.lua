@@ -24,7 +24,7 @@ function lib.world.preparation_main()
     end
 
     table.insert(packs, "server")
-    app.reset_content({"server"})
+    app.reset_content({ "server" })
     app.config_packs(table.merge(packs, plugins), {})
     app.load_content()
 
@@ -44,16 +44,16 @@ function lib.world.preparation_main()
 
         logger.log("Root player was created")
 
-        local expected = 3*(CONFIG.server.chunks_loading_distance^2)
+        local expected = 3 * (CONFIG.server.chunks_loading_distance ^ 2)
         logger.log("Loading chunks... Expected number of chunks: " .. expected)
 
-        local ctime = time.uptime()
+        local start_time = time.uptime()
         local count_chunks = 0
         local last_print = 0
         while count_chunks < expected do
             app.tick()
 
-            if ((time.uptime() - ctime) / 60) > 1 then
+            if ((time.uptime() - start_time) / 60) > 1 then
                 logger.log("Chunk loading timeout exceeded, exiting. Try changing the chunks_loading_speed.", "W")
                 break
             end
@@ -73,10 +73,10 @@ function lib.world.preparation_main()
 end
 
 function lib.world.open_main()
-
     logger.log("Discovery of the main world")
-    app.reset_content({"server"})
+    app.reset_content({ "server" })
     app.open_world(CONFIG.game.main_world)
+    player.set_suspended(ROOT, false)
 
     player.set_noclip(ROOT, true)
     player.set_flight(ROOT, true)
@@ -121,7 +121,7 @@ function lib.validate.username(name)
         'ъ', 'ы', 'ь', 'э', 'ю', 'я'
     }
 
-    local numbers = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'}
+    local numbers = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' }
 
     if #name > 16 then
         return false
@@ -131,7 +131,7 @@ function lib.validate.username(name)
         return false
     end
 
-    for i=2, #name do
+    for i = 2, #name do
         local char = name[i]
 
         if not table.has(alphabet, char) and not table.has(numbers, char) then
