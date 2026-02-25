@@ -6,6 +6,7 @@ local function tests()
     require "server:tests/player_entity"
     require "server:tests/edd"
     require "server:tests/external_buffer"
+    require "server:tests/varint"
 
     logger.log("All tests passed", "T")
 end

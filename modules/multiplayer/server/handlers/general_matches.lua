@@ -2,6 +2,7 @@ local protocol = require "multiplayer/protocol-kernel/protocol"
 local switcher = require "lib/public/common/switcher"
 local protect = require "lib/private/protect"
 local sandbox = require "lib/private/sandbox/sandbox"
+local inventories_manager = require "lib/private/sandbox/inventories_manager"
 local account_manager = require "lib/private/accounts/account_manager"
 local chat = require "multiplayer/server/chat/chat"
 local timeout_executor = require "lib/private/common/timeout_executor"
@@ -88,7 +89,7 @@ function matches.actions.Disconnect(client, reason)
 
     logger.log("Aborted message: " .. reason, 'W')
 
-    client:push_packet(protocol.ServerMsg.Disconnect, {reason = reason})
+    client:push_packet(protocol.ServerMsg.Disconnect, { reason = reason })
     client:kick()
 end
 
@@ -113,7 +114,7 @@ matches.general_fsm:add_state("idle", {
                 return "joining"
             end
         elseif event.packet_type == protocol.ClientMsg.HTTPGet then
-            local handler = function ()
+            local handler = function()
                 http_matches:switch(event.request.path, event, client)
             end
 
@@ -221,7 +222,7 @@ matches.joining_fsm:add_state("sending_packs_list", {
 
         local DATA = packs
 
-        client:push_packet(protocol.ServerMsg.PacksList, {DATA})
+        client:push_packet(protocol.ServerMsg.PacksList, { DATA })
         return "awaiting_packs_hashes"
     end
 })
@@ -334,7 +335,8 @@ Incorrect VoxelCore version:
         client:set_active(true)
 
         timeout_executor.push(
-            function(_client, x, y, z, x_rot, y_rot, z_rot, noclip, flight, infinite_items, instant_destruction, interaction_distance, is_last)
+            function(_client, x, y, z, x_rot, y_rot, z_rot, noclip, flight, infinite_items, instant_destruction,
+                     interaction_distance, is_last)
                 local _DATA = {
                     pos = { x = x, y = y, z = z },
                     rot = { x = x_rot, y = y_rot, z = z_rot },
@@ -344,7 +346,7 @@ Incorrect VoxelCore version:
                     interaction_distance = interaction_distance
                 }
 
-                client:push_packet(protocol.ServerMsg.SynchronizePlayer, {_DATA})
+                client:push_packet(protocol.ServerMsg.SynchronizePlayer, { _DATA })
 
                 if is_last then
                     _client.player.is_teleported = true
@@ -372,7 +374,7 @@ Incorrect VoxelCore version:
         local p_data = { username = account_player.username, pid = account_player.pid }
 
         local buffer = protocol.create_databuffer()
-        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.PlayerListAdd, {p_data}))
+        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.PlayerListAdd, { p_data }))
 
         echo.put_event(
             function(c)
@@ -390,14 +392,17 @@ Incorrect VoxelCore version:
             }
         end)
 
-        client:push_packet(protocol.ServerMsg.PlayerList, {player_keys})
+        client:push_packet(protocol.ServerMsg.PlayerList, { player_keys })
 
         local data = sandbox.get_inventory(account_player)
         local inv, slot = data.inventory, data.slot
 
-        client:push_packet(protocol.ServerMsg.PlayerInventory, {inv})
+        client:push_packet(protocol.ServerMsg.SyncLayoutInventory, {
+            invid = 0,
+            inventory = inv
+        })
 
-        client:push_packet(protocol.ServerMsg.PlayerHandSlot, {slot})
+        client:push_packet(protocol.ServerMsg.PlayerHandSlot, { slot })
 
         ---
 
@@ -525,9 +530,9 @@ matches.client_online_handler:add_case(protocol.ClientMsg.ChatMessage, (
 
             for i = 1, #name_in_message do
                 local char = name_in_message:sub(i, i)
-                if char ~= " " then 
+                if char ~= " " then
                     result = result .. colors[color_index] .. char
-                    color_index = math.in_range(color_index+1, {1, #EVENT.colors})
+                    color_index = math.in_range(color_index + 1, { 1, #EVENT.colors })
                 else
                     result = result .. char
                 end
@@ -566,7 +571,8 @@ matches.client_online_handler:add_case(protocol.ClientMsg.Disconnect, (
         entities_manager.clear_pid(pid)
 
         local buffer = protocol.create_databuffer()
-        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.PlayerListRemove, {{username = username, pid = pid}}))
+        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.PlayerListRemove,
+            { { username = username, pid = pid } }))
         events.emit("server:client_disconnected", client)
 
         echo.put_event(
@@ -602,7 +608,7 @@ local function chunk_responce(packet, client, is_timeout)
         data = chunk
     }
 
-    client:push_packet(protocol.ServerMsg.ChunkData, {chunk = DATA})
+    client:push_packet(protocol.ServerMsg.ChunkData, { chunk = DATA })
 
     return true
 end
@@ -636,7 +642,7 @@ local function chunks_responce_optimizate(packet, client)
         end
     end
 
-    client:push_packet(protocol.ServerMsg.ChunksData, {chunks_list})
+    client:push_packet(protocol.ServerMsg.ChunksData, { chunks_list })
 
     return true
 end
@@ -793,16 +799,6 @@ matches.client_online_handler:add_case(protocol.ClientMsg.KeepAlive, (
     end
 ))
 
-matches.client_online_handler:add_case(protocol.ClientMsg.PlayerInventory, (
-    function(packet, client)
-        if not client.account or not client.account.is_logged or not client.player.is_teleported then
-            return
-        end
-
-        sandbox.set_inventory(client.player, packet.inventory)
-    end
-))
-
 matches.client_online_handler:add_case(protocol.ClientMsg.PlayerHandSlot, (
     function(packet, client)
         if not client.account or not client.account.is_logged or not client.player.is_teleported then
@@ -824,20 +820,22 @@ matches.client_online_handler:add_case(protocol.ClientMsg.EntitySpawnAttempt, (
     end
 ))
 
-matches.client_online_handler:add_case( protocol.ClientMsg.BlockInventory, function (packet, client)
-    local invid = inventory.get_block(packet.pos.x, packet.pos.y, packet.pos.z)
-    if invid ~= 0 then
-        inventory.set_inv(invid, packet.inventory)
-    end
-end)
+matches.client_online_handler:add_case(protocol.ClientMsg.KeepAlive, (
+    function(packet, client)
+        local challenge = packet.challenge
 
-matches.client_online_handler:add_case( protocol.ClientMsg.BlockInventorySlot, function (packet, client)
-    local invid = inventory.get_block(packet.pos.x, packet.pos.y, packet.pos.z)
+        local wait_time = time.uptime() - client.ping.last_upd
+        client.ping.ping = wait_time * 1000
 
-    if invid ~= 0 then
-        inventory.set(invid, packet.slot_id, packet.item_id, packet.item_count)
+        client.ping.waiting = false
     end
-end)
+))
+
+matches.client_online_handler:add_case(protocol.ClientMsg.InventoryItemMovement, (
+    function(packet, client)
+        inventories_manager.apply_movement(client, packet)
+    end
+))
 
 
 

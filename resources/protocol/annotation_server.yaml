@@ -42,7 +42,7 @@ StatusResponse:
     - engine_version: string
     - api_version: string
     - neutron_version: string
-  
+
     - short_desc: string
     - description: string
     - favicon: bytearray
@@ -67,7 +67,7 @@ SynchronizePlayer:
 
 TimeUpdate:
   fields:
-    - game_time: uint16
+    - game_time: uint16[math.floor(W * 65535 + 0.5)][R / 65535]
 
 KeepAlive:
   fields:
@@ -96,10 +96,6 @@ PlayerListRemove:
   fields:
     - data: Player
 
-PlayerInventory:
-  fields:
-    - inventory: Inventory
-
 PlayerHandSlot:
   fields:
     - slot: uint8
@@ -108,6 +104,23 @@ PlayerUsername:
   fields:
     - pid: var
     - username: string
+
+OpenVirtualLayout:
+  fields:
+    - layout: string
+    - layout_id: var
+    - root_id: NullAble<var>
+    - disable_player_inventory: boolean[W or false]
+
+OpenBlockLayout:
+  fields:
+    - pos: BlockPosition
+    - layout_id: var
+
+SyncLayoutInventory:
+  fields:
+    - invid: var[W+1][R-1]
+    - inventory: InventoryUnlimited
 
 ChunkData:
   fields:
@@ -125,18 +138,6 @@ BlockChanged:
   fields:
     - pid: var
     - block: Block
-
-BlockInventory:
-  fields:
-    - pos: BlockPosition
-    - inventory: InventoryUnlimited
-
-BlockInventorySlot:
-  fields:
-    - pos: BlockPosition
-    - slot_id: uint16
-    - item_id: uint16
-    - item_count: uint16
 
 PacksList:
   fields:

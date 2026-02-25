@@ -101,10 +101,6 @@ PlayerCheats:
     - noclip: boolean
     - flight: boolean
 
-PlayerInventory:
-  fields:
-    - inventory: Inventory
-
 PlayerHandSlot:
   fields:
     - slot: uint8
@@ -119,6 +115,24 @@ PlayerFeatures:
     - infinite_items: boolean
     - instant_destruction: boolean
     - interaction_distance: uint12
+
+# 0 - айди инвентаря игрока
+# dst_inventory = -2 - игрок выкидывает предмет
+# src_inventory = -1 - айди инвентаря курсора
+# -1 = слот курсора игрока
+InventoryItemMovement:
+  fields:
+    - src_inventory: var[W+2][R-2]
+    - dst_inventory: var[W+2][R-2]
+    - src_slot: uint16[W+1][R-1]
+    - dst_slot: uint16[W+1][R-1]
+    - action: uint8
+    - item_id: uint16
+    - checksum: uint24
+
+LayoutClosing:
+  fields:
+    - layout_id: var
 
 RequestChunk:
   fields:
@@ -174,15 +188,3 @@ EntitySpawnAttempt:
   fields:
     - def: uint16
     - args: bson
-
-BlockInventory:
-  fields:
-    - pos: BlockPosition
-    - inventory: InventoryUnlimited
-
-BlockInventorySlot:
-  fields:
-    - pos: BlockPosition
-    - slot_id: uint16
-    - item_id: uint16
-    - item_count: uint16

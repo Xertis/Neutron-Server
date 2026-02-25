@@ -12,7 +12,7 @@ function module.parse_content(content)
 
     local remaining_content = content:sub(read_start_pos + #"--@READ_START")
 
-    local block_pattern = "%-%-%s*@([%w_]+)%.([%w]+)([%s%S]-)do([%s%S]-)end%-%-@"
+    local block_pattern = "%-%-%s*@([%w_]+)%.([%w]+)([%s%S]-)do([%s%S]-)end %-%-@"
 
     remaining_content = remaining_content .. "\n--@"
 
