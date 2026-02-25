@@ -59,7 +59,7 @@ function logger.log(text, type, only_save, custom_source)
     local timestamp = string.format("[%s] %s", type, uptime)
 
     local path = "export:server.log"
-    local message = timestamp .. string.left_pad(out, #out+33-#timestamp)
+    local message = timestamp .. string.left_pad(out, #out + 33 - #timestamp)
 
     if not only_save then
         print(message)
@@ -84,7 +84,7 @@ end
 
 local sha256 = require "lib/private/sha256"
 function logger.shorted(str, size)
-    size = size or 10
+    size = size or 7
 
     local hashed = sha256.sha256(str)
     return string.sub(hashed, 1, size)

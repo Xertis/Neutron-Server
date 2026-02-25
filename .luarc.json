@@ -1,0 +1,5 @@
+{
+  "runtime.version": "LuaJIT",
+  "format.enable": true,
+  "workspace.library": ["modules/types"]
+}
