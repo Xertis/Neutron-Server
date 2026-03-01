@@ -45,5 +45,5 @@ end
 function global_inventory.move_range(invA, slotA, invB, rangeBegin, rangeEnd)
     set_changed_flag(invA)
     set_changed_flag(invB)
-    move_range(invA, slotA, invB, rangeBegin, rangeEnd)
+    return move_range(invA, slotA, invB, rangeBegin, rangeEnd)
 end
