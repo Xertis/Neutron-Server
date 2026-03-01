@@ -292,37 +292,4 @@ function module.by_invid.get(invid)
     end
 end
 
---Вынужденный ужас
---TODO: В СРОЧНОМ ПОРЯДКЕ ЗАСУНУТЬ ЭТО В БОЛЕЕ ПРАВИЛЬНОЕ МЕСТО
-do
-    local inventory_funcs = {
-        set = inventory.set,
-        set_count = inventory.set_count,
-        add = inventory.add,
-        remove = inventory.remove,
-        set_data = inventory.set_data,
-        decrement = inventory.decrement,
-        use = inventory.use
-    }
-
-    for name, func in pairs(inventory_funcs) do
-        inventory[name] = function(invid, ...)
-            local res = { func(invid, ...) }
-
-            local prefix = parse_path(debug.getinfo(2, "S").source)
-
-            if prefix ~= "server" then
-                local player = module.by_invid.get(invid)
-                if not player then
-                    return unpack(res)
-                end
-
-                player.inv_is_changed = true
-            end
-
-            return unpack(res)
-        end
-    end
-end
-
 return protect.protect_return(module)
