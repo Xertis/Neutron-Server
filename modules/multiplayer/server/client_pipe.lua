@@ -57,7 +57,7 @@ ClientPipe:add_middleware(function(client)
     end
 
     player.inv_is_changed = false
-    inventories_manager.sync(client)
+    inventories_manager.sync(player, 1)
 end)
 
 --Запрос на логин/регистрацию

@@ -675,6 +675,7 @@ audio.play_sound_2d = function() end
 -- INVENTORY
 
 function inventory.get_inv(invid)
+    --print(debug.traceback())
     local inv_size = inventory.size(invid)
     local res_inv = {}
 
