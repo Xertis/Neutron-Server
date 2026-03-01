@@ -56,12 +56,13 @@ local function main()
     metadata.load()
 
     server = server.new(CONFIG.server.port)
-    server:start()
+    server:start_main()
+    server:start_http()
 
     logger.log("server is started")
 
     timeout_executor.push(
-        function ()
+        function()
             local today = os.date("*t")
             EVENT = nil
 

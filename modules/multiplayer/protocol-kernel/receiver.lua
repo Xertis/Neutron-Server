@@ -12,7 +12,7 @@ end
 
 function module.recv(buffer, client)
     next_id = next_id + 1
-    local socket = client.network.socket
+    local socket = client.socket
 
     if not socket then return end
 
@@ -70,4 +70,3 @@ function module.empty(buffer)
 end
 
 return module
-

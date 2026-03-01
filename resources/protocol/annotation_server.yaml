@@ -105,21 +105,25 @@ PlayerUsername:
     - pid: var
     - username: string
 
-OpenVirtualLayout:
+OpenVirtualInventory:
   fields:
     - layout: string
-    - layout_id: var
+    - inventory_id: var[W+2][R-2]
     - root_id: NullAble<var>
     - disable_player_inventory: boolean[W or false]
 
-OpenBlockLayout:
+OpenBlockInventory:
   fields:
+    - inventory_id: var[W+2][R-2]
     - pos: BlockPosition
-    - layout_id: var
 
-SyncLayoutInventory:
+CloseInventory:
   fields:
-    - invid: var[W+1][R-1]
+    - inventory_id: var[W+2][R-2]
+
+SyncInventory:
+  fields:
+    - inventory_id: var[W+2][R-2]
     - inventory: InventoryUnlimited
 
 ChunkData:

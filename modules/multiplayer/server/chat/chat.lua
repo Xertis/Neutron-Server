@@ -3,7 +3,6 @@ local protocol = require "multiplayer/protocol-kernel/protocol"
 local server_echo = require "multiplayer/server/server_echo"
 local states = require "multiplayer/server/chat/chat_states"
 local sandbox = require "lib/private/sandbox/sandbox"
-local account_manager = require "lib/private/accounts/account_manager"
 local module = {}
 
 local no_logged_commands = {}
@@ -13,7 +12,7 @@ function module.echo(message)
     logger.log(message)
 
     local buffer = protocol.create_databuffer()
-    buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.ChatMessage, {message}))
+    buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.ChatMessage, { message }))
 
     server_echo.put_event(function(client)
         client:queue_response(buffer.bytes)
@@ -33,14 +32,14 @@ function module.echo_with_mentions(message)
             return
         end
 
-        local exclient = account_manager.by_username.get_client(name)
+        local exclient = sandbox.get_client(sandbox.by_username.get(name))
         if exclient then
             table.insert(exclients, exclient)
         end
     end
 
     local buffer = protocol.create_databuffer()
-    buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.ChatMessage, {mention_message}))
+    buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.ChatMessage, { mention_message }))
 
     server_echo.put_event(function(client)
         client:queue_response(buffer.bytes)
@@ -81,7 +80,7 @@ function module.mention_prepare(message)
 end
 
 function module.tell(message, client)
-    client:push_packet(protocol.ServerMsg.ChatMessage, {message})
+    client:push_packet(protocol.ServerMsg.ChatMessage, { message })
 end
 
 function module.command(message, client)

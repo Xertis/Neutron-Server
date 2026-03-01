@@ -8,13 +8,14 @@ console.set_command("tell: username=<string> message=<string> -> Sends a private
         local username = args.username
         local sender_username = client.player.username
         local message = args.message
-        local receiver_client = sandbox.get_client(sandbox.by_username.get(username))
-        local receiver_account = receiver_client.account
 
-        if not receiver_account or not sandbox.by_identity.is_online(receiver_account.identity) then
+        local receiver_player = sandbox.by_username.get(username)
+        if not receiver_player then
             console.tell(string.format('%s The player "%s" is currently offline!', console.colors.red, username), client)
             return
         end
+
+        local receiver_client = sandbox.get_client(receiver_player)
 
         local yellow, white = console.colors.yellow, console.colors.white
 
@@ -41,10 +42,6 @@ console.set_command("tps: -> Shows current tps and mspt", {}, function(args, cli
     local mspt = string.format("%s%sms%s", color, TPS.mspt, console.colors.white);
 
     console.tell(string.format("TPS: %s | MSPT: %s", tps, mspt), client);
-end)
-
-console.set_command("obama: -> Shows current tps and mspt", {}, function(args, client)
-    _G["player"].set_name(client.player.pid, "obama")
 end)
 
 console.set_command("register: password=<string>, rpassword=<string> -> Registration", {}, function(args, client)
@@ -120,13 +117,15 @@ end, true)
 
 console.set_command("role: username=[string] -> Returns the role of the user", {}, function(args, client)
     local username = args.username or client.player.username
-    local target_client = sandbox.get_client(sandbox.by_username.get(username))
-    local account = target_client.account
 
-    if not account or not sandbox.by_identity.is_online(account.identity) then
+    local target_player = sandbox.by_username.get(username)
+    if not target_player then
         console.tell(string.format('%s The player "%s" is currently offline!', console.colors.red, username), client)
         return
     end
+
+    local target_client = sandbox.get_client(target_player)
+    local account = target_client.account
 
     console.tell(string.format('%s The role of the player "%s" is: %s', console.colors.yellow, username, account.role),
         client)
@@ -137,17 +136,21 @@ console.set_command("role_set: username=<string>, role=<string> -> Changes the r
         local account = client.account
         local subject_username = args.username
         local role = args.role
-        local subject_client = sandbox.get_client(sandbox.by_username.get(subject_username))
+
+        local subject_player = sandbox.by_username.get(subject_username)
+        if not subject_player then
+            console.tell(string.format('%s The player "%s" is currently offline!', console.colors.red, subject_username),
+                client)
+            return
+        end
+
+        local subject_client = sandbox.get_client(subject_player)
         local subject_account = subject_client.account
 
         local client_role = account_manager.get_role(account)
         local subject_role = account_manager.get_role(subject_account)
 
-        if not subject_role or not sandbox.by_identity.is_online(subject_account.identity) then
-            console.tell(string.format('%s The player "%s" is currently offline!', console.colors.red, subject_username),
-                client)
-            return
-        elseif subject_username == client.player.username then
+        if subject_username == client.player.username then
             console.tell(string.format("%s You cannot change your own role!", console.colors.red), client)
             return
         elseif not lib.roles.is_higher(client_role, subject_role) then
@@ -157,16 +160,19 @@ console.set_command("role_set: username=<string>, role=<string> -> Changes the r
                     console.colors.red), client)
             return
         elseif not lib.roles.exists(role) then
-            console.tell(string.format("%s Role: %s does not exist!", role, console.colors.red), client)
+            console.tell(string.format("%s Role \"%s\" does not exist!", console.colors.red, role), client)
             return
         elseif not lib.roles.is_higher(client_role, CONFIG.roles[role]) then
             console.tell(
-                string.format("%s You can't give a role to a player that's higher than yours!", console.colors.red),
+                string.format(
+                    "%s You cannot assign a role to a player that has a higher or equal priority than your role",
+                    console.colors.red),
                 client)
             return
         end
 
         subject_account.role = role
+        console.tell(string.format('%s Role has been successfully changed', console.colors.yellow), client)
     end)
 
 console.set_command("time_set: time=<any> -> Changes day time", { server = { "time_management" } },

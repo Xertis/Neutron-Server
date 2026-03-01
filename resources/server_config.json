@@ -15,7 +15,7 @@
     "max_players": 16,
     "short_description": "MasterServer",
     "description": "",
-    "port": 25565,
+    "port": 22003,
     "auto_save_interval": 5,
     "chunks_loading_distance": 4,
     "chunks_loading_speed": 4,

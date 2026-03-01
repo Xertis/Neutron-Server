@@ -3,7 +3,10 @@ local account_manager = start_require("server:lib/private/accounts/account_manag
 local protocol = start_require("server:multiplayer/protocol-kernel/protocol")
 
 local module = {
-    players = {},
+    players = {
+        by_username = {},
+        by_identity = {}
+    },
     world = {},
     blocks = {}
 }
@@ -26,6 +29,14 @@ function module.players.get_player(account)
     return sandbox.get_player(account)
 end
 
+function module.players.by_username.is_online(username)
+    return sandbox.by_username.is_online(username)
+end
+
+function module.players.by_identity.is_online(identity)
+    return sandbox.by_identity.is_online(identity)
+end
+
 function module.players.sync_states(_player, states)
     local client = account_manager.by_username.get_client(_player.username)
 
@@ -42,7 +53,7 @@ function module.players.sync_states(_player, states)
         player.set_flight(_player.pid, states.cheats.flight)
     end
 
-    client:push_packet(protocol.ServerMsg.SynchronizePlayer, {data = states})
+    client:push_packet(protocol.ServerMsg.SynchronizePlayer, { data = states })
 end
 
 function module.players.get_in_radius(target_pos, radius)
@@ -84,14 +95,14 @@ function module.blocks.sync_inventory(pos, client)
     local inv = inventory.get_inv(invid)
 
     client:push_packet(protocol.ServerMsg.BlockInventory, {
-        pos = {x = pos[1], y = pos[2], z = pos[3]},
+        pos = { x = pos[1], y = pos[2], z = pos[3] },
         inventory = inv
     })
 end
 
 function module.blocks.sync_slot(pos, slot, client)
     client:push_packet(protocol.ServerMsg.BlockInventorySlot, {
-        pos = {x = pos[1], y = pos[2], z = pos[3]},
+        pos = { x = pos[1], y = pos[2], z = pos[3] },
         slot_id = slot.slot_id,
         item_id = slot.item_id,
         item_count = slot.item_count

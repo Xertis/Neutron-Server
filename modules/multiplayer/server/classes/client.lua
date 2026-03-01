@@ -6,18 +6,18 @@ local Client = {}
 local max_id = 0
 Client.__index = Client
 
-function Client.new(active, network, address, port, username)
+function Client.new(active, socket, address, port, username)
     local self = setmetatable({}, Client)
 
     self.active = false or active
-    self.network = network
+    self.socket = socket
     self.username = username
     self.address = address
     self.port = port
     self.client_id = max_id
     self.account = nil
     self.player = nil
-    self.ping = {ping = 0, last_upd = time.uptime(), waiting = false}
+    self.ping = { ping = 0, last_upd = time.uptime(), waiting = false }
     self.meta = {}
     self.is_kicked = false
 

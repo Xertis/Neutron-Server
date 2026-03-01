@@ -25,7 +25,7 @@ RESERVED_USERNAMES = {
 IS_RUNNING = false
 IS_FIRST_RUN = false
 IS_RELEASE = false
-PROTOCOL_VERSION = "3.1"
+PROTOCOL_VERSION = "3.2"
 API_VERSION = "2"
 PROTOCOL_STATES = {
     Status = 0,
@@ -35,22 +35,22 @@ PROTOCOL_STATES = {
 SERVER_VERSION = json.parse(file.read("server:package.json")).version
 PROJECT_NAME = "Neutron"
 LOGO = [[
-                                               
-    _   __              __                     
-   / | / /___   __  __ / /_ _____ ____   ____  
-  /  |/ // _ \ / / / // __// ___// __ \ / __ \ 
- / /|  //  __// /_/ // /_ / /   / /_/ // / / / 
-/_/ |_/ \___/ \____/ \__//_/    \____//_/ /_/  
-                                               
+
+    _   __              __
+   / | / /___   __  __ / /_ _____ ____   ____
+  /  |/ // _ \ / / / // __// ___// __ \ / __ \
+ / /|  //  __// /_/ // /_ / /   / /_/ // / / /
+/_/ |_/ \___/ \____/ \__//_/    \____//_/ /_/
+
 ]]
 
 DEV = [[
-                    
-      ___           
-     / _ \___ _  __ 
-    / // / -_) |/ / 
-   /____/\__/|___/  
-                    
+
+      ___
+     / _ \___ _  __
+    / // / -_) |/ /
+   /____/\__/|___/
+
 ]]
 
 TARGET_TPS = 20
@@ -66,5 +66,5 @@ HAPPY_NEW_YEAR = true
 EVENT = nil
 
 __system_events = {
-    {month = 12, day = 31, colors = {"[#DC143C]", "[#FFFFFF]"}}
+    { month = 12, day = 31, colors = { "[#DC143C]", "[#FFFFFF]" } }
 }

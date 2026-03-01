@@ -31,19 +31,6 @@ BlockRegion:
 # -----------------------------------------------------------------
 
 # -----------------------------------------------------------------
-# HTTP
-# -----------------------------------------------------------------
-HTTPGet:
-  packet_id: "G"
-  fields:
-    - request: http_get
-
-HTTPost:
-  packet_id: "P"
-  fields:
-    - request: http_get
-
-# -----------------------------------------------------------------
 # Connecting
 # -----------------------------------------------------------------
 
@@ -110,29 +97,17 @@ PlayerRegion:
     - x: int16
     - z: int16
 
-PlayerFeatures:
+InventoryInteract:
   fields:
-    - infinite_items: boolean
-    - instant_destruction: boolean
-    - interaction_distance: uint12
-
-# 0 - айди инвентаря игрока
-# dst_inventory = -2 - игрок выкидывает предмет
-# src_inventory = -1 - айди инвентаря курсора
-# -1 = слот курсора игрока
-InventoryItemMovement:
-  fields:
-    - src_inventory: var[W+2][R-2]
-    - dst_inventory: var[W+2][R-2]
-    - src_slot: uint16[W+1][R-1]
-    - dst_slot: uint16[W+1][R-1]
+    - inventory_id: var[W+2][R-2]
+    - slot: var
     - action: uint8
     - item_id: uint16
     - checksum: uint24
 
-LayoutClosing:
+CloseInventory:
   fields:
-    - layout_id: var
+    - inventory_id: var[W+2][R-2]
 
 RequestChunk:
   fields:

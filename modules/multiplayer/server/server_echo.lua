@@ -9,7 +9,7 @@ function ServerEcho.put_event(func, ...)
     for i = 1, select('#', ...) do
         exclients[select(i, ...)] = true
     end
-    table.insert(events, {func = func, exclients = exclients})
+    events[#events + 1] = { func = func, exclients = exclients }
 end
 
 function ServerEcho.proccess(clients)
@@ -17,7 +17,7 @@ function ServerEcho.proccess(clients)
     for i = 1, #events do
         local event = events[i]
         for _, client in ipairs(clients) do
-            local socket = client.network.socket
+            local socket = client.socket
             if socket and socket:is_alive() and not event.exclients[client] then
                 event.func(client)
             end
@@ -25,8 +25,8 @@ function ServerEcho.proccess(clients)
         to_remove[i] = true
     end
 
-    for i, _ in pairs(to_remove) do
-        table.remove(events, i)
+    for i, _ in ipairs(to_remove) do
+        events[i] = nil
     end
 end
 

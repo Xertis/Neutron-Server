@@ -12,8 +12,6 @@ local api_env = require "api/v2/env"
 local entities_manager = require "lib/private/entities/entities_manager"
 local lib = require "lib/private/min"
 local mfsm = require "lib/public/common/multifsm"
-local http = require "server:lib/private/http/httprequestparser"
-local http_matches = require "multiplayer/server/handlers/http_matches"
 
 local hashed_packs = nil
 
@@ -99,9 +97,6 @@ matches.general_fsm:add_state("idle", {
     on_event = function(client, event)
         if event.packet_type == protocol.ClientMsg.HandShake then
             matches.joining_fsm:set_data(client, "handshake", event)
-            if event.protocol_version ~= protocol.Version then
-                return "idle"
-            end
 
             if event.next_state == protocol.States.Status then
                 matches.status_fsm:set_data(client, "friends_list", event.friends_list)
@@ -113,24 +108,6 @@ matches.general_fsm:add_state("idle", {
                 matches.joining_fsm:transition_to(client, "awaiting_join_game")
                 return "joining"
             end
-        elseif event.packet_type == protocol.ClientMsg.HTTPGet then
-            local handler = function()
-                http_matches:switch(event.request.path, event, client)
-            end
-
-            local success, res = pcall(handler)
-            if not success then
-                logger.log(string.format("http handler error: %s, additional information in server.log", res), "E")
-                logger.log(debug.traceback(), "E", true)
-                logger.log(json.tostring(event), "E", true)
-                client:queue_response(utf8.tobytes(
-                    http.buildResponse(500, {
-                        message = "Internal Server Error"
-                    })
-                ))
-            end
-
-            client:kick()
         end
     end
 })
@@ -254,6 +231,15 @@ matches.joining_fsm:add_state("joining", {
         if not hash_status and (not CONFIG.server.dev_mode or CONFIG.server.shallow_dev_mode) then
             logger.log("JoinSuccess has been aborted")
             matches.actions.Disconnect(client, "Inconsistencies in mods:" .. hash_reason)
+            close()
+            return
+        elseif handshake.protocol_version ~= protocol.Version or handshake.protocol_reference ~= "Neutron" then
+            logger.log("JoinSuccess has been aborted")
+            matches.actions.Disconnect(client, string.format([[
+Incorrect protocol version:
+    Your version: %s (#%s)
+    Server version: %s (#%s)
+            ]], handshake.protocol_version, handshake.protocol_reference, protocol.Version, "Neutron"))
             close()
             return
         elseif handshake.engine_version ~= CONFIG.server.version then
@@ -397,8 +383,9 @@ Incorrect VoxelCore version:
         local data = sandbox.get_inventory(account_player)
         local inv, slot = data.inventory, data.slot
 
-        client:push_packet(protocol.ServerMsg.SyncLayoutInventory, {
-            invid = 0,
+        inventories_manager.init(account_player)
+        client:push_packet(protocol.ServerMsg.SyncInventory, {
+            inventory_id = 1,
             inventory = inv
         })
 
@@ -451,20 +438,6 @@ matches.client_online_handler:add_case(protocol.ClientMsg.PlayerCheats, (
         sandbox.set_player_state(client.player, {
             noclip = packet.noclip,
             flight = packet.flight
-        })
-    end
-))
-
-matches.client_online_handler:add_case(protocol.ClientMsg.PlayerFeatures, (
-    function(packet, client)
-        if not client.account or not client.account.is_logged or not client.player.is_teleported then
-            return
-        end
-
-        sandbox.set_player_state(client.player, {
-            infinite_items = packet.infinite_items,
-            instant_destruction = packet.instant_destruction,
-            interaction_distance = packet.interaction_distance
         })
     end
 ))
@@ -577,7 +550,7 @@ matches.client_online_handler:add_case(protocol.ClientMsg.Disconnect, (
 
         echo.put_event(
             function(c)
-                c.network:send(buffer.bytes)
+                c.socket:send(buffer.bytes)
             end, client
         )
     end
@@ -831,9 +804,19 @@ matches.client_online_handler:add_case(protocol.ClientMsg.KeepAlive, (
     end
 ))
 
-matches.client_online_handler:add_case(protocol.ClientMsg.InventoryItemMovement, (
+matches.client_online_handler:add_case(protocol.ClientMsg.InventoryInteract, (
     function(packet, client)
-        inventories_manager.apply_movement(client, packet)
+        if not client.account or not client.account.is_logged or not client.player.is_teleported then
+            return
+        end
+
+        local status = inventories_manager.interact(client.player, packet.inventory_id, packet.slot, packet.action,
+            packet.item_id,
+            packet.checksum)
+
+        if not status then
+            inventories_manager.sync(client.player, packet.inventory_id)
+        end
     end
 ))
 

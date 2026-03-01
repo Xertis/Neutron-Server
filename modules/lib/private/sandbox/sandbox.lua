@@ -38,7 +38,6 @@ function module.join_player(username, account)
             account_player.username = username
         end
     elseif status == CODES.players.DataLoss then
-
         if not module.is_username_available(account_player.username, identity) then
             logger.log(
                 string.format(
@@ -254,6 +253,10 @@ function module.by_identity.is_online(identity)
     end
 
     return false
+end
+
+function module.by_username.is_online(username)
+    return module.by_username.get(username) ~= nil
 end
 
 function module.by_username.get(username)

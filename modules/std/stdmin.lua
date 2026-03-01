@@ -427,6 +427,19 @@ function table.reverse(tbl)
     return reversed
 end
 
+function table.max_index(tbl)
+    local max_fun = math.max
+    local max = -math.huge
+
+    for index, _ in pairs(tbl) do
+        if type(index) == "number" then
+            max = max_fun(index, max)
+        end
+    end
+
+    return max
+end
+
 function table.from_bytearray(bytearray)
     local bytes = {}
 
