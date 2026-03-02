@@ -105,7 +105,7 @@ InventoryInteract:
     - item_id: uint16
     - checksum: uint24
 
-CloseInventory:
+InventoryClose:
   fields:
     - inventory_id: var[W+2][R-2]
 

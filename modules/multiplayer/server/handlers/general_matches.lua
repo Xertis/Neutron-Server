@@ -15,6 +15,14 @@ local mfsm = require "lib/public/common/multifsm"
 
 local hashed_packs = nil
 
+local InventoryController = require "server:lib/private/sandbox/classes/inventory_controller"
+
+local player_inventory_controller = InventoryController.new(
+    "server:modules/lib/private/sandbox/controllers/player_inventory.lua")
+
+local content_menu_controller = InventoryController.new(
+    "server:modules/lib/private/sandbox/controllers/content_menu.lua")
+
 local matches = {
     general_fsm = mfsm.new(),
     status_fsm = mfsm.new(),
@@ -383,8 +391,8 @@ Incorrect VoxelCore version:
         local data = sandbox.get_inventory(account_player)
         local inv, slot = data.inventory, data.slot
 
-        inventories_manager.init(account_player)
-        client:push_packet(protocol.ServerMsg.SyncInventory, {
+        inventories_manager.init(account_player, player_inventory_controller, content_menu_controller)
+        client:push_packet(protocol.ServerMsg.InventorySync, {
             inventory_id = 1,
             inventory = inv
         })
@@ -801,6 +809,16 @@ matches.client_online_handler:add_case(protocol.ClientMsg.KeepAlive, (
         client.ping.ping = wait_time * 1000
 
         client.ping.waiting = false
+    end
+))
+
+matches.client_online_handler:add_case(protocol.ClientMsg.InventoryClose, (
+    function(packet, client)
+        if not client.account or not client.account.is_logged or not client.player.is_teleported then
+            return
+        end
+
+        inventories_manager.close_inventory_by_id(client.player, packet.inventory_id, true)
     end
 ))
 

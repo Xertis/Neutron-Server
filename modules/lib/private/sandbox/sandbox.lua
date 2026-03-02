@@ -158,6 +158,10 @@ function module.get_player(account)
     return container.player_online.get(account.identity)
 end
 
+function module.by_identity.get_player(identity)
+    return container.player_online.get(identity)
+end
+
 function module.get_chunk(pos)
     return world.get_chunk_data(pos.x, pos.z)
 end

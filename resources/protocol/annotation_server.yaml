@@ -117,11 +117,11 @@ OpenBlockInventory:
     - inventory_id: var[W+2][R-2]
     - pos: BlockPosition
 
-CloseInventory:
+InventoryClose:
   fields:
     - inventory_id: var[W+2][R-2]
 
-SyncInventory:
+InventorySync:
   fields:
     - inventory_id: var[W+2][R-2]
     - inventory: InventoryUnlimited

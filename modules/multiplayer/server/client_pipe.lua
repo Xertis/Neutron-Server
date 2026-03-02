@@ -51,13 +51,17 @@ end)
 --Обновляем инвентарь
 ClientPipe:add_middleware(function(client)
     local player = client.player
+    local inventories = { player }
 
-    if not player.inv_is_changed then
-        return client
+    for id, _ in pairs(player.pending_inventories) do
+        inventories[#inventories + 1] = id
     end
 
-    player.inv_is_changed = false
-    inventories_manager.sync(player, 1)
+    inventories_manager.sync(unpack(inventories))
+
+    player.pending_inventories = {}
+
+    return client
 end)
 
 --Запрос на логин/регистрацию

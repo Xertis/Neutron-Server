@@ -1,4 +1,4 @@
-local sandbox = start_require("server:lib/private/sandbox/sandbox")
+local inventories_manager = start_require("server:lib/private/sandbox/inventories_manager")
 
 local global_inventory = _G["inventory"]
 
@@ -18,11 +18,7 @@ local inventory_funcs = {
 }
 
 local function set_changed_flag(invid)
-    local player = sandbox.by_invid.get(invid)
-
-    if player then
-        player.inv_is_changed = true
-    end
+    inventories_manager.echo_sync(invid)
 end
 
 for name, func in pairs(inventory_funcs) do

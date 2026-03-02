@@ -1,6 +1,9 @@
 local sandbox = start_require("server:lib/private/sandbox/sandbox")
+local inventories_managers = start_require("server:lib/private/sandbox/inventories_manager")
 local account_manager = start_require("server:lib/private/accounts/account_manager")
 local protocol = start_require("server:multiplayer/protocol-kernel/protocol")
+
+local InventoryController = require "server:lib/private/sandbox/classes/inventory_controller"
 
 local module = {
     players = {
@@ -8,7 +11,8 @@ local module = {
         by_identity = {}
     },
     world = {},
-    blocks = {}
+    blocks = {},
+    inventories = {}
 }
 
 function module.players.is_username_available(username, identity)
@@ -90,23 +94,20 @@ function module.players.get_by_pid(pid)
     end
 end
 
-function module.blocks.sync_inventory(pos, client)
-    local invid = inventory.get_block(pos[1], pos[2], pos[3])
-    local inv = inventory.get_inv(invid)
-
-    client:push_packet(protocol.ServerMsg.BlockInventory, {
-        pos = { x = pos[1], y = pos[2], z = pos[3] },
-        inventory = inv
-    })
+function module.inventories.create_controller(source)
+    return InventoryController.new(source)
 end
 
-function module.blocks.sync_slot(pos, slot, client)
-    client:push_packet(protocol.ServerMsg.BlockInventorySlot, {
-        pos = { x = pos[1], y = pos[2], z = pos[3] },
-        slot_id = slot.slot_id,
-        item_id = slot.item_id,
-        item_count = slot.item_count
-    })
+function module.inventories.set_controller(block_id, controller)
+    inventories_managers.set_block_inventory_controller(block_id, controller)
+end
+
+function module.inventories.open_block(player, pos)
+    return inventories_managers.open_block(player, pos)
+end
+
+function module.inventories.get_second_inventory(player)
+    return inventories_managers.get_second_inventory(player)
 end
 
 return module

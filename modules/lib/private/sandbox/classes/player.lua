@@ -17,9 +17,9 @@ function Player.new(username, identity)
     self.pid = nil
     self.world = nil
     self.is_teleported = false
-    self.region_pos = {x = 0, z = 0}
+    self.region_pos = { x = 0, z = 0 }
     self.invid = 0
-    self.inv_is_changed = false
+    self.pending_inventories = {}
     self.temp = {}
 
     return self
@@ -76,7 +76,7 @@ function Player:to_load(data)
     self.world = data.world
     self.pid = data.pid
     self.invid = data.invid
-    self.region_pos = data.region_pos or {x = 0, z = 0}
+    self.region_pos = data.region_pos or { x = 0, z = 0 }
 end
 
 return Player

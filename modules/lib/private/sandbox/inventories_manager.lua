@@ -9,6 +9,7 @@ local module = {}
 -- invid = локальный идентификатор инвентаря
 local id2Invid = {}
 local invid2Id = {}
+local block_controllers = {}
 local server_cursors = {}
 
 local function get_server_cursor(player)
@@ -23,23 +24,28 @@ local function set_server_cursor(player, item_data)
 end
 
 local function idToInvid(player, id)
-    return table.set_default(id2Invid, player.identity, {})[id]
+    return table.set_default(id2Invid, player.identity, {})[id].invid
 end
 
 local function invidToId(player, invid)
-    return table.set_default(invid2Id, player.identity, {})[invid]
+    return table.set_default(invid2Id, player.identity, {})[invid].id
 end
 
-local function open_inventory(player, invid, id)
-    table.set_default(id2Invid, player.identity, {})[id] = invid
-    table.set_default(id2Invid, player.identity, {})[invid] = id
+local function get_controller(player, invid)
+    return table.set_default(invid2Id, player.identity, {})[invid].controller
 end
 
 local function close_inventory(player, invid)
-    local id = table.set_default(id2Invid, player.identity, {})[invid]
+    local p_id2Invid = table.set_default(id2Invid, player.identity, {})
+    local p_invid2Id = table.set_default(invid2Id, player.identity, {})
 
-    table.set_default(id2Invid, player.identity, {})[invid] = nil
-    table.set_default(id2Invid, player.identity, {})[id] = nil
+    local id = p_id2Invid[invid]
+
+    local controller = get_controller(player, invid)
+    if controller then controller:__on_close(player, invid) end
+
+    if p_id2Invid[id] then p_invid2Id[p_id2Invid[id].invid] = nil end
+    if p_invid2Id[invid] then p_id2Invid[p_invid2Id[invid].id] = nil end
 end
 
 local function server_checksum(player, id)
@@ -56,20 +62,56 @@ end
 
 -- id = айди на сервере
 -- invid = айди для клиента
+local function open_inventory(player, invid, id, controller)
+    local p_id2Invid = table.set_default(id2Invid, player.identity, {})
+    local p_invid2Id = table.set_default(invid2Id, player.identity, {})
+
+    if p_id2Invid[id] then p_invid2Id[p_id2Invid[id].invid] = nil end
+    if p_invid2Id[invid] then p_id2Invid[p_invid2Id[invid].id] = nil end
+
+    p_id2Invid[id] = { invid = invid, controller = controller }
+    p_invid2Id[invid] = { id = id, controller = controller }
+end
+
+function module.get_second_inventory(player)
+    local p_id2Invid = id2Invid[player.identity]
+
+    if not p_id2Invid then
+        return
+    end
+
+    for id, data in pairs(p_id2Invid) do
+        if id ~= 0 and id ~= 1 then
+            return data.invid
+        end
+    end
+end
+
 function module.open_block(player, pos)
-    local invid = inventory.get_block(pos[1], pos[2], pos[3])
-    if invid == 0 then return end
-    local id = table.max_index(id2Invid[player.identity])
-    open_inventory(player, invid, id)
+    local x, y, z = pos[1], pos[2], pos[3]
+    local invid = inventory.get_block(x, y, z)
+    if invid == 0 then return 0 end
+
+    local p_data = id2Invid[player.identity] or {}
+    local new_id = table.max_index(p_data) + 1
+
+    local block_id = block.get(x, y, z)
+    local controller = block_controllers[block_id]
+
+    if controller then
+        controller:__on_open(player, invid, x, y, z)
+    end
+
+    open_inventory(player, invid, new_id, controller)
+
     local client = sandbox.get_client(player)
     client:push_packet(protocol.ServerMsg.OpenBlockInventory, {
-        inventory_id = id,
-        pos = {
-            x = pos[1],
-            y = pos[2],
-            z = pos[3]
-        }
+        inventory_id = new_id,
+        pos = { x = x, y = y, z = z }
     })
+    module.sync(player, new_id)
+
+    return invid
 end
 
 function module.open_virtual(player, layout, disable_player_inventory, root_id, id)
@@ -77,40 +119,58 @@ function module.open_virtual(player, layout, disable_player_inventory, root_id, 
 end
 
 function module.close_inventory_by_invid(player, invid)
-    close_inventory(invid)
     local client = sandbox.get_client(player)
-    client:push_packet(protocol.ServerMsg.CloseInventory, {
+    client:push_packet(protocol.ServerMsg.InventoryClose, {
         inventory_id = invidToId(player, invid),
     })
+    close_inventory(player, invid)
 end
 
-function module.close_inventory_by_id(player, id)
-    close_inventory(idToInvid(player, id))
-    local client = sandbox.get_client(player)
-    client:push_packet(protocol.ServerMsg.CloseInventory, {
-        inventory_id = id,
-    })
-end
+function module.close_inventory_by_id(player, id, non_sync)
+    close_inventory(player, idToInvid(player, id))
 
-function module.init(_player)
-    open_inventory(_player, player.get_inventory(_player.pid), 1)
-    open_inventory(_player, -1, 0)
-end
-
-function module.sync(player, id)
-    local client = sandbox.get_client(player)
-
-    if id ~= 0 then
-        client:push_packet(protocol.ServerMsg.SyncInventory, {
+    if not non_sync then
+        local client = sandbox.get_client(player)
+        client:push_packet(protocol.ServerMsg.InventoryClose, {
             inventory_id = id,
-            inventory = inventory.get_inv(idToInvid(player, id))
         })
     end
+end
 
-    client:push_packet(protocol.ServerMsg.SyncInventory, {
+function module.init(_player, pinv_controller, minv_controller)
+    open_inventory(_player, player.get_inventory(_player.pid), 1, pinv_controller)
+    open_inventory(_player, -1, 0, minv_controller)
+end
+
+function module.sync(player, ...)
+    local client = sandbox.get_client(player)
+
+    for _, id in pairs({ ... }) do
+        if id ~= 0 then
+            client:push_packet(protocol.ServerMsg.InventorySync, {
+                inventory_id = id,
+                inventory = inventory.get_inv(idToInvid(player, id))
+            })
+        end
+    end
+
+    client:push_packet(protocol.ServerMsg.InventorySync, {
         inventory_id = -1,
         inventory = { get_server_cursor(player) }
     })
+end
+
+function module.echo_sync(invid, without_identity)
+    for identity, inventories in pairs(invid2Id) do
+        local data = inventories[invid]
+
+        if data and identity ~= without_identity then
+            local target_player = sandbox.by_identity.get_player(identity)
+            if target_player then
+                target_player.pending_inventories[data.id] = true
+            end
+        end
+    end
 end
 
 local function set_item(invid, slot, item_data)
@@ -131,13 +191,22 @@ local function get_item(invid, slot)
     return { id = id, count = count, meta = meta }
 end
 
-function module.interact(player, id, slot, action, item_id, client_checksum)
-    if action == 2 or action == 3 then return end
+function module.set_block_inventory_controller(id, controller)
+    block_controllers[id] = controller
+end
 
+function module.interact(player, id, slot, action, item_id, client_checksum)
     local client = sandbox.get_client(player)
     local grabbed = get_server_cursor(player)
     local stack = { id = 0, count = 0, meta = nil }
     local invid = idToInvid(player, id)
+
+    if not invid then
+        logger.log(
+            string.format('Player "%s" [#%s] tried to use unopened inventory. Aborting operation.',
+                client.player.username, client.player.identity), "W")
+        return
+    end
 
     if id == 0 then
         local rules = account_manager.get_rules(client.account)
@@ -219,12 +288,21 @@ function module.interact(player, id, slot, action, item_id, client_checksum)
         set_item(invid, slot, stack)
     end
 
+    local controller = get_controller(player, invid)
+    if (action == 0 or action == 1) and controller then
+        controller:__on_update(player, invid, slot, action)
+    elseif controller then
+        controller:__on_share(player, invid, slot, item_id)
+    end
+
     if client_checksum then
         local current_server_checksum = server_checksum(player, id)
         if current_server_checksum ~= client_checksum then
             module.sync(player, id)
         end
     end
+
+    module.echo_sync(invid, player.identity)
 
     return true
 end
