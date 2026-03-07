@@ -107,7 +107,6 @@ InventoryInteract:
 
 InventoryClose:
   fields:
-    - inventory_id: var[W+2][R-2]
 
 RequestChunk:
   fields:

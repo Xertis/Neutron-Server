@@ -109,7 +109,6 @@ OpenVirtualInventory:
   fields:
     - layout: string
     - inventory_id: var[W+2][R-2]
-    - root_id: NullAble<var>
     - disable_player_inventory: boolean[W or false]
 
 OpenBlockInventory:
@@ -119,7 +118,6 @@ OpenBlockInventory:
 
 InventoryClose:
   fields:
-    - inventory_id: var[W+2][R-2]
 
 InventorySync:
   fields:

@@ -3,6 +3,9 @@ local protocol = require "multiplayer/protocol-kernel/protocol"
 local account_manager = require "lib/private/accounts/account_manager"
 local sandbox = require "lib/private/sandbox/sandbox"
 
+local xml = require "lib/public/xml/xml2lua"
+local tree = require "lib/public/xml/handler/tree"
+
 local module = {}
 
 -- id = общий идентификатор инвентаря (у клиента и у сервера)
@@ -10,6 +13,9 @@ local module = {}
 local id2Invid = {}
 local invid2Id = {}
 local block_controllers = {}
+local virtual_controllers = {}
+local virtual_inventories = {}
+
 local server_cursors = {}
 
 local function get_server_cursor(player)
@@ -46,6 +52,14 @@ local function close_inventory(player, invid)
 
     if p_id2Invid[id] then p_invid2Id[p_id2Invid[id].invid] = nil end
     if p_invid2Id[invid] then p_id2Invid[p_invid2Id[invid].id] = nil end
+
+    if virtual_inventories[invid] then
+        table.remove(virtual_inventories, invid)
+    end
+end
+
+local function inventory_to_table(invid)
+    return inventory.get_inv(invid)
 end
 
 local function server_checksum(player, id)
@@ -53,7 +67,7 @@ local function server_checksum(player, id)
     local inv = {}
 
     if invid and id ~= 0 then
-        inv = inventory.get_inv(invid)
+        inv = inventory_to_table(invid)
     end
 
     local cursor = get_server_cursor(player)
@@ -71,6 +85,55 @@ local function open_inventory(player, invid, id, controller)
 
     p_id2Invid[id] = { invid = invid, controller = controller }
     p_invid2Id[invid] = { id = id, controller = controller }
+end
+
+local function get_slots_counts(inventory)
+    local sum = 0
+
+    for type, elem in pairs(inventory) do
+        if type == "slots-grid" then
+            for _, grid in pairs(elem) do
+                local cols = grid._attr.cols
+                local rows = grid._attr.rows
+                local count = grid._attr.count
+
+                if rows and cols then
+                    sum = sum + rows * cols
+                elseif count then
+                    sum = sum + count
+                end
+            end
+        elseif type == "slot" then
+            sum = sum + 1
+        end
+    end
+
+    return sum
+end
+
+local function abs_layout_path(path)
+    local prefix, abs_path = path:match("([^:]+):(.+)")
+    abs_path = prefix .. ":layouts/" .. abs_path
+
+    if abs_path:match("%.([^.]+)$") == nil then
+        abs_path = abs_path .. ".xml"
+    end
+
+    return abs_path
+end
+
+local function create_virtual_inventory(path)
+    local abs_path = abs_layout_path(path)
+
+    local layout = file.read(abs_path)
+    local handler = tree:new()
+    local parser = xml.parser(handler)
+    parser:parse(layout)
+
+    local root = handler.root
+    local size = get_slots_counts(root.inventory)
+
+    return inventory.create(size)
 end
 
 function module.get_second_inventory(player)
@@ -102,6 +165,7 @@ function module.open_block(player, pos)
         controller:__on_open(player, invid, x, y, z)
     end
 
+    module.close_inventory(player)
     open_inventory(player, invid, new_id, controller)
 
     local client = sandbox.get_client(player)
@@ -114,26 +178,56 @@ function module.open_block(player, pos)
     return invid
 end
 
-function module.open_virtual(player, layout, disable_player_inventory, root_id, id)
-    -- Пока не работает, невозможно реализовать
-end
+function module.open_virtual(player, layout_path, disable_player_inventory, root_id)
+    local invid = root_id
+    if not root_id then
+        invid = create_virtual_inventory(layout_path)
+    end
 
-function module.close_inventory_by_invid(player, invid)
+    local controller = virtual_controllers[abs_layout_path(layout_path)]
+    local p_data = id2Invid[player.identity] or {}
+    local new_id = table.max_index(p_data) + 1
+
+    module.close_inventory(player)
+
+    if controller then
+        controller:__on_open(player, invid)
+    end
+
+    open_inventory(player, invid, new_id, controller)
+
+    virtual_inventories[#virtual_inventories + 1] = invid
+
     local client = sandbox.get_client(player)
-    client:push_packet(protocol.ServerMsg.InventoryClose, {
-        inventory_id = invidToId(player, invid),
+    client:push_packet(protocol.ServerMsg.OpenVirtualInventory, {
+        layout = layout_path,
+        inventory_id = new_id,
+        disable_player_inventory = disable_player_inventory
     })
-    close_inventory(player, invid)
+    module.sync(player, new_id)
+    return invid
 end
 
-function module.close_inventory_by_id(player, id, non_sync)
-    close_inventory(player, idToInvid(player, id))
+function module.close_inventory(player, non_sync)
+    local second = module.get_second_inventory(player)
+    if not second then return end
+
+    close_inventory(player, second)
 
     if not non_sync then
         local client = sandbox.get_client(player)
-        client:push_packet(protocol.ServerMsg.InventoryClose, {
-            inventory_id = id,
-        })
+        client:push_packet(protocol.ServerMsg.InventoryClose, {})
+    end
+end
+
+function module.echo_close_inventory(invid)
+    for identity, inventories in pairs(invid2Id) do
+        local data = inventories[invid]
+
+        if data then
+            local target_player = sandbox.by_identity.get_player(identity)
+            module.close_inventory(target_player)
+        end
     end
 end
 
@@ -145,11 +239,11 @@ end
 function module.sync(player, ...)
     local client = sandbox.get_client(player)
 
-    for _, id in pairs({ ... }) do
+    for _, id in ipairs({ ... }) do
         if id ~= 0 then
             client:push_packet(protocol.ServerMsg.InventorySync, {
                 inventory_id = id,
-                inventory = inventory.get_inv(idToInvid(player, id))
+                inventory = inventory_to_table(idToInvid(player, id))
             })
         end
     end
@@ -160,14 +254,17 @@ function module.sync(player, ...)
     })
 end
 
-function module.echo_sync(invid, without_identity)
+function module.echo_sync(invid, without_identity, action_type)
+    -- action_type = true просто синкает
+    -- action_type = false закрывает инвентарь
+    action_type = action_type or true
     for identity, inventories in pairs(invid2Id) do
         local data = inventories[invid]
 
         if data and identity ~= without_identity then
             local target_player = sandbox.by_identity.get_player(identity)
             if target_player then
-                target_player.pending_inventories[data.id] = true
+                target_player.pending_inventories[data.id] = action_type
             end
         end
     end
@@ -193,6 +290,10 @@ end
 
 function module.set_block_inventory_controller(id, controller)
     block_controllers[id] = controller
+end
+
+function module.set_virtual_inventory_controller(layout_path, controller)
+    virtual_controllers[abs_layout_path(layout_path)] = controller
 end
 
 function module.interact(player, id, slot, action, item_id, client_checksum)

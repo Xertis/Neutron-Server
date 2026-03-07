@@ -51,13 +51,23 @@ end)
 --Обновляем инвентарь
 ClientPipe:add_middleware(function(client)
     local player = client.player
-    local inventories = { player }
 
-    for id, _ in pairs(player.pending_inventories) do
-        inventories[#inventories + 1] = id
+    local inventories_for_sync = { player }
+    local inventories_close = false
+
+    for id, action_type in pairs(player.pending_inventories) do
+        if action_type then
+            inventories_for_sync[#inventories_for_sync + 1] = id
+        else
+            inventories_close = true
+        end
     end
 
-    inventories_manager.sync(unpack(inventories))
+    if not inventories_close then
+        inventories_manager.sync(unpack(inventories_for_sync))
+    else
+        inventories_manager.close_inventory(player)
+    end
 
     player.pending_inventories = {}
 

@@ -98,12 +98,28 @@ function module.inventories.create_controller(source)
     return InventoryController.new(source)
 end
 
-function module.inventories.set_controller(block_id, controller)
-    inventories_managers.set_block_inventory_controller(block_id, controller)
+function module.inventories.set_controller(ident, controller)
+    if type(ident) == "number" then
+        inventories_managers.set_block_inventory_controller(ident, controller)
+    else
+        inventories_managers.set_virtual_inventory_controller(ident, controller)
+    end
 end
 
 function module.inventories.open_block(player, pos)
     return inventories_managers.open_block(player, pos)
+end
+
+function module.inventories.open(player, layout_path, disable_player_inventory, root_id)
+    return inventories_managers.open_virtual(player, layout_path, disable_player_inventory, root_id)
+end
+
+function module.inventories.close(player)
+    inventories_managers.close_inventory(player)
+end
+
+function module.inventories.echo_close(invid)
+    inventories_managers.echo_close_inventory(invid)
 end
 
 function module.inventories.get_second_inventory(player)

@@ -550,6 +550,7 @@ matches.client_online_handler:add_case(protocol.ClientMsg.Disconnect, (
         chat.echo(message)
 
         entities_manager.clear_pid(pid)
+        inventories_manager.close_inventory(client.player, true)
 
         local buffer = protocol.create_databuffer()
         buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.PlayerListRemove,
@@ -818,7 +819,7 @@ matches.client_online_handler:add_case(protocol.ClientMsg.InventoryClose, (
             return
         end
 
-        inventories_manager.close_inventory_by_id(client.player, packet.inventory_id, true)
+        inventories_manager.close_inventory(client.player, true)
     end
 ))
 
