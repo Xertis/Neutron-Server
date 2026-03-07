@@ -261,7 +261,7 @@ end
 function module.echo_sync(invid, without_identity, action_type)
     -- action_type = true просто синкает
     -- action_type = false закрывает инвентарь
-    action_type = action_type or true
+    if action_type == nil then action_type = true end
     for identity, inventories in pairs(invid2Id) do
         local data = inventories[invid]
 
