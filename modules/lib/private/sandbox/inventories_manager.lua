@@ -45,16 +45,20 @@ local function close_inventory(player, invid)
     local p_id2Invid = table.set_default(id2Invid, player.identity, {})
     local p_invid2Id = table.set_default(invid2Id, player.identity, {})
 
-    local id = p_id2Invid[invid]
-
     local controller = get_controller(player, invid)
     if controller then controller:__on_close(player, invid) end
 
-    if p_id2Invid[id] then p_invid2Id[p_id2Invid[id].invid] = nil end
-    if p_invid2Id[invid] then p_id2Invid[p_invid2Id[invid].id] = nil end
+    local inv_data = p_invid2Id[invid]
+    if inv_data then
+        local id = inv_data.id
+
+        p_id2Invid[id] = nil
+        p_invid2Id[invid] = nil
+    end
 
     if virtual_inventories[invid] then
-        table.remove(virtual_inventories, invid)
+        virtual_inventories[invid] = nil
+        inventory.remove(invid)
     end
 end
 
