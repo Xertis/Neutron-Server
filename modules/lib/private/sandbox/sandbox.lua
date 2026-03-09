@@ -38,7 +38,6 @@ function module.join_player(username, account)
             account_player.username = username
         end
     elseif status == CODES.players.DataLoss then
-
         if not module.is_username_available(account_player.username, identity) then
             logger.log(
                 string.format(
@@ -159,6 +158,10 @@ function module.get_player(account)
     return container.player_online.get(account.identity)
 end
 
+function module.by_identity.get_player(identity)
+    return container.player_online.get(identity)
+end
+
 function module.get_chunk(pos)
     return world.get_chunk_data(pos.x, pos.z)
 end
@@ -256,6 +259,10 @@ function module.by_identity.is_online(identity)
     return false
 end
 
+function module.by_username.is_online(username)
+    return module.by_username.get(username) ~= nil
+end
+
 function module.by_username.get(username)
     for _, player in pairs(module.get_players()) do
         if player.username == username then
@@ -285,39 +292,6 @@ function module.by_invid.get(invid)
     for _, player in pairs(module.get_players()) do
         if player.invid == invid then
             return player
-        end
-    end
-end
-
---Вынужденный ужас
---TODO: В СРОЧНОМ ПОРЯДКЕ ЗАСУНУТЬ ЭТО В БОЛЕЕ ПРАВИЛЬНОЕ МЕСТО
-do
-    local inventory_funcs = {
-        set = inventory.set,
-        set_count = inventory.set_count,
-        add = inventory.add,
-        remove = inventory.remove,
-        set_data = inventory.set_data,
-        decrement = inventory.decrement,
-        use = inventory.use
-    }
-
-    for name, func in pairs(inventory_funcs) do
-        inventory[name] = function(invid, ...)
-            local res = { func(invid, ...) }
-
-            local prefix = parse_path(debug.getinfo(2, "S").source)
-
-            if prefix ~= "server" then
-                local player = module.by_invid.get(invid)
-                if not player then
-                    return unpack(res)
-                end
-
-                player.inv_is_changed = true
-            end
-
-            return unpack(res)
         end
     end
 end

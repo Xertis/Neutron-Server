@@ -3,9 +3,6 @@ local protocol = require "multiplayer/protocol-kernel/protocol"
 local server_matches = start_require("multiplayer/server/handlers/general_matches")
 local switcher = server_matches.client_online_handler
 
-local fsm_interceptors = {}
-local fsm_generic_interceptors = {}
-
 local receive_interceptors = {}
 local generic_receive_interceptors = {}
 

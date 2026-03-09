@@ -2,8 +2,8 @@ buf = {}
 bincode = {}
 bit = {}
 bson = {}
-ForeignEncode = function () end
-ForeignDecode = function () end
+ForeignEncode = function() end
+ForeignDecode = function() end
 
 -- [[
 -- Особенности
@@ -13,42 +13,12 @@ ForeignDecode = function () end
 
 --@READ_START
 
--- @http_get.write
--- VARIABLES
--- TO_SAVE val
-do
-    buf:put_string(val)
-end--@
-
--- @http_get.read
--- VARIABLES bytes current max str_byte val
--- TO_LOAD data
-do
-    bytes = {71}
-    current = utf8.tobytes("\r\n\r\n", true)
-    max = 4*1024
-
-    while not table.deep_equals(table.sub(bytes, #bytes-3), current) do
-        str_byte = buf:get_byte()
-
-        bytes[#bytes+1] = str_byte
-
-        if #bytes > max then
-            break
-        end
-    end
-
-    val = utf8.tostring(bytes)
-
-    data = http.toJsonString(val)
-end--@
-
 -- @degree.read
 -- VARIABLES
 -- TO_LOAD a
 do
     a = (buf:get_uint24() / 16777215) * 360 - 180
-end--@
+end --@
 
 -- @degree.write
 -- VARIABLES deg
@@ -57,85 +27,175 @@ do
     deg = math.clamp(val, -180, 180)
 
     buf:put_uint24(math.floor((deg + 180) / 360 * 16777215 + 0.5))
-end--@
+end --@
 
 -- @degree.read
 -- VARIABLES
 -- TO_LOAD a
 do
     a = (buf:get_uint24() / 16777215) * 360 - 180
-end--@
+end --@
 
 -- @boolean.write
--- VARIABLES 
+-- VARIABLES
 -- TO_SAVE val
 do
     val = val and true or false
     buf:put_bit(val)
-end--@
+end --@
 
 -- @boolean.read
--- VARIABLES 
+-- VARIABLES
 -- TO_LOAD result
 do
     result = buf:get_bit()
-end--@
+end --@
 
 -- @var.write
--- VARIABLES 
+-- VARIABLES
 -- TO_SAVE val
 do
     buf:put_bytes(bincode.encode_varint(val))
-end--@
+end --@
 
 -- @var.read
--- VARIABLES 
+-- VARIABLES
 -- TO_LOAD result
 do
     result = bincode.decode_varint(buf)
-end--@
+end --@
 
 -- @any.write
--- VARIABLES 
+-- VARIABLES
 -- TO_SAVE val
 do
     buf:put_any(val)
-end--@
+end --@
 
 -- @any.read
--- VARIABLES 
+-- VARIABLES
 -- TO_LOAD result
 do
     result = buf:get_any()
-end--@
+end --@
+
+-- @varint.write
+-- VARIABLES val byte
+-- TO_SAVE num
+do
+    val = bit.bxor(bit.lshift(num, 1), bit.arshift(num, 31))
+
+    while true do
+        byte = bit.band(val, 0x7F)
+        val = bit.rshift(val, 7)
+
+        if val ~= 0 then
+            buf:put_uint(bit.bor(byte, 0x80), 8)
+        else
+            buf:put_uint(byte, 8)
+            break
+        end
+    end
+end --@
+
+-- @varint.read
+-- VARIABLES val shift byte
+-- TO_LOAD result
+do
+    local val = 0
+    local shift = 0
+
+    while true do
+        local byte = buf:get_uint(8)
+        val = bit.bor(val, bit.lshift(bit.band(byte, 0x7F), shift))
+
+        if bit.band(byte, 0x80) == 0 then
+            break
+        end
+        shift = shift + 7
+
+        if shift >= 32 then break end
+    end
+
+    result = bit.bxor(bit.rshift(val, 1), -(bit.band(val, 1)))
+end --@
+
+-- @eint.write
+-- VARIABLES val byte num_to_encode
+-- TO_SAVE num
+do
+    num_to_encode = num
+    val = nil
+    if num_to_encode >= 0 then
+        val = num_to_encode * 2
+    else
+        val = (num_to_encode + 2147483648) * 2 + 1
+    end
+
+    while true do
+        local byte = val % 128
+        val = math.floor(val / 128)
+
+        if val > 0 then
+            buf:put_uint(byte + 128, 8)
+        else
+            buf:put_uint(byte, 8)
+            break
+        end
+    end
+end --@
+
+-- @eint.read
+-- VARIABLES val mult byte
+-- TO_LOAD result
+do
+    val = 0
+    mult = 1
+
+    while true do
+        byte = buf:get_uint(8)
+        val = val + (byte % 128) * mult
+
+        if byte < 128 then
+            break
+        end
+        mult = mult * 128
+    end
+
+    if val % 2 == 0 then
+        result = val / 2
+    else
+        result = math.floor(val / 2) - 2147483648
+    end
+end --@
 
 -- @norm8.write
--- VARIABLES 
+-- VARIABLES
 -- TO_SAVE val
 do
     buf:put_norm8(val)
-end--@
+end --@
 
 -- @norm8.read
--- VARIABLES 
+-- VARIABLES
 -- TO_LOAD result
 do
     result = buf:get_norm8()
-end--@
+end --@
 
 -- @uint12.write
--- VARIABLES 
+-- VARIABLES
 -- TO_SAVE val
 do
     buf:put_uint(val, 12)
-end--@
+end --@
 
 -- @uint12.read
--- VARIABLES 
+-- VARIABLES
 -- TO_LOAD result
 do
     result = buf:get_uint(12)
-end--@
+end --@
 
 -- @PlayerPos.write
 -- VARIABLES xx yy zz y_low y_high
@@ -153,7 +213,7 @@ do
 
     buf:put_uint24(bit.bor(bit.lshift(y_low, 15), xx))
     buf:put_uint24(bit.bor(bit.lshift(zz, 9), y_high))
-end--@
+end --@
 
 -- @PlayerPos.read
 -- VARIABLES i ii xx yy zz y_low y_high
@@ -168,162 +228,176 @@ do
     yy = bit.bor(bit.lshift(y_high, 9), y_low)
     zz = bit.rshift(ii, 9)
 
-    result = {x = xx / 1000, y = yy / 1000, z = zz / 1000}
-end--@
+    result = { x = xx / 1000, y = yy / 1000, z = zz / 1000 }
+end --@
 
 -- @bson.write
--- VARIABLES 
+-- VARIABLES
 -- TO_SAVE val
 do
     bson.encode(buf, val)
-end--@
+end --@
 
 -- @bson.read
--- VARIABLES 
+-- VARIABLES
 -- TO_LOAD result
 do
     result = bson.decode(buf)
-end--@
+end --@
 
 -- @int8.write
--- VARIABLES 
+-- VARIABLES
 -- TO_SAVE val
 do
     buf:put_byte(val + 127)
-end--@
+end --@
 
 -- @int8.read
--- VARIABLES 
+-- VARIABLES
 -- TO_LOAD result
 do
     result = buf:get_byte() - 127
-end--@
+end --@
 
 -- @uint8.write
--- VARIABLES 
+-- VARIABLES
 -- TO_SAVE val
 do
     buf:put_byte(val)
-end--@
+end --@
 
 -- @uint8.read
--- VARIABLES 
+-- VARIABLES
 -- TO_LOAD result
 do
     result = buf:get_byte()
-end--@
+end --@
 
 -- @int16.write
--- VARIABLES 
+-- VARIABLES
 -- TO_SAVE val
 do
     buf:put_sint16(val)
-end--@
+end --@
 
 -- @int16.read
--- VARIABLES 
+-- VARIABLES
 -- TO_LOAD result
 do
     result = buf:get_sint16()
-end--@
+end --@
 
 -- @uint16.write
--- VARIABLES 
+-- VARIABLES
 -- TO_SAVE val
 do
     buf:put_uint16(val)
-end--@
+end --@
 
 -- @uint16.read
--- VARIABLES 
+-- VARIABLES
 -- TO_LOAD result
 do
     result = buf:get_uint16()
-end--@
+end --@
+
+-- @uint24.write
+-- VARIABLES
+-- TO_SAVE val
+do
+    buf:put_uint24(val)
+end --@
+
+-- @uint24.read
+-- VARIABLES
+-- TO_LOAD result
+do
+    result = buf:get_uint24()
+end --@
 
 -- @int32.write
--- VARIABLES 
+-- VARIABLES
 -- TO_SAVE val
 do
     buf:put_sint32(val)
-end--@
+end --@
 
 -- @int32.read
--- VARIABLES 
+-- VARIABLES
 -- TO_LOAD result
 do
     result = buf:get_sint32()
-end--@
+end --@
 
 -- @uint32.write
--- VARIABLES 
+-- VARIABLES
 -- TO_SAVE val
 do
     buf:put_uint32(val)
-end--@
+end --@
 
 -- @uint32.read
--- VARIABLES 
+-- VARIABLES
 -- TO_LOAD result
 do
     result = buf:get_uint32()
-end--@
+end --@
 
 -- @int64.write
--- VARIABLES 
+-- VARIABLES
 -- TO_SAVE val
 do
     buf:put_int64(val)
-end--@
+end --@
 
 -- @int64.read
--- VARIABLES 
+-- VARIABLES
 -- TO_LOAD result
 do
     result = buf:get_int64()
-end--@
+end --@
 
 -- @f32.write
--- VARIABLES 
+-- VARIABLES
 -- TO_SAVE val
 do
     buf:put_float32(val)
-end--@
+end --@
 
 -- @f32.read
--- VARIABLES 
+-- VARIABLES
 -- TO_LOAD result
 do
     result = buf:get_float32()
-end--@
+end --@
 
 -- @f64.write
--- VARIABLES 
+-- VARIABLES
 -- TO_SAVE val
 do
     buf:put_float64(val)
-end--@
+end --@
 
 -- @f64.read
--- VARIABLES 
+-- VARIABLES
 -- TO_LOAD result
 do
     result = buf:get_float64()
-end--@
+end --@
 
 -- @string.write
--- VARIABLES 
+-- VARIABLES
 -- TO_SAVE val
 do
     buf:put_string(val)
-end--@
+end --@
 
 -- @string.read
--- VARIABLES 
+-- VARIABLES
 -- TO_LOAD result
 do
     result = buf:get_string()
-end--@
+end --@
 
 -- @Array.write
 -- VARIABLES i
@@ -334,7 +408,7 @@ do
     for i = 1, #value do
         Foreign(value[i])
     end
-end--@
+end --@
 
 -- @Array.read
 -- VARIABLES i array_length
@@ -347,7 +421,7 @@ do
     for i = 1, array_length do
         Foreign(result[i])
     end
-end--@
+end --@
 
 -- @bytearray.write
 -- VARIABLES i
@@ -355,14 +429,14 @@ end--@
 do
     buf:put_bytes(bincode.encode_varint(#arr))
     buf:put_bytes(arr)
-end--@
+end --@
 
 -- @bytearray.read
 -- VARIABLES i
 -- TO_LOAD result
 do
     result = buf:get_bytes(bincode.decode_varint(buf))
-end--@
+end --@
 
 -- @Rule.write
 -- VARIABLES
@@ -370,7 +444,7 @@ end--@
 do
     buf:put_string(data[1])
     buf:put_bit(data[2])
-end--@
+end --@
 
 -- @Rule.read
 -- VARIABLES
@@ -380,7 +454,7 @@ do
         buf:get_string(),
         buf:get_bit()
     }
-end--@
+end --@
 
 -- @Player.write
 -- VARIABLES
@@ -388,7 +462,7 @@ end--@
 do
     buf:put_bytes(bincode.encode_varint(data.pid))
     buf:put_string(data.username)
-end--@
+end --@
 
 -- @Player.read
 -- VARIABLES
@@ -398,7 +472,7 @@ do
         pid = bincode.decode_varint(buf),
         username = buf:get_string()
     }
-end--@
+end --@
 
 -- @Chunk.write
 -- VARIABLES
@@ -409,7 +483,7 @@ do
 
     buf:put_bytes(bincode.encode_varint(#chunk.data))
     buf:put_bytes(chunk.data)
-end--@
+end --@
 
 -- @Chunk.read
 -- VARIABLES xx zz len
@@ -422,7 +496,7 @@ do
         z = zz,
         data = buf:get_bytes(len)
     }
-end--@
+end --@
 
 -- @PackHash.write
 -- VARIABLES
@@ -430,7 +504,7 @@ end--@
 do
     buf:put_string(data.pack)
     buf:put_string(data.hash)
-end--@
+end --@
 
 -- @PackHash.read
 -- VARIABLES
@@ -440,7 +514,7 @@ do
         pack = buf:get_string(),
         hash = buf:get_string()
     }
-end--@
+end --@
 
 -- @Particle.write
 -- VARIABLES config
@@ -473,7 +547,7 @@ do
     if config == 2 or config == 3 then
         bson.encode(buf, value.extension)
     end
-end--@
+end --@
 
 -- @Particle.read
 -- VARIABLES config
@@ -504,7 +578,7 @@ do
     if config == 2 or config == 3 then
         value.extension = bson.decode(buf)
     end
-end--@
+end --@
 
 -- @particle_origin.write
 -- VARIABLES
@@ -520,7 +594,7 @@ do
         buf:put_float32(value.origin[2])
         buf:put_float32(value.origin[3])
     end
-end--@
+end --@
 
 -- @particle_origin.read
 -- VARIABLES
@@ -537,7 +611,7 @@ do
             buf:get_float32()
         }
     end
-end--@
+end --@
 
 -- @Audio.write
 -- VARIABLES
@@ -564,7 +638,7 @@ do
     buf:put_string(audio.channel)
     buf:put_bit(audio.loop)
     buf:put_bit(audio.isStream or false)
-end--@
+end --@
 
 -- @Audio.read
 -- VARIABLES
@@ -589,7 +663,7 @@ do
     audio.channel = buf:get_string()
     audio.loop = buf:get_bit()
     audio.isStream = buf:get_bit()
-end--@
+end --@
 
 -- @Vec6.write
 -- VARIABLES
@@ -602,7 +676,7 @@ do
     Foreign(vec[4])
     Foreign(vec[5])
     Foreign(vec[6])
-end--@
+end --@
 
 -- @Vec6.read
 -- VARIABLES
@@ -616,7 +690,7 @@ do
     Foreign(vec[4])
     Foreign(vec[5])
     Foreign(vec[6])
-end--@
+end --@
 
 -- @Vec5.write
 -- VARIABLES
@@ -628,7 +702,7 @@ do
     Foreign(vec[3])
     Foreign(vec[4])
     Foreign(vec[5])
-end--@
+end --@
 
 -- @Vec5.read
 -- VARIABLES
@@ -641,7 +715,7 @@ do
     Foreign(vec[3])
     Foreign(vec[4])
     Foreign(vec[5])
-end--@
+end --@
 
 -- @Vec4.write
 -- VARIABLES
@@ -652,7 +726,7 @@ do
     Foreign(vec[2])
     Foreign(vec[3])
     Foreign(vec[4])
-end--@
+end --@
 
 -- @Vec4.read
 -- VARIABLES
@@ -664,7 +738,7 @@ do
     Foreign(vec[2])
     Foreign(vec[3])
     Foreign(vec[4])
-end--@
+end --@
 
 -- @Vec3.write
 -- VARIABLES
@@ -674,7 +748,7 @@ do
     Foreign(vec[1])
     Foreign(vec[2])
     Foreign(vec[3])
-end--@
+end --@
 
 -- @Vec3.read
 -- VARIABLES
@@ -685,7 +759,7 @@ do
     Foreign(vec[1])
     Foreign(vec[2])
     Foreign(vec[3])
-end--@
+end --@
 
 -- @Vec2.write
 -- VARIABLES
@@ -694,7 +768,7 @@ end--@
 do
     Foreign(vec[1])
     Foreign(vec[2])
-end--@
+end --@
 
 -- @Vec2.read
 -- VARIABLES
@@ -704,7 +778,7 @@ do
     vec = {}
     Foreign(vec[1])
     Foreign(vec[2])
-end--@
+end --@
 
 -- @NullAble.write
 -- VARIABLES
@@ -715,7 +789,7 @@ do
     if val ~= nil then
         Foreign(val)
     end
-end--@
+end --@
 
 -- @NullAble.read
 -- VARIABLES
@@ -726,7 +800,7 @@ do
     if not buf:get_bit() then
         Foreign(val)
     end
-end--@
+end --@
 
 -- @Inventory.write
 -- VARIABLES min_count max_count min_id max_id i slot count_ id_ has_meta needed_bits_id needed_bits_count is_empty min_id_bits min_count_bits
@@ -739,7 +813,7 @@ do
     min_id = math.huge
     max_id = 0
 
-    for i=1, 40 do
+    for i = 1, 40 do
         slot = inv[i]
         count_ = slot.count
         id_ = slot.id
@@ -756,8 +830,8 @@ do
 
     buf:put_bit(is_empty)
 
-    needed_bits_id = math.bit_length(max_id-min_id)
-    needed_bits_count = math.bit_length(max_count-min_count)
+    needed_bits_id = math.bit_length(max_id - min_id)
+    needed_bits_count = math.bit_length(max_count - min_count)
 
     if is_empty then
         goto continue
@@ -775,13 +849,13 @@ do
     buf:put_uint(min_id, min_id_bits)
     buf:put_uint(min_count, min_count_bits)
 
-    for i=1, 40 do
+    for i = 1, 40 do
         slot = inv[i]
 
         if slot.id ~= 0 then
             buf:put_bit(true)
-            buf:put_uint(slot.id-min_id, needed_bits_id)
-            buf:put_uint(slot.count-min_count, needed_bits_count)
+            buf:put_uint(slot.id - min_id, needed_bits_id)
+            buf:put_uint(slot.count - min_count, needed_bits_count)
 
             has_meta = slot.meta ~= nil
             buf:put_bit(has_meta)
@@ -795,15 +869,14 @@ do
     end
 
     ::continue::
-end--@
+end --@
 
 -- @Inventory.read
 -- VARIABLES needed_bits_id needed_bits_count min_id min_count has_item has_meta slot min_id_bits min_count_bits
 -- TO_LOAD inv
 do
-
     if buf:get_bit() then
-        inv = table.rep({}, {id = 0, count = 0}, 40)
+        inv = table.rep({}, { id = 0, count = 0 }, 40)
         goto continue
     end
 
@@ -835,12 +908,12 @@ do
 
             inv[i] = slot
         else
-            inv[i] = {id = 0, count = 0}
+            inv[i] = { id = 0, count = 0 }
         end
     end
 
     ::continue::
-end--@
+end --@
 
 -- @PlayerEntity.write
 -- VARIABLES has_pos has_rot has_cheats has_item has_additional_information
@@ -888,7 +961,7 @@ do
         buf:put_uint(player.instant_destruction == nil and 2 or (player.instant_destruction == true and 1 or 0), 2)
         buf:put_uint((player.interaction_distance or -1) + 1, 12)
     end
-end--@
+end --@
 
 -- @PlayerEntity.read
 -- VARIABLES has_pos has_rot has_cheats has_additional_information inf_items inst_destruct interact_dist
@@ -946,7 +1019,7 @@ do
             player.interaction_distance = interact_dist
         end
     end
-end--@
+end --@
 
 -- @InventoryUnlimited.write
 -- VARIABLES is_empty min_count max_count min_id max_id needed_bits_id needed_bits_count min_id_bits min_count_bits slot i
@@ -1009,7 +1082,7 @@ do
             buf:put_bit(false)
         end
     end
-end--@
+end --@
 
 -- @InventoryUnlimited.read
 -- VARIABLES is_empty needed_bits_id needed_bits_count min_id_bits min_count_bits min_id min_count has_item i size
@@ -1021,7 +1094,7 @@ do
     if is_empty then
         inv = {}
         for i = 1, size do
-            inv[i] = {id = 0, count = 0}
+            inv[i] = { id = 0, count = 0 }
         end
         goto inv_over
     end
@@ -1048,23 +1121,23 @@ do
             end
             inv[i] = slot
         else
-            inv[i] = {id = 0, count = 0}
+            inv[i] = { id = 0, count = 0 }
         end
     end
 
     ::inv_over::
-end--@
+end --@
 
 -- @Edd.write
--- VARIABLES 
+-- VARIABLES
 -- TO_SAVE val
 do
     edd.encode(buf, val)
-end--@
+end --@
 
 -- @Edd.read
--- VARIABLES 
+-- VARIABLES
 -- TO_LOAD result
 do
     result = edd.decode(buf)
-end--@
+end --@

@@ -1,12 +1,3 @@
-## Содержание
-
-* [Игроки](#игроки)
-* [Синхронизация игроков](#синхронизация-игроков)
-* [Синхронизация блоков](#синхронизация-блоков)
-
->[!IMPORTANT]
-> Все стандартные движковые методы player работают на сервере и сихнронизируются с клиентами
-
 ## Игроки
 
 ```lua
@@ -14,6 +5,11 @@
 -- Ключи — identity игроков, значения — объект Player.
 api.sandbox.players.get_all() -> Table<Identity: Player>
 
+-- Проверяет, свободен ли никнейм для конкретного identity (если передан).
+api.sandbox.players.is_username_available(username: string, [опционально] identity: string) -> boolean
+
+-- Возвращает объект Client для взаимодействия с игроком (отправка пакетов и т.д.).
+api.sandbox.players.get_client(player: Player) -> Client
 
 -- Возвращает таблицу игроков в определённом радиусе.
 api.sandbox.players.get_in_radius(
@@ -21,50 +17,51 @@ api.sandbox.players.get_in_radius(
     radius: num
 ) -> Table<Identity: Player>
 
-
 -- Возвращает объект игрока по аккаунту.
 api.sandbox.players.get_player(account: Account) -> Player
 
-
 -- Возвращает объект игрока по pid.
 api.sandbox.players.get_by_pid(pid: number) -> Player
+
+```
+
+## Проверка статуса (Online)
+
+```lua
+-- Проверяет, находится ли игрок в сети по его имени пользователя.
+api.sandbox.players.by_username.is_online(username: string) -> boolean
+
+-- Проверяет, находится ли игрок в сети по его уникальному identity.
+api.sandbox.players.by_identity.is_online(identity: string) -> boolean
+
 ```
 
 ## Синхронизация игроков
 
 ```lua
--- Изменяет игрока в соответствии с таблицой states
--- и принудительно отправляет эти данные на клиент.
--- Таблица states может содержать частичные данные
--- (pos / rot / cheats могут отсутствовать).
+-- Изменяет состояние игрока (позиция, ротация, читы)
+-- и синхронизирует эти данные с клиентом.
 api.sandbox.players.sync_states(
     player: Player,
-    states: {pos={...}, rot={...}, cheats={...}}
+    states: {pos?={x,y,z}, rot?={x,y,z}, cheats?={noclip, flight}}
 )
 
-
--- Сигнатура таблицы states:
--- {
---    pos = {x, y, z},
---    rot = {x, y, z},
---    cheats = {noclip = false, flight = false}
--- }
 ```
 
 ## Синхронизация блоков
 
 ```lua
--- Отправляет данные инвентаря блока с сервера на клиент.
+-- Отправляет полные данные инвентаря блока на позиции pos указанному клиенту.
 api.sandbox.blocks.sync_inventory(
     pos: {x, y, z},
     client: Client
 )
 
-
--- Отправляет данные слота инвентаря блока на позиции pos клиенту.
+-- Синхронизирует конкретный слот инвентаря блока на позиции pos.
 api.sandbox.blocks.sync_slot(
     pos: {x, y, z},
-    slot: {slot_id=0, item_id=0, item_count=0},
+    slot: {slot_id: number, item_id: number, item_count: number},
     client: Client
 )
+
 ```

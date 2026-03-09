@@ -2,6 +2,7 @@ local Pipeline = require "lib/public/pipeline"
 local protocol = require "multiplayer/protocol-kernel/protocol"
 local protect = require "lib/private/protect"
 local sandbox = require "lib/private/sandbox/sandbox"
+local inventories_manager = require "lib/private/sandbox/inventories_manager"
 local matches = require "multiplayer/server/handlers/general_matches"
 
 local entities_manager = require "lib/private/entities/entities_manager"
@@ -15,9 +16,7 @@ local ClientPipe = Pipeline.new()
 
 --Отправляем игровое время
 ClientPipe:add_middleware(function(client)
-    local time = time.day_time_to_uint16(world.get_day_time())
-
-    client:push_packet(protocol.ServerMsg.TimeUpdate, {game_time = time})
+    client:push_packet(protocol.ServerMsg.TimeUpdate, { game_time = world.get_day_time() })
     return client
 end)
 
@@ -29,7 +28,7 @@ ClientPipe:add_middleware(function(client)
         return client
     end
 
-    client:push_packet(protocol.ServerMsg.KeepAlive, {challenge = math.random(0, 255)})
+    client:push_packet(protocol.ServerMsg.KeepAlive, { challenge = math.random(0, 255) })
     client.ping.last_upd = cur_time
     client.ping.waiting = true
     return client
@@ -50,20 +49,29 @@ ClientPipe:add_middleware(function(client)
 end)
 
 --Обновляем инвентарь
-ClientPipe:add_middleware(function (client)
+ClientPipe:add_middleware(function(client)
     local player = client.player
 
-    if not player.inv_is_changed then
-        return client
+    local inventories_for_sync = { player }
+    local inventories_close = false
+
+    for id, action_type in pairs(player.pending_inventories) do
+        if action_type then
+            inventories_for_sync[#inventories_for_sync + 1] = id
+        else
+            inventories_close = true
+        end
     end
 
-    player.inv_is_changed = false
+    if not inventories_close then
+        inventories_manager.sync(unpack(inventories_for_sync))
+    else
+        inventories_manager.close_inventory(player)
+    end
 
-    local data = sandbox.get_inventory(player)
-    local inv, slot = data.inventory, data.slot
+    player.pending_inventories = {}
 
-    client:push_packet(protocol.ServerMsg.PlayerInventory, {inventory = inv})
-    client:push_packet(protocol.ServerMsg.PlayerHandSlot, {slot = slot})
+    return client
 end)
 
 --Запрос на логин/регистрацию
@@ -74,12 +82,12 @@ ClientPipe:add_middleware(function(client)
         local account_player = sandbox.get_player(account)
         local state = sandbox.get_player_state(account_player)
         local data = {
-            pos = {x = state.x, y = state.y, z = state.z},
-            rot = {x = state.x_rot, y = state.y_rot, z = state.z_rot},
-            cheats = {noclip = state.noclip, flight = state.flight}
+            pos = { x = state.x, y = state.y, z = state.z },
+            rot = { x = state.x_rot, y = state.y_rot, z = state.z_rot },
+            cheats = { noclip = state.noclip, flight = state.flight }
         }
 
-        client:push_packet(protocol.ServerMsg.SynchronizePlayer, {data = data})
+        client:push_packet(protocol.ServerMsg.SynchronizePlayer, { data = data })
     end
 
     return client
@@ -104,7 +112,7 @@ ClientPipe:add_middleware(function(client)
 
     local cplayer = client.player
     local cur_weather = table.set_default(cplayer.temp, "current-weather", nil)
-    local pos = {player.get_pos(cplayer.pid)}
+    local pos = { player.get_pos(cplayer.pid) }
 
     local weather = weather_manager.get_by_pos(pos[1], pos[3])
     local data = nil
@@ -115,7 +123,7 @@ ClientPipe:add_middleware(function(client)
             return client
         end
 
-        data = {weather = {}, time = 1, name = "clear"}
+        data = { weather = {}, time = 1, name = "clear" }
         should_update = true
     else
         if not table.deep_equals(cur_weather or {}, weather.weather) then
@@ -148,7 +156,7 @@ ClientPipe:add_middleware(function(client)
     end
 
     local cplayer = client.player
-    local pos = {player.get_pos(cplayer.pid)}
+    local pos = { player.get_pos(cplayer.pid) }
 
     local cur_particles = table.set_default(cplayer.temp, "current-particles", {})
     local particles = particles_manager.get_in_radius(pos[1], pos[3], RENDER_DISTANCE)
@@ -175,7 +183,7 @@ ClientPipe:add_middleware(function(client)
 
         if not current_particle then
             particles_with_pid[pid] = particle
-            table.insert(cur_particles, {pid = pid, origin = particle.origin})
+            table.insert(cur_particles, { pid = pid, origin = particle.origin })
             table.insert(dirty_particles, pid)
         elseif not compare_origins(current_particle.origin, particle.origin) then
             particles_with_pid[pid] = particle
@@ -205,17 +213,17 @@ ClientPipe:add_middleware(function(client)
                 break
             end
         end
-        client:push_packet(protocol.ServerMsg.ParticleStop, {pid = pid})
+        client:push_packet(protocol.ServerMsg.ParticleStop, { pid = pid })
     end
 
     for _, pid in ipairs(dirty_particles) do
         local particle = particles_with_pid[pid]
-        client:push_packet(protocol.ServerMsg.ParticleEmit, {particle = particle})
+        client:push_packet(protocol.ServerMsg.ParticleEmit, { particle = particle })
     end
 
     for _, pid in ipairs(changed_origin_particles) do
         local particle = particles_with_pid[pid]
-        client:push_packet(protocol.ServerMsg.ParticleOrigin, {origin = particle})
+        client:push_packet(protocol.ServerMsg.ParticleOrigin, { origin = particle })
     end
 
     return client
@@ -228,7 +236,7 @@ ClientPipe:add_middleware(function(client)
     end
 
     local cplayer = client.player
-    local pos = {player.get_pos(cplayer.pid)}
+    local pos = { player.get_pos(cplayer.pid) }
 
     local client_speakers = table.set_default(cplayer.temp, "current-speakers", {})
     local speakers = audio_manager.get_in_radius(pos[1], pos[2], pos[3], RENDER_DISTANCE)
@@ -244,7 +252,7 @@ ClientPipe:add_middleware(function(client)
 
     for id, client_speaker in pairs(client_speakers) do
         if not server_speakers_ids[id] then
-            table.insert(stopped_speakers, {id = id})
+            table.insert(stopped_speakers, { id = id })
             client_speakers[id] = nil
         end
     end
@@ -262,15 +270,15 @@ ClientPipe:add_middleware(function(client)
     end
 
     for _, stopped in ipairs(stopped_speakers) do
-        client:push_packet(protocol.ServerMsg.AudioStop, {id = stopped.id})
+        client:push_packet(protocol.ServerMsg.AudioStop, { id = stopped.id })
     end
 
     for _, spawned in ipairs(spawned_speakers) do
-        client:push_packet(protocol.ServerMsg.AudioEmit, {audio = spawned})
+        client:push_packet(protocol.ServerMsg.AudioEmit, { audio = spawned })
     end
 
     for _, changed in ipairs(changed_speakers) do
-        client:push_packet(protocol.ServerMsg.AudioState, {state = changed})
+        client:push_packet(protocol.ServerMsg.AudioState, { state = changed })
     end
 
     return client
@@ -283,7 +291,7 @@ ClientPipe:add_middleware(function(client)
     end
 
     local cplayer = client.player
-    local pos = {player.get_pos(cplayer.pid)}
+    local pos = { player.get_pos(cplayer.pid) }
 
     local client_text3ds = table.set_default(cplayer.temp, "current-text3ds", {})
     local text3ds = text3d_manager.get_in_radius(pos[1], pos[3], RENDER_DISTANCE)
@@ -300,7 +308,7 @@ ClientPipe:add_middleware(function(client)
 
     for id, client_text3d in pairs(client_text3ds) do
         if not server_text3ds_ids[id] then
-            table.insert(stopped_text3ds, {id = id})
+            table.insert(stopped_text3ds, { id = id })
             client_text3ds[id] = nil
         end
     end
@@ -325,26 +333,26 @@ ClientPipe:add_middleware(function(client)
             else
                 client_text3ds[server_text3d.id] = table.copy(server_text3d)
                 if not table.deep_equals(server_text3d.axisX, client_text3d.axisX) then
-                    table.insert(changed_axis, {text = server_text3d, is_x = true})
+                    table.insert(changed_axis, { text = server_text3d, is_x = true })
                 end
 
                 if not table.deep_equals(server_text3d.axisY, client_text3d.axisY) then
-                    table.insert(changed_axis, {text = server_text3d, is_x = false})
+                    table.insert(changed_axis, { text = server_text3d, is_x = false })
                 end
             end
         end
     end
 
     for _, stopped in ipairs(stopped_text3ds) do
-        client:push_packet(protocol.ServerMsg.Text3DHide, {stopped.id})
+        client:push_packet(protocol.ServerMsg.Text3DHide, { stopped.id })
     end
 
     for _, spawned in ipairs(spawned_text3ds) do
-        client:push_packet(protocol.ServerMsg.Text3DShow, {spawned})
+        client:push_packet(protocol.ServerMsg.Text3DShow, { spawned })
     end
 
     for _, changed in ipairs(changed_text3ds) do
-        client:push_packet(protocol.ServerMsg.Text3DState, {changed})
+        client:push_packet(protocol.ServerMsg.Text3DState, { changed })
     end
 
     for _, changed in ipairs(changed_axis) do
@@ -356,8 +364,8 @@ ClientPipe:add_middleware(function(client)
         end
 
         client:push_packet(protocol.ServerMsg.Text3DAxis, {
-                id = changed.text.id, axis = axis, is_x = changed.is_x
-            }
+            id = changed.text.id, axis = axis, is_x = changed.is_x
+        }
         )
     end
 
@@ -371,7 +379,7 @@ ClientPipe:add_middleware(function(client)
     end
 
     local cplayer = client.player
-    local pos = {player.get_pos(cplayer.pid)}
+    local pos = { player.get_pos(cplayer.pid) }
 
     local client_wraps = table.set_default(cplayer.temp, "current-wraps", {})
     local wraps = wraps_manager.get_in_radius(pos[1], pos[3], RENDER_DISTANCE)
@@ -469,20 +477,23 @@ ClientPipe:add_middleware(function(client)
     end
 
     for _, wrap in ipairs(to_hide) do
-        client:push_packet(protocol.ServerMsg.WrapHide, {wrap.id})
+        client:push_packet(protocol.ServerMsg.WrapHide, { wrap.id })
     end
 
     for _, wrap in ipairs(to_change_pos) do
         local wrap_pos = wrap.pos
-        client:push_packet(protocol.ServerMsg.WrapSetPos, {id = wrap.id, pos = {
-            x = wrap_pos[1],
-            y = wrap_pos[2],
-            z = wrap_pos[3]
-        }})
+        client:push_packet(protocol.ServerMsg.WrapSetPos, {
+            id = wrap.id,
+            pos = {
+                x = wrap_pos[1],
+                y = wrap_pos[2],
+                z = wrap_pos[3]
+            }
+        })
     end
 
     for _, wrap in ipairs(to_change_texture) do
-        client:push_packet(protocol.ServerMsg.WrapSetTexture, {id = wrap.id, texture = wrap.texture})
+        client:push_packet(protocol.ServerMsg.WrapSetTexture, { id = wrap.id, texture = wrap.texture })
     end
 
     for _, wrap in ipairs(to_change_faces) do
@@ -515,11 +526,11 @@ ClientPipe:add_middleware(function(client)
         local state = sandbox.get_player_state(player)
 
         if math.euclidian2D(
-            client_states.x,
-            client_states.z,
-            state.x,
-            state.z
-        ) > RENDER_DISTANCE then
+                client_states.x,
+                client_states.z,
+                state.x,
+                state.z
+            ) > RENDER_DISTANCE then
             goto continue
         end
 
@@ -530,7 +541,7 @@ ClientPipe:add_middleware(function(client)
             data = {}
         }
 
-        local current_pos = {x = state.x, y = state.y, z = state.z}
+        local current_pos = { x = state.x, y = state.y, z = state.z }
 
         changed_data.data.compressed = false
 
@@ -538,12 +549,12 @@ ClientPipe:add_middleware(function(client)
             changed_data.data.pos = current_pos
         end
 
-        local current_rot = {x = state.x_rot, y = state.y_rot, z = state.z_rot}
+        local current_rot = { x = state.x_rot, y = state.y_rot, z = state.z_rot }
         if not prev_state.rot or not table.deep_equals(prev_state.rot, current_rot) then
             changed_data.data.rot = current_rot
         end
 
-        local current_cheats = {noclip = state.noclip, flight = state.flight}
+        local current_cheats = { noclip = state.noclip, flight = state.flight }
         if not prev_state.cheats or not table.deep_equals(prev_state.cheats, current_cheats) then
             changed_data.data.cheats = current_cheats
         end
@@ -557,8 +568,7 @@ ClientPipe:add_middleware(function(client)
         --debug.print(changed_data)
 
         if changed_data.data.pos or changed_data.data.rot or changed_data.data.cheats or changed_data.data.hand_item then
-
-            client:push_packet(protocol.ServerMsg.PlayerMoved, {pid = changed_data.pid, data = changed_data.data})
+            client:push_packet(protocol.ServerMsg.PlayerMoved, { pid = changed_data.pid, data = changed_data.data })
 
             prev_states[player.pid] = table.deep_copy({
                 pos = current_pos or prev_state.pos,
