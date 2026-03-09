@@ -27,6 +27,7 @@ function server.new(port)
 end
 
 function server:start_main()
+    logger.log(string.format("Starting main server on port: %s", self.port))
     self.main_socket = network.tcp_open(self.port, function(client_socket)
         client_socket:set_nodelay(true)
         local address, _ = client_socket:get_address()
@@ -49,7 +50,10 @@ function server:start_main()
 end
 
 function server:start_http()
-    self.http_socket = network.tcp_open(self.port + 1, function(client_socket)
+    local http_port = self.port + 1
+    logger.log(string.format("Starting http server on port: %s", http_port))
+
+    self.http_socket = network.tcp_open(http_port, function(client_socket)
         client_socket:set_nodelay(true)
         local address, _ = client_socket:get_address()
 

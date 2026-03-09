@@ -79,13 +79,15 @@ function lib.world.open_main()
     app.open_world(CONFIG.game.main_world)
     player.set_suspended(ROOT, false)
 
-    player.set_noclip(ROOT, true)
-    player.set_flight(ROOT, true)
-    player.set_pos(ROOT, 0, 262, 0)
+    time.post_runnable(function()
+        player.set_noclip(ROOT, true)
+        player.set_flight(ROOT, true)
+        player.set_pos(ROOT, 0, 262, 0)
 
-    local root_entity = entities.get(player.get_entity(ROOT))
+        local root_entity = entities.get(player.get_entity(ROOT))
 
-    PLAYER_ENTITY_ID = root_entity:def_index()
+        PLAYER_ENTITY_ID = root_entity:def_index()
+    end)
 
     -- Загружаем команды
     do

@@ -57,7 +57,10 @@ local function main()
 
     server = server.new(CONFIG.server.port)
     server:start_main()
-    server:start_http()
+
+    if CONFIG.server.http_enabled then
+        server:start_http()
+    end
 
     logger.log("server is started")
 
