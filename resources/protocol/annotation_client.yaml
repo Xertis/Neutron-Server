@@ -101,7 +101,8 @@ InventoryInteract:
   fields:
     - inventory_id: var[W+2][R-2]
     - slot: var
-    - action: uint8
+    - action: hex
+    - mode: hex
     - item_id: uint16
     - checksum: uint24
 

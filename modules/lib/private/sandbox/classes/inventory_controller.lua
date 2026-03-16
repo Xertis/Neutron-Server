@@ -33,18 +33,18 @@ function InventoryController:__on_close(player, invid)
     on_close(player, invid)
 end
 
+function InventoryController:__on_update(player, invid, slot, action, mode)
+    local on_update = self.env.on_update
+    if not on_update then return end
+
+    on_update(player, invid, slot, action, mode)
+end
+
 function InventoryController:__on_share(player, invid, slot, item_id)
     local on_share = self.env.on_share
     if not on_share then return end
 
     on_share(player, invid, slot, item_id)
-end
-
-function InventoryController:__on_update(player, invid, slot, action)
-    local on_update = self.env.on_update
-    if not on_update then return end
-
-    on_update(player, invid, slot, action)
 end
 
 return InventoryController

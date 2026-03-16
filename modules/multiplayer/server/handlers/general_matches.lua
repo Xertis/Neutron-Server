@@ -829,9 +829,15 @@ matches.client_online_handler:add_case(protocol.ClientMsg.InventoryInteract, (
             return
         end
 
-        local status = inventories_manager.interact(client.player, packet.inventory_id, packet.slot, packet.action,
+        local status = inventories_manager.interact(
+            client.player,
+            packet.inventory_id,
+            packet.slot,
+            packet.action,
+            packet.mode,
             packet.item_id,
-            packet.checksum)
+            packet.checksum
+        )
 
         if not status then
             inventories_manager.sync(client.player, packet.inventory_id)

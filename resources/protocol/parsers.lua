@@ -169,6 +169,20 @@ do
     end
 end --@
 
+-- @hex.write
+-- VARIABLES
+-- TO_SAVE val
+do
+    buf:put_uint(val, 4)
+end --@
+
+-- @hex.read
+-- VARIABLES
+-- TO_LOAD result
+do
+    result = buf:get_uint(4)
+end --@
+
 -- @norm8.write
 -- VARIABLES
 -- TO_SAVE val

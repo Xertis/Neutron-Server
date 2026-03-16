@@ -300,7 +300,7 @@ function module.set_virtual_inventory_controller(layout_path, controller)
     virtual_controllers[abs_layout_path(layout_path)] = controller
 end
 
-function module.interact(player, id, slot, action, item_id, client_checksum)
+function module.interact(player, id, slot, action, mode, item_id, client_checksum)
     local client = sandbox.get_client(player)
     local grabbed = get_server_cursor(player)
     local stack = { id = 0, count = 0, meta = nil }
@@ -323,7 +323,7 @@ function module.interact(player, id, slot, action, item_id, client_checksum)
         stack = get_item(invid, slot)
     end
 
-    if action == 0 then
+    if mode == 0 and action ~= 2 then
         if id == 0 then
             if grabbed.id == 0 or grabbed.count == 0 then
                 grabbed = { id = stack.id, count = 1, meta = stack.meta }
@@ -358,7 +358,7 @@ function module.interact(player, id, slot, action, item_id, client_checksum)
                 grabbed = temp
             end
         end
-    elseif action == 1 then
+    elseif mode == 1 then
         if id == 0 then
             return false
         end
@@ -394,8 +394,8 @@ function module.interact(player, id, slot, action, item_id, client_checksum)
     end
 
     local controller = get_controller(player, invid)
-    if (action == 0 or action == 1) and controller then
-        controller:__on_update(player, invid, slot, action)
+    if action ~= 2 and controller then
+        controller:__on_update(player, invid, slot, action, mode)
     elseif controller then
         controller:__on_share(player, invid, slot, item_id)
     end
