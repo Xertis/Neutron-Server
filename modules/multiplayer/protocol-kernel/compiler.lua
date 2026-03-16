@@ -11,13 +11,13 @@ local module = {}
 local PARSED_INFO = types_parser.get_info()
 
 local FUNCTION_PATTERN_ENCODER = [[
-return function (buf, %s) 
+return function (buf, %s)
 %s
 end
 ]]
 
 local FUNCTION_PATTERN_DECODER = [[
-return function (buf) 
+return function (buf)
 %s
     return {%s}
 end
@@ -29,36 +29,57 @@ end
 
 local function find_foreign_call(code)
     local pattern = "Foreign%s*%(%s*([^)]*)%s*%)"
-
     local start_pos, end_pos, arg = code:find(pattern)
-
     if start_pos then
         arg = arg and arg:match("^%s*(.-)%s*$") or ""
-
-        return {
-            start = start_pos,
-            finish = end_pos,
-            res_token = arg
-        }
-    else
-        return nil
+        return { start = start_pos, finish = end_pos, res_token = arg }
     end
+    return nil
 end
 
-local function parse_type_tree(str)
-    local outer, inner_str = str:match("^([^<>]+)<(.*)>$")
-    if not outer then
-        return {type_name = str, inner = nil}
+local function parse_type(str)
+    local w_expr = nil
+    local r_expr = nil
+    local base_str = str
+
+    while true do
+        local content = base_str:match("%[([^%]]+)%]%s*$")
+        if not content then break end
+        content = content:match("^%s*(.-)%s*$")
+
+        if content:find("W") then
+            w_expr = content
+        elseif content:find("R") then
+            r_expr = content
+        end
+
+        base_str = base_str:gsub("%[%s*[^%]]+%s*%]%s*$", "")
     end
-    return {type_name = outer, inner = parse_type_tree(inner_str)}
+
+    local outer, inner_str = base_str:match("^%s*([^<>]+)%s*<%s*(.*)%s*>%s*$")
+    if outer then
+        return {
+            type_name = outer:match("^%s*(.-)%s*$"),
+            inner = parse_type(inner_str),
+            w_expr = w_expr,
+            r_expr = r_expr
+        }
+    else
+        return {
+            type_name = base_str:match("^%s*(.-)%s*$"),
+            inner = nil,
+            w_expr = w_expr,
+            r_expr = r_expr
+        }
+    end
 end
 
 local function compile_encode_type(type_node, cur_index, override_save_token)
     local type_name = type_node.type_name
     local info = PARSED_INFO.encode[type_name]
     local to_save = info.TO_SAVE
-    local vars = info.VARIABLES
-    local sum_vars_to_gen = override_save_token and vars or table.merge({to_save}, vars)
+    local vars = info.VARIABLES or {}
+    local sum_vars_to_gen = override_save_token and vars or table.merge({ to_save }, vars)
 
     local tokens = {}
     tokens, cur_index = tokenizer.get_tokens(cur_index, sum_vars_to_gen)
@@ -69,6 +90,12 @@ local function compile_encode_type(type_node, cur_index, override_save_token)
 
     local code = tokenizer.variables_replace(info.code, tokens)
     local save_token = tokens[to_save]
+
+    if type_node.w_expr then
+        local w_tokens = { W = save_token }
+        local expr = tokenizer.variables_replace(type_node.w_expr, w_tokens)
+        code = string.format("    %s = %s\n%s", save_token, expr, code)
+    end
 
     if type_node.inner then
         local replaced = true
@@ -92,8 +119,8 @@ local function compile_decode_type(type_node, cur_index, override_load_token)
     local type_name = type_node.type_name
     local info = PARSED_INFO.decode[type_name]
     local to_load = info.TO_LOAD
-    local vars = info.VARIABLES
-    local sum_vars_to_gen = override_load_token and vars or table.merge({to_load}, vars)
+    local vars = info.VARIABLES or {}
+    local sum_vars_to_gen = override_load_token and vars or table.merge({ to_load }, vars)
 
     local tokens = {}
     tokens, cur_index = tokenizer.get_tokens(cur_index, sum_vars_to_gen)
@@ -120,6 +147,12 @@ local function compile_decode_type(type_node, cur_index, override_load_token)
         end
     end
 
+    if type_node.r_expr then
+        local r_tokens = { R = load_token }
+        local expr = tokenizer.variables_replace(type_node.r_expr, r_tokens)
+        code = code .. string.format("\n    %s = %s", load_token, expr)
+    end
+
     return code, load_token, cur_index
 end
 
@@ -133,11 +166,10 @@ function module.compile_encoder(types)
     end
 
     for _, typestr in ipairs(types) do
-        local type_node = parse_type_tree(typestr)
+        local type_node = parse_type(typestr)
         local code, to_save, cur_indx = compile_encode_type(type_node, cur_index, nil)
         cur_index = cur_indx
         table.insert(sum_tokens, to_save)
-
         concated_code = string.format("%s%s ", concated_code, code)
     end
 
@@ -155,11 +187,10 @@ function module.compile_decoder(types)
     end
 
     for _, typestr in ipairs(types) do
-        local type_node = parse_type_tree(typestr)
+        local type_node = parse_type(typestr)
         local code, to_load, cur_indx = compile_decode_type(type_node, cur_index, nil)
         cur_index = cur_indx
         table.insert(sum_tokens, to_load)
-
         concated_code = string.format("%s%s ", concated_code, code)
     end
 

@@ -31,10 +31,11 @@ function lib.world.preparation_main()
     if not file.exists("user:worlds/" .. CONFIG.game.main_world .. "/world.json") then
         logger.log("Creating a main world...")
         local name = CONFIG.game.main_world
+        local main_world = CONFIG.game.worlds[name]
         app.new_world(
-            CONFIG.game.main_world,
-            CONFIG.game.worlds[name].seed,
-            CONFIG.game.worlds[name].generator
+            name,
+            main_world.seed,
+            main_world.generator
         )
 
         player.create("root", ROOT)
@@ -78,13 +79,15 @@ function lib.world.open_main()
     app.open_world(CONFIG.game.main_world)
     player.set_suspended(ROOT, false)
 
-    player.set_noclip(ROOT, true)
-    player.set_flight(ROOT, true)
-    player.set_pos(ROOT, 0, 262, 0)
+    time.post_runnable(function()
+        player.set_noclip(ROOT, true)
+        player.set_flight(ROOT, true)
+        player.set_pos(ROOT, 0, 262, 0)
 
-    local root_entity = entities.get(player.get_entity(ROOT))
+        local root_entity = entities.get(player.get_entity(ROOT))
 
-    PLAYER_ENTITY_ID = root_entity:def_index()
+        PLAYER_ENTITY_ID = root_entity:def_index()
+    end)
 
     -- Загружаем команды
     do

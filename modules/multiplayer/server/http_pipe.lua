@@ -1,15 +1,15 @@
 local Pipeline = require "lib/public/async_pipeline"
 local protocol = require "multiplayer/protocol-kernel/protocol"
 local protect = require "lib/private/protect"
-local matches = require "multiplayer/server/handlers/general_matches"
-local ClientPipe = require "multiplayer/server/client_pipe"
+local matches = require "multiplayer/server/handlers/http_matches"
 local List = require "lib/public/common/list"
 local interceptors = require "api/v2/interceptors"
+local http = require "server:lib/private/http/httprequestparser"
 local receiver = require "server:multiplayer/protocol-kernel/receiver"
 
-local ServerPipe = Pipeline.new()
+local HttpPipe = Pipeline.new()
 
-ServerPipe:add_middleware(function(client)
+HttpPipe:add_middleware(function(client)
     local co = client.meta.recieve_co
     if not co then
         client.meta.buffer = receiver.create_buffer()
@@ -19,7 +19,7 @@ ServerPipe:add_middleware(function(client)
                 local received_any = false
                 while true do
                     local success, packet = pcall(function()
-                        return protocol.parse_packet("client", buffer)
+                        return protocol.parse_query(buffer)
                     end)
 
                     if success and packet then
@@ -47,7 +47,7 @@ ServerPipe:add_middleware(function(client)
     return client
 end)
 
-ServerPipe:add_middleware(function(client)
+HttpPipe:add_middleware(function(client)
     if List.is_empty(client.received_packets) then
         return client
     end
@@ -55,32 +55,31 @@ ServerPipe:add_middleware(function(client)
     local packet = List.popleft(client.received_packets)
 
     local success, err = pcall(function()
-        if client.active == false then
-            local status = interceptors.receive.__process(packet, client)
-            if status then matches.general_fsm:handle_event(client, packet) end
-        elseif client.active == true then
-            matches.client_online_handler:switch(packet.packet_type, packet, client)
-        end
+        local status = interceptors.receive.__process(packet, client)
+        if status then matches:switch(packet.path, packet, client) end
     end)
 
     if not success then
         client:kick()
-        logger.log("Error while reading packet: " .. err .. '\n' .. "Client disconnected", 'E')
+
+        logger.log(string.format("http handler error: %s, additional information in server.log", err), "E")
+        logger.log(debug.traceback(), "E", true)
+        logger.log(json.tostring(packet), "E", true)
+        client:queue_response(utf8.tobytes(
+            http.buildResponse(500, {
+                message = "Internal Server Error"
+            })
+        ))
     end
 
     return client, not List.is_empty(client.received_packets)
 end)
 
-ServerPipe:add_middleware(function(client)
-    events.emit("server:client_pipe_start", client)
-    if client.active then
-        ClientPipe:process(client)
-    end
-
+HttpPipe:add_middleware(function(client)
     while not List.is_empty(client.response_queue) do
         local packet = List.popleft(client.response_queue)
         local success, err = pcall(function()
-            client.network.socket:send(packet)
+            client.socket:send(packet)
         end)
         if not success then
             logger.log("Error when sending a packet: " .. err, 'E')
@@ -91,4 +90,4 @@ ServerPipe:add_middleware(function(client)
     return client
 end)
 
-return protect.protect_return(ServerPipe)
+return protect.protect_return(HttpPipe)

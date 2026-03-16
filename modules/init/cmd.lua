@@ -1,5 +1,4 @@
 local chat = start_require "multiplayer/server/chat/chat"
-local tasks = require "api/v2/tasks"
 
 console.add_command(
     "chat message:str",
@@ -8,6 +7,15 @@ console.add_command(
         local message = string.format("[#ffff00] [root] %s", args[1])
         time.post_runnable(function() chat.echo(message) end)
         return "message has been sent"
+    end
+)
+
+console.add_command(
+    "shutdown",
+    "Shuts down the server",
+    function(args)
+        time.post_runnable(function() IS_RUNNING = false end)
+        return "done"
     end
 )
 

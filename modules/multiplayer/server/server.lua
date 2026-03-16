@@ -1,9 +1,8 @@
 local protect = require "lib/private/protect"
-local socketlib = require "lib/public/socketlib"
 local Client = require "multiplayer/server/classes/client"
-local Network = require "lib/public/network"
 local container = require "lib/private/common/container"
-local server_pipe = require "multiplayer/server/server_pipe"
+local main_pipe = require "multiplayer/server/main_pipe"
+local http_pipe = require "multiplayer/server/http_pipe"
 local server_echo = require "multiplayer/server/server_echo"
 local server_matches = require "multiplayer/server/handlers/general_matches"
 local protocol = require "multiplayer/protocol-kernel/protocol"
@@ -16,19 +15,22 @@ function server.new(port)
 
     self.port = port
 
-    self.clients = {}
-    self.server_socket = nil
+    self.main_clients = {}
+    self.http_clients = {}
+    self.main_socket = nil
+    self.http_socket = nil
     self.tps = { timestamp = time.uptime(), tick = 0, target_tps = TARGET_TPS }
     self.tasks = {}
-    container.clients_all.set(self.clients)
+    container.clients_all.set(self.main_clients)
 
     return self
 end
 
-function server:start()
-    self.server_socket = socketlib.create_server(self.port, function(client_socket)
-       client_socket:set_nodelay(true)
-       local address, _ = client_socket:get_address()
+function server:start_main()
+    logger.log(string.format("Starting main server on port: %s", self.port))
+    self.main_socket = network.tcp_open(self.port, function(client_socket)
+        client_socket:set_nodelay(true)
+        local address, _ = client_socket:get_address()
 
         if (not table.has(table.freeze_unpack(CONFIG.server.whitelist_ip), address) and #table.freeze_unpack(CONFIG.server.whitelist_ip) > 0) then
             client_socket:close()
@@ -37,49 +39,70 @@ function server:start()
 
         if table.has(self.tasks, client_socket) then
             client_socket:close()
-            logger.log("The client is trying to reconnect while its previous session is still active and queued for processing. Aborted", "W")
+            logger.log(
+                "The client is trying to reconnect while its previous session is still active and queued for processing. Aborted",
+                "W")
             return
         end
 
-        table.insert(self.tasks, client_socket)
+        table.insert(self.tasks, { socket = client_socket, storage = self.main_clients })
+    end)
+end
+
+function server:start_http()
+    local http_port = self.port + 1
+    logger.log(string.format("Starting http server on port: %s", http_port))
+
+    self.http_socket = network.tcp_open(http_port, function(client_socket)
+        client_socket:set_nodelay(true)
+        local address, _ = client_socket:get_address()
+
+        if (not table.has(table.freeze_unpack(CONFIG.server.whitelist_ip), address) and #table.freeze_unpack(CONFIG.server.whitelist_ip) > 0) then
+            client_socket:close()
+            return
+        end
+
+        if table.has(self.tasks, client_socket) then
+            client_socket:close()
+            logger.log(
+                "The client is trying to reconnect while its previous session is still active and queued for processing. Aborted",
+                "W")
+            return
+        end
+
+        table.insert(self.tasks, { socket = client_socket, storage = self.http_clients })
     end)
 end
 
 function server:do_tasks()
     for j = #self.tasks, 1, -1 do
-        local client_socket = self.tasks[j]
+        local client_socket = self.tasks[j].socket
+        local storage = self.tasks[j].storage
 
-        local network = Network.new(client_socket)
         local address, port = client_socket:get_address()
-        local client = Client.new(false, network, address, port)
+        local client = Client.new(false, client_socket, address, port)
 
-        for i = #self.clients, 1, -1 do
-            local server_client = self.clients[i]
+        for i = #storage, 1, -1 do
+            local server_client = storage[i]
             if server_client.address == client.address and not server_client.active then
                 logger.log("Reconnection from the client side was detected", "W")
-                if server_client.network.socket:is_alive() then
-                    server_client.network.socket:close()
+                if server_client.socket:is_alive() then
+                    server_client.socket:close()
                 end
 
-                table.remove(self.clients, i)
+                table.remove(storage, i)
             end
         end
 
         logger.log("Connection to the client has been successfully established")
 
-        table.insert(self.clients, client)
+        table.insert(storage, client)
         table.remove(self.tasks, j)
     end
 end
 
-function server:queue_response(event)
-    for _, client in ipairs(self.clients) do
-        client:queue_response(event)
-    end
-end
-
 function server:stop()
-    self.server_socket:close()
+    self.main_socket:close()
 end
 
 function server:calculate_tps()
@@ -108,35 +131,39 @@ function server:tick()
     local cur_time = time.uptime()
     local max_timeout = CONFIG.server.kick_threshold_timeout or 30
 
-    for index = #self.clients, 1, -1 do
-        local client = self.clients[index]
-        local socket = client.network.socket
+    for id, clients in ipairs({ self.main_clients, self.http_clients }) do
+        for index = #clients, 1, -1 do
+            local client = clients[index]
+            local socket = client.socket
 
-        if  not socket or
-            not socket:is_alive() or
-            client.is_kicked or
-            cur_time - client.ping.last_upd > max_timeout then
+            if not socket or
+                not socket:is_alive() or
+                client.is_kicked or
+                cur_time - client.ping.last_upd > max_timeout then
+                if client.active then
+                    client.active = false
+                end
 
-            if client.active then
-                client.active = false
-            end
+                table.remove(clients, index)
 
-            table.remove(self.clients, index)
+                if id == 1 then
+                    server_matches.client_online_handler:switch(
+                        protocol.ClientMsg.Disconnect,
+                        { packet_type = protocol.ClientMsg.Disconnect },
+                        client
+                    )
+                end
 
-            server_matches.client_online_handler:switch(
-                protocol.ClientMsg.Disconnect,
-                { packet_type = protocol.ClientMsg.Disconnect },
-                client
-            )
-
-            if socket and socket:is_alive() then
-                socket:close()
+                if socket and socket:is_alive() then
+                    socket:close()
+                end
             end
         end
     end
 
-    server_pipe:process(table.copy(self.clients))
-    server_echo.proccess(self.clients)
+    main_pipe:process(table.copy(self.main_clients))
+    http_pipe:process(table.copy(self.http_clients))
+    server_echo.proccess(self.main_clients)
 end
 
 return protect.protect_return(server)

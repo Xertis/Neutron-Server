@@ -1,22 +1,29 @@
 local compiler = require "multiplayer/protocol-kernel/compiler"
+
 local module = {
-    server = {
-        letters = {},
-        ids = {}
-    },
-    client = {
-        letters = {},
-        ids = {}
-    }
+    server = { letters = {}, ids = {} },
+    client = { letters = {}, ids = {} }
 }
 
 local PATH_TO_ANNOTATION_SERVER = PACK_ID .. ":resources/protocol/annotation_server.yaml"
 local PATH_TO_ANNOTATION_CLIENT = PACK_ID .. ":resources/protocol/annotation_client.yaml"
 
-local compiled = {
-    server = {},
-    client = {}
-}
+local compiled = { server = {}, client = {} }
+
+local function get_base_type(typestr)
+    if not typestr or type(typestr) ~= "string" then
+        return typestr
+    end
+    local base = typestr
+    while true do
+        local new_base = base:match("^(.-)%s*%[[^%]]+%]%s*$")
+        if not new_base or new_base == base then
+            break
+        end
+        base = new_base
+    end
+    return base:match("^%s*(.-)%s*$")
+end
 
 local function gen_ids(side)
     local packets = compiled[side]
@@ -26,13 +33,7 @@ local function gen_ids(side)
 
     for name, data in pairs(packets) do
         if data.packet_id then
-            local id = nil
-            if type(data.packet_id) == "number" then
-                id = data.packet_id
-            else
-                id = utf8.codepoint(data.packet_id)
-            end
-
+            local id = type(data.packet_id) == "number" and data.packet_id or utf8.codepoint(data.packet_id)
             if id_to_name[id] then
                 error(string.format("Duplicate packet_id! ID %d is used by '%s' and '%s'", id, id_to_name[id], name))
             end
@@ -62,7 +63,6 @@ local function gen_ids(side)
     end
 
     module[side].ids = name_to_id
-
     for id, name in pairs(id_to_name) do
         module[side].ids[id] = name
     end
@@ -79,17 +79,17 @@ local function get_fields(annotation, letter, name)
     local key2index = {}
     local index2key = {}
 
-    for indx, type in ipairs(letter.fields or {}) do
-        local key, val = get_one(type)
+    for indx, type_entry in ipairs(letter.fields or {}) do
+        local key, val = get_one(type_entry)
 
-        if annotation[val] then
-            if val == name then
+        local base_type = get_base_type(val)
+
+        if annotation[base_type] then
+            if base_type == name then
                 error("Stack overflow detected inside the " .. name)
             end
-
-            local _, _, inner_types_compiler_types = get_fields(annotation, annotation[val], val)
-
-            for _, t in ipairs(inner_types_compiler_types) do
+            local _, _, inner_types = get_fields(annotation, annotation[base_type], base_type)
+            for _, t in ipairs(inner_types) do
                 table.insert(types_compiler_types, t)
             end
         else
@@ -117,34 +117,44 @@ function module.__compilation(side, path)
 
         compiled[side][name] = {
             packet_id = letter.packet_id,
-            encode = function (buf, data)
+            encode = function(buf, data)
                 local flat_data = {}
-                if data[1] then flat_data = data end
+                if data and data[1] then flat_data = data end
 
                 local function flatten(fields, d)
                     for _, f in ipairs(fields) do
                         local k, t = get_one(f)
-                        local v = d[k]
-                        if annotation[t] then
-                            flatten(annotation[t].fields, v)
+                        local v = d and d[k]
+                        local base_t = get_base_type(t)
+
+                        if annotation[base_t] then
+                            flatten(annotation[base_t].fields, v or {})
                         else
                             table.insert(flat_data, v)
                         end
                     end
                 end
-                if #flat_data == 0 then flatten(letter.fields or {}, data) end
+
+                if #flat_data == 0 then
+                    flatten(letter.fields or {}, data or {})
+                end
+
                 encoder(buf, unpack(flat_data))
                 buf:flush()
             end,
-            decode = function (buf)
+
+            decode = function(buf)
                 local flat_data = decoder(buf)
                 local idx = 1
+
                 local function unflatten(fields)
                     local d = {}
                     for _, f in ipairs(fields) do
                         local k, t = get_one(f)
-                        if annotation[t] then
-                            d[k] = unflatten(annotation[t].fields)
+                        local base_t = get_base_type(t)
+
+                        if annotation[base_t] then
+                            d[k] = unflatten(annotation[base_t].fields)
                         else
                             d[k] = flat_data[idx]
                             idx = idx + 1
@@ -152,6 +162,7 @@ function module.__compilation(side, path)
                     end
                     return d
                 end
+
                 return unflatten(letter.fields or {})
             end
         }
@@ -166,10 +177,16 @@ function module.__init()
 end
 
 function module.write(buf, side, letter, data)
+    if not compiled[side][letter] then
+        error("Unknown packet letter: " .. tostring(letter))
+    end
     compiled[side][letter].encode(buf, data or {})
 end
 
 function module.read(buf, side, letter)
+    if not compiled[side][letter] then
+        error("Unknown packet letter: " .. tostring(letter))
+    end
     return compiled[side][letter].decode(buf)
 end
 

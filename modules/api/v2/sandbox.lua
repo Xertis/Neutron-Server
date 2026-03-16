@@ -1,11 +1,18 @@
 local sandbox = start_require("server:lib/private/sandbox/sandbox")
+local inventories_managers = start_require("server:lib/private/sandbox/inventories_manager")
 local account_manager = start_require("server:lib/private/accounts/account_manager")
 local protocol = start_require("server:multiplayer/protocol-kernel/protocol")
 
+local InventoryController = require "server:lib/private/sandbox/classes/inventory_controller"
+
 local module = {
-    players = {},
+    players = {
+        by_username = {},
+        by_identity = {}
+    },
     world = {},
-    blocks = {}
+    blocks = {},
+    inventories = {}
 }
 
 function module.players.is_username_available(username, identity)
@@ -26,6 +33,14 @@ function module.players.get_player(account)
     return sandbox.get_player(account)
 end
 
+function module.players.by_username.is_online(username)
+    return sandbox.by_username.is_online(username)
+end
+
+function module.players.by_identity.is_online(identity)
+    return sandbox.by_identity.is_online(identity)
+end
+
 function module.players.sync_states(_player, states)
     local client = account_manager.by_username.get_client(_player.username)
 
@@ -42,7 +57,7 @@ function module.players.sync_states(_player, states)
         player.set_flight(_player.pid, states.cheats.flight)
     end
 
-    client:push_packet(protocol.ServerMsg.SynchronizePlayer, {data = states})
+    client:push_packet(protocol.ServerMsg.SynchronizePlayer, { data = states })
 end
 
 function module.players.get_in_radius(target_pos, radius)
@@ -79,23 +94,36 @@ function module.players.get_by_pid(pid)
     end
 end
 
-function module.blocks.sync_inventory(pos, client)
-    local invid = inventory.get_block(pos[1], pos[2], pos[3])
-    local inv = inventory.get_inv(invid)
-
-    client:push_packet(protocol.ServerMsg.BlockInventory, {
-        pos = {x = pos[1], y = pos[2], z = pos[3]},
-        inventory = inv
-    })
+function module.inventories.create_controller(source)
+    return InventoryController.new(source)
 end
 
-function module.blocks.sync_slot(pos, slot, client)
-    client:push_packet(protocol.ServerMsg.BlockInventorySlot, {
-        pos = {x = pos[1], y = pos[2], z = pos[3]},
-        slot_id = slot.slot_id,
-        item_id = slot.item_id,
-        item_count = slot.item_count
-    })
+function module.inventories.set_controller(ident, controller)
+    if type(ident) == "number" then
+        inventories_managers.set_block_inventory_controller(ident, controller)
+    else
+        inventories_managers.set_virtual_inventory_controller(ident, controller)
+    end
+end
+
+function module.inventories.open_block(player, pos)
+    return inventories_managers.open_block(player, pos)
+end
+
+function module.inventories.open(player, layout_path, disable_player_inventory, root_id)
+    return inventories_managers.open_virtual(player, layout_path, disable_player_inventory, root_id)
+end
+
+function module.inventories.close(player)
+    inventories_managers.close_inventory(player)
+end
+
+function module.inventories.echo_close(invid)
+    inventories_managers.echo_close_inventory(invid)
+end
+
+function module.inventories.get_second_inventory(player)
+    return inventories_managers.get_second_inventory(player)
 end
 
 return module

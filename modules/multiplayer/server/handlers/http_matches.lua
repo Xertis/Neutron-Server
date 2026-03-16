@@ -9,7 +9,7 @@ local function send_responce(client, responce)
 end
 
 local matches = switcher.new(function(packet, client)
-    local error = string.format("Path '%s' does not exist.", packet.request.path)
+    local error = string.format("Path '%s' does not exist.", packet.path)
     logger.log(string.format('http 404 error: "%s", additional information in server.log', error))
     logger.log(json.tostring(packet), "E", true)
 
@@ -19,7 +19,7 @@ local matches = switcher.new(function(packet, client)
     send_responce(client, responce)
 end)
 
-matches:add_case("/status", function (packet, client)
+matches:add_case("/status", function(packet, client)
     logger.log("Sending the status...")
     local icon = nil
 
@@ -29,7 +29,7 @@ matches:add_case("/status", function (packet, client)
         icon = file.read_bytes(DEFAULT_ICON_PATH)
     end
 
-    local query = packet.request.query or {}
+    local query = packet.query or {}
 
     local friends_list = query.friends_list or {}
     local players = table.keys(sandbox.get_players())

@@ -31,19 +31,6 @@ BlockRegion:
 # -----------------------------------------------------------------
 
 # -----------------------------------------------------------------
-# HTTP
-# -----------------------------------------------------------------
-HTTPGet:
-  packet_id: "G"
-  fields:
-    - request: http_get
-
-HTTPost:
-  packet_id: "P"
-  fields:
-    - request: http_get
-
-# -----------------------------------------------------------------
 # Connecting
 # -----------------------------------------------------------------
 
@@ -101,10 +88,6 @@ PlayerCheats:
     - noclip: boolean
     - flight: boolean
 
-PlayerInventory:
-  fields:
-    - inventory: Inventory
-
 PlayerHandSlot:
   fields:
     - slot: uint8
@@ -114,11 +97,17 @@ PlayerRegion:
     - x: int16
     - z: int16
 
-PlayerFeatures:
+InventoryInteract:
   fields:
-    - infinite_items: boolean
-    - instant_destruction: boolean
-    - interaction_distance: uint12
+    - inventory_id: var[W+2][R-2]
+    - slot: var
+    - action: hex
+    - mode: hex
+    - item_id: uint16
+    - checksum: uint24
+
+InventoryClose:
+  fields:
 
 RequestChunk:
   fields:
@@ -174,15 +163,3 @@ EntitySpawnAttempt:
   fields:
     - def: uint16
     - args: bson
-
-BlockInventory:
-  fields:
-    - pos: BlockPosition
-    - inventory: InventoryUnlimited
-
-BlockInventorySlot:
-  fields:
-    - pos: BlockPosition
-    - slot_id: uint16
-    - item_id: uint16
-    - item_count: uint16
