@@ -5,12 +5,17 @@ function on_share(_player, _, _, item_id)
 
     for slot = 0, size - 1 do
         local id, count = inventory.get(inv, slot)
-        if id == item_id and count + 1 <= stack_size then
+        if id == item_id and count < stack_size then
             inventory.set_count(inv, slot, count + 1)
-            break
-        elseif id == 0 then
+            return
+        end
+    end
+
+    for slot = 0, size - 1 do
+        local id, count = inventory.get(inv, slot)
+        if id == 0 then
             inventory.set(inv, slot, item_id, 1)
-            break
+            return
         end
     end
 end
