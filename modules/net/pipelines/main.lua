@@ -1,7 +1,7 @@
 local Pipeline = require "lib/flow/async_pipeline"
 local protocol = require "net/protocol/protocol"
 local matches = require "net/handlers/main"
-local ClientPipe = require "net/pipelines/client_pipe"
+local ClientPipe = require "net/pipelines/client"
 local List = require "lib/utils/list"
 local interceptors = require "api/v2/interceptors"
 local receiver = require "server:net/protocol/receiver"
