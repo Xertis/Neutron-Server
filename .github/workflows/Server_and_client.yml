@@ -3,41 +3,41 @@ name: Create Server-Client Packages
 on:
   workflow_dispatch:
   push:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   package:
     runs-on: ubuntu-latest
-    
+
     steps:
-    - name: Checkout server
-      uses: actions/checkout@v2
-      with:
-        path: 'server-src'
+      - name: Checkout server
+        uses: actions/checkout@v2
+        with:
+          path: "server-src"
 
-    - name: Clone client
-      run: |
-        git clone --depth 1 --branch main https://github.com/Xertis/Quartz-Client.git client-src
+      - name: Clone client
+        run: |
+          git clone --depth 1 --branch main https://github.com/Xertis/Neutron-Client.git client-src
 
-    - name: Prepare packages
-      run: |
-        rm -rf server-src/.git
-        rm -rf client-src/.git
+      - name: Prepare packages
+        run: |
+          rm -rf server-src/.git
+          rm -rf client-src/.git
 
-        mkdir -p Neutron-Server-main
-        cp -r server-src/* Neutron-Server-main/
-        zip -r server.zip Neutron-Server-main
-        rm -rf Neutron-Server-main
+          mkdir -p Neutron-Server-main
+          cp -r server-src/* Neutron-Server-main/
+          zip -r server.zip Neutron-Server-main
+          rm -rf Neutron-Server-main
 
-        mkdir -p Quartz
-        cp -r client-src/* Quartz/
-        zip -r client.zip Quartz
-        rm -rf Quartz
+          mkdir -p Quartz
+          cp -r client-src/* Quartz/
+          zip -r client.zip Quartz
+          rm -rf Quartz
 
-    - name: Upload packages
-      uses: actions/upload-artifact@v4
-      with:
-        name: server_and_client
-        path: |
-          server.zip
-          client.zip
+      - name: Upload packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: server_and_client
+          path: |
+            server.zip
+            client.zip
