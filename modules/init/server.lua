@@ -1,7 +1,4 @@
 local lib = require "lib/private/min"
-local protect = require "lib/private/protect"
-
-if protect.protect_require() then return end
 
 local world = lib.world
 
@@ -23,7 +20,9 @@ do
 
     if CONFIG.server.chunks_loading_distance > 255 then
         CONFIG.server.chunks_loading_distance = 255
-        logger.log("Chunks distance is too high. Please select a value in the range of 0-255. The current chunks distance is set to 255", 'W')
+        logger.log(
+        "Chunks distance is too high. Please select a value in the range of 0-255. The current chunks distance is set to 255",
+            'W')
     end
 
     CONFIG = table.freeze(CONFIG)
