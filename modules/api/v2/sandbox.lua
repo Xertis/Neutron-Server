@@ -1,9 +1,9 @@
-local sandbox = start_require("server:lib/private/sandbox/sandbox")
-local inventories_managers = start_require("server:lib/private/sandbox/inventories_manager")
-local account_manager = start_require("server:lib/private/accounts/account_manager")
-local protocol = start_require("server:multiplayer/protocol-kernel/protocol")
+local sandbox = start_require("server:core/sandbox/methods")
+local inventories_managers = start_require("server:core/sandbox/managers/inventories")
+local account_manager = start_require("server:core/accounts/methods")
+local protocol = start_require("server:net/protocol/protocol")
 
-local InventoryController = require "server:lib/private/sandbox/classes/inventory_controller"
+local InventoryController = require "server:core/sandbox/classes/inventory_controller"
 
 local module = {
     players = {

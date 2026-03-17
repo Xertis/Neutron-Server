@@ -1,4 +1,4 @@
-local weather_manager = start_require "server:lib/private/gfx/weather_manager"
+local weather_manager = start_require "server:core/sandbox/managers/weather"
 local module = {}
 
 local weather_mt = {
@@ -70,8 +70,8 @@ local weather_mt = {
             end
             local weather = weather_manager_get_by_wid(self.wid)
             if weather then
-                weather.range = {min, max}
-                self.range = {min, max}
+                weather.range = { min, max }
+                self.range = { min, max }
             end
         end,
 

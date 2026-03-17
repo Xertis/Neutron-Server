@@ -1,4 +1,4 @@
-local text3d_manager = start_require("server:lib/private/gfx/text3d_manager")
+local text3d_manager = start_require("server:core/sandbox/managers/text3d")
 
 local defaultFunctions = {
     "get_text", "set_text",

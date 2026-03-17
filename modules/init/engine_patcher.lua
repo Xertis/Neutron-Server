@@ -1,4 +1,4 @@
-local entities_manager = start_require "lib/private/entities/entities_manager"
+local entities_manager = start_require "core/sandbox/managers/entities"
 
 logger.log("Patching the in-memory engine before start")
 

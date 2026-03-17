@@ -1,19 +1,15 @@
-require "server:std/stdboot"
+require "server:std/boot"
 
 LAUNCH_ATTEMPTS = 1
 
 local function main()
     require "server:globals"
-    require "server:std/stdmin"
-
-    local protect = require "server:lib/private/protect"
-    if protect.protect_require() then return end
-
+    require "server:std/min"
 
     if IS_RELEASE then
-        logger.log(LOGO)
+        logger.log("\n" .. LOGO)
     else
-        logger.log(string.multiline_concat(LOGO, DEV))
+        logger.log("\n" .. string.multiline_concat(LOGO, DEV))
     end
 
     logger.log(string.format("Welcome to %s! Starting...", PROJECT_NAME))
@@ -24,11 +20,11 @@ local function main()
         version: %s
     ]], PROJECT_NAME, IS_RELEASE, SERVER_VERSION))
 
-    local lib = require "server:lib/private/min"
+    local lib = require "server:lib/utils/min"
 
     require "server:init/engine_patcher"
     require "server:init/server"
-    require "server:multiplayer/server/chat/commands"
+    require "server:core/sandbox/chat/commands"
 
     if IS_FIRST_RUN then
         logger.log("The first startup was detected, server has been stopped.")
@@ -37,10 +33,10 @@ local function main()
         return
     end
 
-    local timeout_executor = require "server:lib/private/common/timeout_executor"
-    local server = require "server:multiplayer/server/server"
+    local timeout_executor = require "server:lib/flow/timeout_executor"
+    local server = require "server:net/classes/server"
 
-    local metadata = require "server:lib/private/files/metadata"
+    local metadata = require "server:lib/data/metadata"
     local world = lib.world
 
     _G["/$p"] = table.copy(package.loaded)
@@ -109,8 +105,8 @@ local function main()
 end
 
 -- do
---     local compiler = require "server:multiplayer/protocol-kernel/compiler"
---     local bb = require "server:lib/public/bit_buffer":new()
+--     local compiler = require "server:net/protocol/compiler"
+--     local bb = require "server:lib/io/bit_buffer":new()
 
 --     local decoder = compiler.compile_decoder({"particle"})
 --     local encoder = compiler.compile_encoder({"particle"})

@@ -1,6 +1,6 @@
-local protocol = require "multiplayer/protocol-kernel/protocol"
+local protocol = require "net/protocol/protocol"
 
-local server_matches = start_require("multiplayer/server/handlers/general_matches")
+local server_matches = start_require("net/handlers/main")
 local switcher = server_matches.client_online_handler
 
 local receive_interceptors = {}

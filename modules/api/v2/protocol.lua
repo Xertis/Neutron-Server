@@ -1,5 +1,5 @@
-local protocol = start_require "server:multiplayer/protocol-kernel/protocol"
-local server_echo = start_require "server:multiplayer/server/server_echo"
+local protocol = start_require "server:net/protocol/protocol"
+local server_echo = start_require "server:lib/flow/server_echo"
 
 local module = {
     ServerMsg = protocol.ServerMsg,
