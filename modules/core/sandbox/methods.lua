@@ -79,7 +79,7 @@ function module.join_player(username, account)
     account_player:save()
 
     local is_suspended = player.is_suspended(account_player.pid)
-    logger.log(string.format('Suspend state of player %s is %s', account_player.username, tostring(is_suspended)))
+    logger.log(string.format('Suspend state of player "%s" is %s', account_player.username, tostring(is_suspended)))
     if is_suspended then
         player.set_suspended(account_player.pid, false)
         logger.log(string.format('Suspend state of player "%s" changed to false', account_player.username))
