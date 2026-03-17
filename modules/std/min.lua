@@ -1,4 +1,4 @@
-local data_buffer = require "lib/public/bit_buffer"
+local data_buffer = require "lib/io/bit_buffer"
 
 _G['$Neutron'] = "server"
 _G['$Multiplayer'] = {

@@ -1,15 +1,15 @@
-local Pipeline = require "lib/public/pipeline"
-local protocol = require "multiplayer/protocol-kernel/protocol"
-local sandbox = require "lib/private/sandbox/sandbox"
-local inventories_manager = require "lib/private/sandbox/inventories_manager"
-local matches = require "multiplayer/server/handlers/general_matches"
+local Pipeline = require "lib/flow/pipeline"
+local protocol = require "net/protocol/protocol"
+local sandbox = require "core/sandbox/methods"
+local inventories_manager = require "core/sandbox/managers/inventories"
+local matches = require "net/handlers/main"
 
-local entities_manager = require "lib/private/entities/entities_manager"
-local weather_manager = require "lib/private/gfx/weather_manager"
-local particles_manager = require "lib/private/gfx/particles_manager"
-local audio_manager = require "lib/private/gfx/audio_manager"
-local text3d_manager = require "lib/private/gfx/text3d_manager"
-local wraps_manager = require "lib/private/gfx/blockwraps_manager"
+local entities_manager = require "core/sandbox/managers/entities"
+local weather_manager = require "core/sandbox/managers/weather"
+local particles_manager = require "core/sandbox/managers/particles"
+local audio_manager = require "core/sandbox/managers/audio"
+local text3d_manager = require "core/sandbox/managers/text3d"
+local wraps_manager = require "core/sandbox/managers/blockwraps"
 
 local ClientPipe = Pipeline.new()
 

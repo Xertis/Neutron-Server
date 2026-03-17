@@ -1,5 +1,5 @@
-local compiler = require "server:multiplayer/protocol-kernel/compiler"
-local bb = require "lib/public/bit_buffer"
+local compiler = require "server:net/protocol/compiler"
+local bb = require "lib/io/bit_buffer"
 
 local function deep_approx_equals(a, b, epsilon)
     if type(a) ~= type(b) then

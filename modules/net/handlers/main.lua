@@ -1,26 +1,26 @@
-local protocol = require "multiplayer/protocol-kernel/protocol"
-local switcher = require "lib/public/common/switcher"
-local sandbox = require "lib/private/sandbox/sandbox"
-local inventories_manager = require "lib/private/sandbox/inventories_manager"
-local account_manager = require "lib/private/accounts/account_manager"
-local chat = require "multiplayer/server/chat/chat"
-local timeout_executor = require "lib/private/common/timeout_executor"
-local echo = require "multiplayer/server/server_echo"
+local protocol = require "net/protocol/protocol"
+local switcher = require "lib/flow/switcher"
+local sandbox = require "core/sandbox/methods"
+local inventories_manager = require "core/sandbox/managers/inventories"
+local account_manager = require "core/accounts/methods"
+local chat = require "core/sandbox/chat/chat"
+local timeout_executor = require "lib/flow/timeout_executor"
+local echo = require "lib/flow/server_echo"
 local api_events = require "api/v2/events"
 local api_env = require "api/v2/env"
-local entities_manager = require "lib/private/entities/entities_manager"
-local lib = require "lib/private/min"
-local mfsm = require "lib/public/common/multifsm"
+local entities_manager = require "core/sandbox/managers/entities"
+local lib = require "lib/utils/min"
+local mfsm = require "lib/flow/multifsm"
 
 local hashed_packs = nil
 
-local InventoryController = require "server:lib/private/sandbox/classes/inventory_controller"
+local InventoryController = require "server:core/sandbox/classes/inventory_controller"
 
 local player_inventory_controller = InventoryController.new(
-    "server:modules/lib/private/sandbox/controllers/player_inventory.lua")
+    "server:modules/core/sandbox/controllers/player_inventory.lua")
 
 local content_menu_controller = InventoryController.new(
-    "server:modules/lib/private/sandbox/controllers/content_menu.lua")
+    "server:modules/core/sandbox/controllers/content_menu.lua")
 
 local matches = {
     general_fsm = mfsm.new(),

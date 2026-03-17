@@ -1,4 +1,4 @@
-local db = require "lib/public/bit_buffer"
+local db = require "lib/io/bit_buffer"
 
 local VERSION = 0
 

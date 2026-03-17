@@ -1,6 +1,6 @@
-local utils = require "lib/public/database/utils/utils"
-local parser = require "lib/public/database/files/db_parser"
-local Query = require "lib/public/database/logic/query_builder"
+local utils = require "lib/db/utils/utils"
+local parser = require "lib/db/files/db_parser"
+local Query = require "lib/db/logic/query_builder"
 local Session = {}
 Session.__index = Session
 

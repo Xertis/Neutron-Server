@@ -1,4 +1,4 @@
-local List = require "lib/public/common/list"
+local List = require "lib/utils/list"
 
 local module = {}
 local tasks = List.new()

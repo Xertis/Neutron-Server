@@ -1,7 +1,7 @@
-local bit_buffer = require "server:lib/public/bit_buffer"
-local kernel = require "server:multiplayer/protocol-kernel/kernel"
-local receiver = require "server:multiplayer/protocol-kernel/receiver"
-local http = require "server:lib/private/http/httprequestparser"
+local bit_buffer = require "server:lib/io/bit_buffer"
+local kernel = require "server:net/protocol/kernel"
+local receiver = require "server:net/protocol/receiver"
+local http = require "server:lib/http/httprequestparser"
 local protocol = {}
 
 logger.log("Initializing protocol...")

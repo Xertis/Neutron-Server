@@ -1,10 +1,10 @@
-local Client = require "multiplayer/server/classes/client"
-local container = require "lib/private/common/container"
-local main_pipe = require "multiplayer/server/main_pipe"
-local http_pipe = require "multiplayer/server/http_pipe"
-local server_echo = require "multiplayer/server/server_echo"
-local server_matches = require "multiplayer/server/handlers/general_matches"
-local protocol = require "multiplayer/protocol-kernel/protocol"
+local Client = require "net/classes/client"
+local container = require "core/container"
+local main_pipe = require "net/pipelines/main_pipe"
+local http_pipe = require "net/pipelines/http_pipe"
+local server_echo = require "lib/flow/server_echo"
+local server_matches = require "net/handlers/main"
+local protocol = require "net/protocol/protocol"
 
 local server = {}
 server.__index = server

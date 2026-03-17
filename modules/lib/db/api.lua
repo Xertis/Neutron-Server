@@ -1,6 +1,6 @@
-local utils = require "lib/public/database/utils/utils"
-local session = require "lib/public/database/session"
-local CODES = json.parse(file.read("server:modules/lib/public/database/data/codes.json"))
+local utils = require "lib/db/utils/utils"
+local session = require "lib/db/session"
+local CODES = json.parse(file.read("server:modules/lib/db/data/codes.json"))
 
 local db = {
     types = utils.types,
@@ -40,7 +40,7 @@ db.db.exists = utils.db.exists
 
 function db.items.Column(type, config)
     config = config or {}
-    return {type = type, config = config}
+    return { type = type, config = config }
 end
 
 return db

@@ -1,4 +1,4 @@
-local metadata = start_require "lib/private/files/metadata"
+local metadata = start_require "lib/data/metadata"
 local Player = {}
 Player.__index = Player
 

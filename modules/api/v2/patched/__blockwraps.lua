@@ -1,6 +1,6 @@
-local server_echo = start_require "server:multiplayer/server/server_echo"
-local protocol = start_require "server:multiplayer/protocol-kernel/protocol"
-local wraps = start_require "lib/private/gfx/blockwraps_manager"
+local server_echo = start_require "server:lib/flow/server_echo"
+local protocol = start_require "server:net/protocol/protocol"
+local wraps = start_require "core/sandbox/managers/blockwraps"
 
 local global_gfx = _G["gfx"]
 

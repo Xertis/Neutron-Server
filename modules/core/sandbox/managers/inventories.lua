@@ -1,9 +1,9 @@
-local protocol = require "multiplayer/protocol-kernel/protocol"
-local account_manager = require "lib/private/accounts/account_manager"
-local sandbox = require "lib/private/sandbox/sandbox"
+local protocol = require "net/protocol/protocol"
+local account_manager = require "core/accounts/methods"
+local sandbox = require "core/sandbox/methods"
 
-local xml = require "lib/public/xml/xml2lua"
-local tree = require "lib/public/xml/handler/tree"
+local xml = require "lib/xml/xml2lua"
+local tree = require "lib/xml/handler/tree"
 
 local module = {}
 

@@ -1,4 +1,4 @@
-local bit_converter = require "lib/public/common/bit_converter"
+local bit_converter = require "lib/io/bit_converter"
 
 -- Data buffer
 

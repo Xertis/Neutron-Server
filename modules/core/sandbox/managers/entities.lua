@@ -1,5 +1,5 @@
-local protocol = require "multiplayer/protocol-kernel/protocol"
-local server_echo = require "multiplayer/server/server_echo"
+local protocol = require "net/protocol/protocol"
+local server_echo = require "lib/flow/server_echo"
 
 local module = {}
 local reg_entities = {}

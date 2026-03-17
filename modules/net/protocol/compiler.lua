@@ -1,10 +1,10 @@
-local types_parser = require "multiplayer/protocol-kernel/types_parser"
-local tokenizer = require "multiplayer/protocol-kernel/tokenizer"
+local types_parser = require "net/protocol/types_parser"
+local tokenizer = require "net/protocol/tokenizer"
 
-local bincode = require "server:lib/public/common/bincode"
-local bson = require "server:lib/private/files/bson"
-local edd = require "server:lib/private/files/edd"
-local http = require "server:lib/private/http/httprequestparser"
+local bincode = require "server:lib/io/bincode"
+local bson = require "server:lib/data/bson"
+local edd = require "server:lib/data/edd"
+local http = require "server:lib/http/httprequestparser"
 
 local module = {}
 

@@ -1,5 +1,5 @@
-local utils = require "lib/public/database/utils/utils"
-local parser = require "lib/public/database/files/db_parser"
+local utils = require "lib/db/utils/utils"
+local parser = require "lib/db/files/db_parser"
 local Query = {}
 Query.__index = Query
 

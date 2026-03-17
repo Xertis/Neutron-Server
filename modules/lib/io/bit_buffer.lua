@@ -1,5 +1,5 @@
-local bit_converter = require "lib/public/common/bit_converter"
-local data_buffer = require "lib/public/data_buffer"
+local bit_converter = require "lib/io/bit_converter"
+local data_buffer = require "lib/io/data_buffer"
 
 local bit_buffer =
 {

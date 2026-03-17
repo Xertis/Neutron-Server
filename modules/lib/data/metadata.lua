@@ -1,4 +1,4 @@
-local bson = require "lib/private/files/bson"
+local bson = require "lib/data/bson"
 
 local module = {
     server = {},

@@ -1,6 +1,6 @@
-local container = require "lib/private/common/container"
-local Player = require "lib/private/sandbox/classes/player"
-local metadata = require "lib/private/files/metadata"
+local container = require "core/container"
+local Player = require "core/sandbox/classes/player"
+local metadata = require "lib/data/metadata"
 local module = {
     by_identity = {},
     by_username = {},

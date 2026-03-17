@@ -1,4 +1,4 @@
-local parser = require "lib/public/database/files/db_parser"
+local parser = require "lib/db/files/db_parser"
 
 local utils = {
     tables_path = "world:databases",

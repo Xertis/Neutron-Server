@@ -1,8 +1,8 @@
-local account_manager = start_require "server:lib/private/accounts/account_manager"
-local protocol = start_require "server:multiplayer/protocol-kernel/protocol"
-local entities_manager = start_require "lib/private/entities/entities_manager"
+local account_manager = start_require "server:core/accounts/methods"
+local protocol = start_require "server:net/protocol/protocol"
+local entities_manager = start_require "core/sandbox/managers/entities"
 local tasks = require "api/v2/tasks"
-local lib = require "lib/private/min"
+local lib = require "lib/utils/min"
 local module = {
     roles = {},
     by_username = {},
@@ -29,7 +29,7 @@ function module.kick(account, reason, is_soft)
 
         local client = account_manager.get_client(account)
 
-        client:push_packet(protocol.ServerMsg.Disconnect, {reason = reason or "No reason"})
+        client:push_packet(protocol.ServerMsg.Disconnect, { reason = reason or "No reason" })
         logger.log(string.format('The account [#%s] was kicked for the reason: %s', account.identity, reason))
 
         entities_manager.clear_pid(client.player.pid)

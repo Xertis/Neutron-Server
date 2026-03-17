@@ -1,5 +1,5 @@
-local metadata = start_require "lib/private/files/metadata"
-local lib = require "lib/private/min"
+local metadata = start_require "lib/data/metadata"
+local lib = require "lib/utils/min"
 local account = {}
 account.__index = account
 

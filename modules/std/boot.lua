@@ -46,7 +46,7 @@ function logger.log(text, type, only_save, custom_source)
 
     text = string.first_low(text)
 
-    local source = file.name(debug.getinfo(2).source)
+    local source = (debug.getinfo(2).source):match("([^/]+/[^/]+)$"):sub(1, -5)
 
     if custom_source and source == "main.lua" then
         source = custom_source
@@ -82,7 +82,7 @@ function logger.blank()
     print()
 end
 
-local sha256 = require "lib/private/sha256"
+local sha256 = require "lib/crypto/sha256"
 function logger.shorted(str, size)
     size = size or 7
 

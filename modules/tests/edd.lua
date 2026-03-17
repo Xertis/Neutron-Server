@@ -1,5 +1,5 @@
-local bb = require "lib/public/bit_buffer"
-local edd = require "server:lib/private/files/edd"
+local bb = require "lib/io/bit_buffer"
+local edd = require "server:lib/data/edd"
 
 local function roundtrip(tbl)
   local buf = bb:new()

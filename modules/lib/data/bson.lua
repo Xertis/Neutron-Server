@@ -1,4 +1,4 @@
-local bb = require "lib/public/bit_buffer"
+local bb = require "lib/io/bit_buffer"
 
 
 local MAX_UINT16 = 65535

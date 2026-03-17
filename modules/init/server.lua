@@ -1,4 +1,4 @@
-local lib = require "lib/private/min"
+local lib = require "lib/utils/min"
 
 local world = lib.world
 

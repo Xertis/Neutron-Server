@@ -1,10 +1,10 @@
 local events = start_require("server:api/v1/events")
 local rpc = require "api/v1/rpc"
 local accounts = require "api/v1/accounts"
-local bson = require "lib/private/files/bson"
+local bson = require "lib/data/bson"
 local console = require "api/v1/console"
 local sandbox = require "api/v1/sandbox"
-local db = require "lib/public/database/api"
+local db = require "lib/db/api"
 local env = start_require("server:api/v1/env")
 local middlewares = start_require "api/v1/middlewares"
 local entities = require "api/v1/entities"

@@ -1,43 +1,38 @@
-local Pipeline = require "lib/public/async_pipeline"
-local protocol = require "multiplayer/protocol-kernel/protocol"
-local matches = require "multiplayer/server/handlers/http_matches"
-local List = require "lib/public/common/list"
+local Pipeline = require "lib/flow/async_pipeline"
+local protocol = require "net/protocol/protocol"
+local matches = require "net/handlers/http"
+local List = require "lib/utils/list"
 local interceptors = require "api/v2/interceptors"
-local http = require "server:lib/private/http/httprequestparser"
-local receiver = require "server:multiplayer/protocol-kernel/receiver"
+local http = require "server:lib/http/httprequestparser"
+local receiver = require "server:net/protocol/receiver"
 
 local HttpPipe = Pipeline.new()
 
 HttpPipe:add_middleware(function(client)
-    local co = client.meta.recieve_co
-    if not co then
-        client.meta.buffer = receiver.create_buffer()
-        co = coroutine.create(function()
-            local buffer = client.meta.buffer
-            while true do
-                local received_any = false
-                while true do
-                    local success, packet = pcall(function()
-                        return protocol.parse_query(buffer)
-                    end)
+    local meta = client.meta
+    local co = meta.receive_co
 
-                    if success and packet then
-                        List.pushright(client.received_packets, packet)
-                        received_any = true
-                    elseif not success then
+    if not co then
+        meta.buffer = receiver.create_buffer()
+        co = coroutine.create(function()
+            local buffer = meta.buffer
+
+            while true do
+                local success, packet = pcall(protocol.parse_query, buffer)
+
+                if success and packet then
+                    List.pushright(client.received_packets, packet)
+                else
+                    if not success then
                         client:kick()
-                        logger.log("Error while parsing packet: " .. packet .. '\n' .. "Client disconnected", 'E')
-                        break
-                    else
-                        break
+                        logger.log("Error while parsing packet: " .. tostring(packet) .. '\nClient disconnected', 'E')
                     end
-                end
-                if not received_any then
+
                     coroutine.yield()
                 end
             end
         end)
-        client.meta.recieve_co = co
+        meta.receive_co = co
     end
 
     receiver.recv(client.meta.buffer, client)

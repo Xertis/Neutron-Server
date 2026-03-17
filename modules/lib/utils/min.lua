@@ -1,4 +1,4 @@
-local hash = require "lib/private/hash"
+local hash = require "lib/crypto/hash"
 
 local lib = {
     server = {},

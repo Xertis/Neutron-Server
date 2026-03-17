@@ -1,5 +1,5 @@
-local protocol = require "multiplayer/protocol-kernel/protocol"
-local List = require "lib/public/common/list"
+local protocol = require "net/protocol/protocol"
+local List = require "lib/utils/list"
 local interceptors = require "api/v2/interceptors"
 
 local Client = {}

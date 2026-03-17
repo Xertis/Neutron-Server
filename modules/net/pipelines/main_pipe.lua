@@ -1,10 +1,10 @@
-local Pipeline = require "lib/public/async_pipeline"
-local protocol = require "multiplayer/protocol-kernel/protocol"
-local matches = require "multiplayer/server/handlers/general_matches"
-local ClientPipe = require "multiplayer/server/client_pipe"
-local List = require "lib/public/common/list"
+local Pipeline = require "lib/flow/async_pipeline"
+local protocol = require "net/protocol/protocol"
+local matches = require "net/handlers/main"
+local ClientPipe = require "net/pipelines/client_pipe"
+local List = require "lib/utils/list"
 local interceptors = require "api/v2/interceptors"
-local receiver = require "server:multiplayer/protocol-kernel/receiver"
+local receiver = require "server:net/protocol/receiver"
 
 local ServerPipe = Pipeline.new()
 

@@ -1,4 +1,4 @@
-local receiver = require "server:multiplayer/protocol-kernel/receiver"
+local receiver = require "server:net/protocol/receiver"
 
 local buffer = receiver.create_buffer()
 local function roundtrip()

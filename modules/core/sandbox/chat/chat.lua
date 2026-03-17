@@ -1,7 +1,7 @@
-local protocol = require "multiplayer/protocol-kernel/protocol"
-local server_echo = require "multiplayer/server/server_echo"
-local states = require "multiplayer/server/chat/chat_states"
-local sandbox = require "lib/private/sandbox/sandbox"
+local protocol = require "net/protocol/protocol"
+local server_echo = require "lib/flow/server_echo"
+local states = require "core/sandbox/classes/chat_states"
+local sandbox = require "core/sandbox/methods"
 local module = {}
 
 local no_logged_commands = {}

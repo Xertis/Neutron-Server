@@ -1,6 +1,6 @@
-local Account = require "lib/private/accounts/account"
-local sandbox = require "lib/private/sandbox/sandbox"
-local container = require "lib/private/common/container"
+local Account = require "core/accounts/classes/account"
+local sandbox = require "core/sandbox/methods"
+local container = require "core/container"
 local module = {
     by_username = {},
     by_identity = {}

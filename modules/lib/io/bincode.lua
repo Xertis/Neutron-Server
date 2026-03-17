@@ -1,4 +1,4 @@
-local data_buffer = require "lib/public/bit_buffer"
+local data_buffer = require "lib/io/bit_buffer"
 local bincode = {}
 
 -- нейронка вампала много помогла с кодированием в leb128

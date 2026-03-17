@@ -1,4 +1,4 @@
-require "server:std/stdboot"
+require "server:std/boot"
 
 LAUNCH_ATTEMPTS = 1
 
@@ -13,7 +13,7 @@ end
 
 local function main()
     require "server:globals"
-    require "server:std/stdmin"
+    require "server:std/min"
 
     if IS_RELEASE then
         logger.log(LOGO)
@@ -31,7 +31,7 @@ local function main()
 
 
     require "server:init/server"
-    require "server:multiplayer/server/chat/commands"
+    require "server:core/sandbox/chat/commands"
 
     tests()
 end
