@@ -11,8 +11,8 @@ console.add_command(
 )
 
 console.add_command(
-    "shutdown",
-    "Shuts down the server",
+    "stop",
+    "Stops the server",
     function(args)
         time.post_runnable(function() IS_RUNNING = false end)
         return "done"

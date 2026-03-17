@@ -100,6 +100,7 @@ local function main()
     server:stop()
     logger.log("world loop is stoped. Server is now offline.")
     logger.log("Saving and closing the world...")
+    metadata.save()
     world.close_main()
 end
 
