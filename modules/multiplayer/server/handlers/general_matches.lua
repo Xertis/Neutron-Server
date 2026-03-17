@@ -1,6 +1,5 @@
 local protocol = require "multiplayer/protocol-kernel/protocol"
 local switcher = require "lib/public/common/switcher"
-local protect = require "lib/private/protect"
 local sandbox = require "lib/private/sandbox/sandbox"
 local inventories_manager = require "lib/private/sandbox/inventories_manager"
 local account_manager = require "lib/private/accounts/account_manager"
@@ -847,4 +846,4 @@ matches.client_online_handler:add_case(protocol.ClientMsg.InventoryInteract, (
 
 
 
-return protect.protect_return(matches)
+return matches

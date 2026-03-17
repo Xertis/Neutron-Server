@@ -1,6 +1,3 @@
-local protect = require "lib/private/protect"
-if protect.protect_require() then return end
-
 local module = {
     player_online = {},
     clients_all = {},

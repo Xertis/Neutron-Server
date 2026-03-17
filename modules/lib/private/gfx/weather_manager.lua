@@ -1,7 +1,3 @@
-local protect = require "lib/private/protect"
-
-if protect.protect_require() then return end
-
 local bson = require "lib/private/files/bson"
 
 local module = {}
@@ -13,8 +9,8 @@ local WRITE_PATH = "world:server_resources/weather.bson"
 
 local WEATHER_SEED_START = nil
 local WEATHER_SEED_END = nil
-local WEATHER_CYCLE_DURATION = 20000  -- Полный цикл 20 часов (10 часов в каждую сторону)
-local LAST_CYCLE_UPDATE = 0           -- Время последнего обновления цикла
+local WEATHER_CYCLE_DURATION = 20000 -- Полный цикл 20 часов (10 часов в каждую сторону)
+local LAST_CYCLE_UPDATE = 0          -- Время последнего обновления цикла
 
 
 local function generate_weather_seeds()
@@ -22,7 +18,7 @@ local function generate_weather_seeds()
     local combined_seed = bit.bxor(world.get_seed(), current_cycle)
 
     WEATHER_SEED_START = bit.band(combined_seed, 0x598CC129D23)
-    WEATHER_SEED_END = bit.band(combined_seed,   0x6D82EDA8C33)
+    WEATHER_SEED_END = bit.band(combined_seed, 0x6D82EDA8C33)
     LAST_CYCLE_UPDATE = current_cycle * WEATHER_CYCLE_DURATION
 end
 
@@ -50,7 +46,7 @@ local function get_weather_map(x, z, gen_map)
     return start_map
 end
 
-events.on("server:save", function ()
+events.on("server:save", function()
     file.mktree(
         WRITE_PATH,
         bson.serialize({
@@ -103,7 +99,7 @@ function module.remove_weather(wid)
 end
 
 local function point_get_by_pos(weather, x, z)
-    if ( weather.time_start + weather.duration < world.get_total_time() ) and weather.duration ~= -1 then
+    if (weather.time_start + weather.duration < world.get_total_time()) and weather.duration ~= -1 then
         module.remove_weather(weather.wid)
         if weather.on_finished then
             weather.on_finished(weather)
@@ -124,7 +120,7 @@ local function heightmap_get_by_pos(weather, x, z)
     end
 
     local map = get_weather_map(x, z, weather.heightmap_generator)
-    local res = map:at({x, z})
+    local res = map:at({ x, z })
     local min, max = weather.range[1], weather.range[2]
 
     if res >= min and res <= max then

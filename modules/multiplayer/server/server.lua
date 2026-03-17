@@ -1,4 +1,3 @@
-local protect = require "lib/private/protect"
 local Client = require "multiplayer/server/classes/client"
 local container = require "lib/private/common/container"
 local main_pipe = require "multiplayer/server/main_pipe"
@@ -166,4 +165,4 @@ function server:tick()
     server_echo.proccess(self.main_clients)
 end
 
-return protect.protect_return(server)
+return server

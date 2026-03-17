@@ -1,7 +1,6 @@
-local module = {}
-
-local protect = require "lib/private/protect"
 local sha256 = require("lib/private/sha256")
+
+local module = {}
 
 for key, func in pairs(sha256) do
     module[key] = func
@@ -52,4 +51,4 @@ function module.equals(str, hash)
     return false
 end
 
-return protect.protect_return(module)
+return module

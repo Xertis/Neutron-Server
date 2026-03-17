@@ -1,5 +1,3 @@
-local protect = require "lib/private/protect"
-
 local module = {}
 local delayed_responses = {}
 
@@ -11,11 +9,11 @@ function module.push(func, args, time_out, step)
         time_out = time_out,
         step = step or 0
     }
-)
+    )
 end
 
 function module.process()
-    for i=#delayed_responses, 1, -1 do
+    for i = #delayed_responses, 1, -1 do
         local responce = delayed_responses[i]
         local cur_time = time.uptime()
         if cur_time - responce.time_create > responce.time_out then
@@ -31,4 +29,4 @@ function module.process()
     end
 end
 
-return protect.protect_return(module)
+return module

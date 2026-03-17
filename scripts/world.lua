@@ -4,14 +4,15 @@ local function start_require(path)
         return start_require(prefix .. ':' .. path)
     end
 
+    local old_path = path
     local prefix, file = parse_path(path)
-    path = prefix .. ":modules/" .. file .. ".lua"
+    local module_path = prefix .. ":modules/" .. file .. ".lua"
 
-    if not _G["/$p"] then
-        return
+    if _G["/$p"] and _G["/$p"][module_path] then
+        return _G["/$p"][module_path]
     end
 
-    return _G["/$p"][path]
+    return require(old_path)
 end
 
 local server_echo = nil
@@ -19,6 +20,7 @@ local protocol = nil
 local sandbox = nil
 
 local function upd(blockid, x, y, z, playerid)
+    if not IS_HEADLESS then return end
     playerid = math.max(playerid, 0)
 
     local data = {
@@ -60,6 +62,10 @@ local function upd(blockid, x, y, z, playerid)
 end
 
 function on_world_open()
+    if not IS_HEADLESS then
+        require "run/standalone"
+    end
+
     server_echo = start_require("server:multiplayer/server/server_echo")
     protocol = start_require("server:multiplayer/protocol-kernel/protocol")
     sandbox = start_require("server:lib/private/sandbox/sandbox")
@@ -72,6 +78,10 @@ end
 function on_block_broken(...)
     upd(...)
 end
+
+function on_world_tick() end
+
+function on_world_save() end
 
 events.on("server:block_interact", function(...)
     upd(...)

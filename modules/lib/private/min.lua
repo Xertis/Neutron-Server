@@ -1,4 +1,3 @@
-local protect = require "lib/private/protect"
 local hash = require "lib/private/hash"
 
 local lib = {
@@ -9,11 +8,12 @@ local lib = {
     hash = hash
 }
 
-ROOT = 0
+local ROOT = 0
 
 ---WORLD---
 
 function lib.world.preparation_main()
+    if not IS_HEADLESS then return end
     --Загружаем мир
     local packs = table.freeze_unpack(CONFIG.game.content_packs)
     local plugins = table.freeze_unpack(CONFIG.game.plugins)
@@ -75,23 +75,31 @@ end
 
 function lib.world.open_main()
     logger.log("Discovery of the main world")
-    app.reset_content({ "server" })
-    app.open_world(CONFIG.game.main_world)
-    player.set_suspended(ROOT, false)
 
-    time.post_runnable(function()
-        player.set_noclip(ROOT, true)
-        player.set_flight(ROOT, true)
-        player.set_pos(ROOT, 0, 262, 0)
+    if IS_HEADLESS then
+        app.reset_content({ "server" })
+        app.open_world(CONFIG.game.main_world)
+        player.set_suspended(ROOT, false)
 
-        local root_entity = entities.get(player.get_entity(ROOT))
+        time.post_runnable(function()
+            player.set_noclip(ROOT, true)
+            player.set_flight(ROOT, true)
+            player.set_pos(ROOT, 0, 262, 0)
 
-        PLAYER_ENTITY_ID = root_entity:def_index()
-    end)
+            local root_entity = entities.get(player.get_entity(ROOT))
 
-    -- Загружаем команды
-    do
-        require "init/cmd"
+            PLAYER_ENTITY_ID = root_entity:def_index()
+        end)
+
+        -- Загружаем команды
+        do
+            require "init/cmd"
+        end
+    else
+        time.post_runnable(function()
+            local root_entity = entities.get(player.get_entity(ROOT))
+            PLAYER_ENTITY_ID = root_entity:def_index()
+        end)
     end
 end
 
@@ -157,4 +165,4 @@ function lib.validate.plugins()
     return true
 end
 
-return protect.protect_return(lib)
+return lib

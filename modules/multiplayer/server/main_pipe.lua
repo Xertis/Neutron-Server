@@ -1,6 +1,5 @@
 local Pipeline = require "lib/public/async_pipeline"
 local protocol = require "multiplayer/protocol-kernel/protocol"
-local protect = require "lib/private/protect"
 local matches = require "multiplayer/server/handlers/general_matches"
 local ClientPipe = require "multiplayer/server/client_pipe"
 local List = require "lib/public/common/list"
@@ -48,7 +47,7 @@ ServerPipe:add_middleware(function(client)
     end
 
     local packet = List.popleft(client.received_packets)
-
+    debug.print(packet)
     local success, err = pcall(function()
         if client.active == false then
             local status = interceptors.receive.__process(packet, client)
@@ -85,4 +84,4 @@ ServerPipe:add_middleware(function(client)
     return client
 end)
 
-return protect.protect_return(ServerPipe)
+return ServerPipe

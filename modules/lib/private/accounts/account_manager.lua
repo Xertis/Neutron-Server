@@ -1,6 +1,3 @@
-local protect = require "lib/private/protect"
-if protect.protect_require() then return end
-
 local Account = require "lib/private/accounts/account"
 local sandbox = require "lib/private/sandbox/sandbox"
 local container = require "lib/private/common/container"

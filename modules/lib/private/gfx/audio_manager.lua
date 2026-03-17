@@ -2,13 +2,9 @@
   Work In Progress
 ]]
 
-local protect = require "lib/private/protect"
+local module = {}
 
-if protect.protect_require() then return end
-
-local module = { }
-
-local SPEAKERS = { }
+local SPEAKERS = {}
 local SOUNDS_DURATIONS = {}
 
 local aliveSpeakersCount = 0
@@ -18,7 +14,7 @@ local NEXT_ID = 1
 
 local function ensureSpeaker(id)
     if not SPEAKERS[id] then
-        error("undefined speaker with id '"..id.."'")
+        error("undefined speaker with id '" .. id .. "'")
     end
 end
 
@@ -39,14 +35,14 @@ end
 local function ensureArgs(args, names)
     for i = 1, #args do
         if not args[i] then
-            error("'"..names[i].."' argument is undefined")
+            error("'" .. names[i] .. "' argument is undefined")
         end
     end
 end
 
 local function checkVolPitch(num, name)
     if num < 0 or num > 1 then
-        error("invalid "..name)
+        error("invalid " .. name)
     end
 end
 
@@ -79,7 +75,9 @@ local function basePlay(name, x, y, z, volume, pitch, channel, loop)
 
     local sound = {
         path = name,
-        x = x, y = y, z = z,
+        x = x,
+        y = y,
+        z = z,
         volume = volume,
         pitch = pitch,
         channel = channel,
@@ -281,7 +279,9 @@ function module.get_time_left(speaker)
     local sound = SPEAKERS[speaker]
 
     if not SOUNDS_DURATIONS[sound.path] then
-        logger.log('The "audio.get_duration" function in the API returns 0 for technical reasons, please use "audio.register_duration" to fix it', 'W')
+        logger.log(
+        'The "audio.get_duration" function in the API returns 0 for technical reasons, please use "audio.register_duration" to fix it',
+            'W')
         return 0
     else
         local playback = sound.offsetTime + SOUNDS_DURATIONS[sound.path] - module.get_time(speaker)
