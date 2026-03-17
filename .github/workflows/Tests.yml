@@ -2,47 +2,47 @@ name: Neutron Test
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   Neutron-test:
     runs-on: windows-latest
 
     steps:
-    - name: Clone repository
-      uses: actions/checkout@v4
-      with:
-        path: 'Neutron-Server-main'
+      - name: Clone repository
+        uses: actions/checkout@v4
+        with:
+          path: "Neutron-Server-main"
 
-    - name: Download VoxelCore 0.30.0
-      uses: dawidd6/action-download-artifact@v3
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        workflow: CI.yml
-        run_id: 20745926109
-        name: Windows-Build
-        path: build
-        repo: MihailRis/voxelcore
-        if_no_artifact_found: fail
+      - name: Download VoxelCore 0.30.0
+        uses: dawidd6/action-download-artifact@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          workflow: CI.yml
+          run_id: 23216187543
+          name: Windows-Build
+          path: build
+          repo: MihailRis/voxelcore
+          if_no_artifact_found: fail
 
-    - name: Create folder structure and copy content
-      run: |
-        New-Item -Path build/res/content/Neutron-Server-main -ItemType Directory -Force
-        
-        Copy-Item -Path Neutron-Server-main/* -Destination build/res/content/Neutron-Server-main -Recurse -Force -Exclude .git,*.yml
-      shell: powershell
+      - name: Create folder structure and copy content
+        run: |
+          New-Item -Path build/res/content/Neutron-Server-main -ItemType Directory -Force
 
-    - name: Create project.toml
-      run: |
-        $content = @"
-        # default project
-        name = "default"
-        base_packs = ["base"]
-        "@
-        New-Item -Path build/res/project.toml -ItemType File -Force -Value $content
-      shell: powershell
+          Copy-Item -Path Neutron-Server-main/* -Destination build/res/content/Neutron-Server-main -Recurse -Force -Exclude .git,*.yml
+        shell: powershell
 
-    - name: Run Neutron tests
-      working-directory: ./build
-      run: ./VoxelCore.exe --headless --script res/content/Neutron-Server-main/scripts/tests.lua
-      shell: powershell
+      - name: Create project.toml
+        run: |
+          $content = @"
+          # default project
+          name = "default"
+          base_packs = ["base"]
+          "@
+          New-Item -Path build/res/project.toml -ItemType File -Force -Value $content
+        shell: powershell
+
+      - name: Run Neutron tests
+        working-directory: ./build
+        run: ./VoxelCore.exe --headless --script res/content/Neutron-Server-main/scripts/tests.lua
+        shell: powershell

@@ -16,9 +16,9 @@ local function main()
     require "server:std/min"
 
     if IS_RELEASE then
-        logger.log(LOGO)
+        logger.log("\n" .. LOGO)
     else
-        logger.log(string.multiline_concat(LOGO, DEV))
+        logger.log("\n" .. string.multiline_concat(LOGO, DEV))
     end
 
     logger.log(string.format("Welcome to %s! Starting...", PROJECT_NAME))
