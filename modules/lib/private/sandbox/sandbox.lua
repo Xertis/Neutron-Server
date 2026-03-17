@@ -1,4 +1,3 @@
-local protect = require "lib/private/protect"
 local container = require "lib/private/common/container"
 local Player = require "lib/private/sandbox/classes/player"
 local metadata = require "lib/private/files/metadata"
@@ -51,7 +50,12 @@ function module.join_player(username, account)
             return
         end
 
-        local pid = player.create(account_player.username, table.count_pairs(metadata.players.get_all()) + 1)
+        local pid = ROOT_PID
+        if IS_HEADLESS then
+            local next_pid = table.count_pairs(metadata.players.get_all()) + 1
+            pid = player.create(account_player.username, next_pid)
+        end
+
         logger.log(string.format('Player [#%s] has been created with pid: %s', logger.shorted(identity), pid))
         account_player:set("pid", pid)
         account_player:set("entity_id", player.get_entity(account_player.pid))
@@ -296,4 +300,4 @@ function module.by_invid.get(invid)
     end
 end
 
-return protect.protect_return(module)
+return module

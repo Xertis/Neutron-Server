@@ -1,10 +1,6 @@
-local protect = require "lib/private/protect"
+local module = {}
 
-if protect.protect_require() then return end
-
-local module = { }
-
-local TEXTS = { }
+local TEXTS = {}
 
 local NEXT_ID = 1
 
@@ -72,7 +68,7 @@ end
 
 function module.get_axis_x(id)
     ensureText(id)
-    return TEXTS[id].axisX or {1, 0, 0}
+    return TEXTS[id].axisX or { 1, 0, 0 }
 end
 
 function module.set_axis_x(id, axis)
@@ -83,7 +79,7 @@ end
 
 function module.get_axis_y(id)
     ensureText(id)
-    return TEXTS[id].axisY or {0, 1, 0}
+    return TEXTS[id].axisY or { 0, 1, 0 }
 end
 
 function module.set_axis_y(id, axis)

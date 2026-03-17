@@ -1,4 +1,3 @@
-local protect = require "lib/private/protect"
 local protocol = require "multiplayer/protocol-kernel/protocol"
 local account_manager = require "lib/private/accounts/account_manager"
 local sandbox = require "lib/private/sandbox/sandbox"
@@ -412,4 +411,4 @@ function module.interact(player, id, slot, action, mode, item_id, client_checksu
     return true
 end
 
-return protect.protect_return(module)
+return module

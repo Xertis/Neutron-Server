@@ -1,6 +1,3 @@
-local protect = require "lib/private/protect"
-if protect.protect_require() then return end
-
 local protocol = require "multiplayer/protocol-kernel/protocol"
 local server_echo = require "multiplayer/server/server_echo"
 

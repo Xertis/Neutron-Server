@@ -1,5 +1,3 @@
-local protect = require "lib/private/protect"
-
 local events = {}
 
 local ServerEcho = {}
@@ -30,4 +28,4 @@ function ServerEcho.proccess(clients)
     end
 end
 
-return protect.protect_return(ServerEcho)
+return ServerEcho

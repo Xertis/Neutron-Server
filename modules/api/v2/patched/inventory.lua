@@ -1,5 +1,4 @@
 local inventories_manager = start_require("server:lib/private/sandbox/inventories_manager")
-
 local global_inventory = _G["inventory"]
 
 PACK_ENV["inventory"] = table.deep_copy(global_inventory)

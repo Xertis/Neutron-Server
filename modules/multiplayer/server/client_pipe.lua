@@ -1,6 +1,5 @@
 local Pipeline = require "lib/public/pipeline"
 local protocol = require "multiplayer/protocol-kernel/protocol"
-local protect = require "lib/private/protect"
 local sandbox = require "lib/private/sandbox/sandbox"
 local inventories_manager = require "lib/private/sandbox/inventories_manager"
 local matches = require "multiplayer/server/handlers/general_matches"
@@ -584,4 +583,4 @@ ClientPipe:add_middleware(function(client)
     return client
 end)
 
-return protect.protect_return(ClientPipe)
+return ClientPipe

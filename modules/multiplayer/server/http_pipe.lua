@@ -1,6 +1,5 @@
 local Pipeline = require "lib/public/async_pipeline"
 local protocol = require "multiplayer/protocol-kernel/protocol"
-local protect = require "lib/private/protect"
 local matches = require "multiplayer/server/handlers/http_matches"
 local List = require "lib/public/common/list"
 local interceptors = require "api/v2/interceptors"
@@ -90,4 +89,4 @@ HttpPipe:add_middleware(function(client)
     return client
 end)
 
-return protect.protect_return(HttpPipe)
+return HttpPipe

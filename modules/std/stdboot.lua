@@ -52,6 +52,8 @@ function logger.log(text, type, only_save, custom_source)
         source = custom_source
     end
 
+    source = "S:/" .. source
+
     local out = '[' .. string.left_pad(source, 20) .. '] ' .. text
 
     local uptime = time.formatted_time()

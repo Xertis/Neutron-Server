@@ -1,6 +1,5 @@
 local protocol = require "multiplayer/protocol-kernel/protocol"
 local switcher = require "lib/public/common/switcher"
-local protect = require "lib/private/protect"
 local sandbox = require "lib/private/sandbox/sandbox"
 local http = require "server:lib/private/http/httprequestparser"
 
@@ -72,4 +71,4 @@ matches:add_case("/status", function(packet, client)
     send_responce(client, responce)
 end)
 
-return protect.protect_return(matches)
+return matches

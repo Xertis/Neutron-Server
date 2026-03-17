@@ -10,31 +10,33 @@ entities["despawn"] = function(eid)
     entities_manager.despawn(eid)
 end
 
--- Патчим skeleton, ибо кому-то пришла ахуительная идея снести нахуй скелеты в хеадлессе ПОЛНОСТЬЮ НАХУЙ
-local skeletons_info = {
-    textures = {},
-    models = {}
-}
+if IS_HEADLESS then
+    -- Патчим skeleton, ибо кому-то пришла ахуительная идея снести нахуй скелеты в хеадлессе ПОЛНОСТЬЮ НАХУЙ
+    local skeletons_info = {
+        textures = {},
+        models = {}
+    }
 
-__skeleton.set_texture = function(id, key, texture)
-    table.set_default(skeletons_info.textures, id, {})[key] = texture
-end
-
-__skeleton.set_model = function(id, key, model)
-    table.set_default(skeletons_info.models, id, {})[key] = model
-end
-
-__skeleton.get_texture = function(id, key)
-    local skeleton = skeletons_info.textures[id]
-    if skeleton then
-        return skeleton[key]
+    __skeleton.set_texture = function(id, key, texture)
+        table.set_default(skeletons_info.textures, id, {})[key] = texture
     end
-end
 
-__skeleton.get_model = function(id, key)
-    local skeleton = skeletons_info.models[id]
-    if skeleton then
-        return skeleton[key]
+    __skeleton.set_model = function(id, key, model)
+        table.set_default(skeletons_info.models, id, {})[key] = model
+    end
+
+    __skeleton.get_texture = function(id, key)
+        local skeleton = skeletons_info.textures[id]
+        if skeleton then
+            return skeleton[key]
+        end
+    end
+
+    __skeleton.get_model = function(id, key)
+        local skeleton = skeletons_info.models[id]
+        if skeleton then
+            return skeleton[key]
+        end
     end
 end
 

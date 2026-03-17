@@ -1,7 +1,3 @@
-local protect = require "lib/private/protect"
-
-if protect.protect_require() then return end
-
 local module = {}
 
 local PARTICLES = {}
@@ -10,7 +6,7 @@ local MAX_PID = 0
 function module.emit(origin, count, preset, extension)
     local pid = MAX_PID
 
-    functions.args_check("emit", {origin = origin or false, count = count or false, preset = preset or false})
+    functions.args_check("emit", { origin = origin or false, count = count or false, preset = preset or false })
 
     PARTICLES[tohex(pid)] = {
         origin = origin,
