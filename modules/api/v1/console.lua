@@ -1,6 +1,6 @@
-local chat = start_require "core/sandbox/chat/chat"
-local states = start_require "core/sandbox/classes/chat_states"
-local account_manager = start_require "server:core/accounts/methods"
+local chat = import "core/sandbox/chat/chat"
+local states = import "core/sandbox/classes/chat_states"
+local account_manager = import "server:core/accounts/methods"
 local module = {}
 
 module.colors = {
@@ -158,7 +158,8 @@ function module.set_command(command, permissions, handler, is_no_logged)
             for _, perm in ipairs(perms) do
                 if not rules[perm] then
                     chat.tell(
-                    string.format("%s You do not have sufficient permissions to perform this action!", module.colors.red),
+                        string.format("%s You do not have sufficient permissions to perform this action!",
+                            module.colors.red),
                         client)
                     return
                 end

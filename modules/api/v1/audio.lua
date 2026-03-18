@@ -1,4 +1,4 @@
-local audio_manager = start_require("server:core/sandbox/managers/audio")
+local audio_manager = import("server:core/sandbox/managers/audio")
 local module = {}
 
 local defFuncs = {

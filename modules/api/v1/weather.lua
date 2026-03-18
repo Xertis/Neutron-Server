@@ -1,4 +1,4 @@
-local weather_manager = start_require "server:core/sandbox/managers/weather"
+local weather_manager = import "server:core/sandbox/managers/weather"
 local module = {}
 
 local weather_mt = {

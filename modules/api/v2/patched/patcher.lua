@@ -1,4 +1,4 @@
 local path = "server:api/v2/patched/"
 
-require(path .. "player")
-require(path .. "inventory")
+import(path .. "player")
+import(path .. "inventory")

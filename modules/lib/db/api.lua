@@ -1,5 +1,5 @@
-local utils = require "lib/db/utils/utils"
-local session = require "lib/db/session"
+local utils = import "lib/db/utils/utils"
+local session = import "lib/db/session"
 local CODES = json.parse(file.read("server:modules/lib/db/data/codes.json"))
 
 local db = {

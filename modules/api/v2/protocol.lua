@@ -1,5 +1,5 @@
-local protocol = start_require "server:net/protocol/protocol"
-local server_echo = start_require "server:lib/flow/server_echo"
+local protocol = import "server:net/protocol/protocol"
+local server_echo = import "server:lib/flow/server_echo"
 
 local module = {
     ServerMsg = protocol.ServerMsg,
@@ -24,7 +24,7 @@ function module.echo(packet_type, data)
     buffer:put_packet(protocol.build_packet("server", packet_type, data))
 
     server_echo.put_event(
-        function (client)
+        function(client)
             if client.active ~= true then
                 return
             end

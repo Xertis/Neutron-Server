@@ -1,4 +1,4 @@
-local bson = require "lib/data/bson"
+local bson = import "lib/data/bson"
 
 local module = {}
 

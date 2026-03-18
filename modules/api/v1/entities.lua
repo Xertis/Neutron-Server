@@ -1,4 +1,4 @@
-local entities_v2 = require "api/v2/entities"
+local entities_v2 = import "api/v2/entities"
 
 local module = table.deep_copy(entities_v2)
 

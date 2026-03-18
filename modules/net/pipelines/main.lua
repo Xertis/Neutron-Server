@@ -1,10 +1,10 @@
-local Pipeline = require "lib/flow/async_pipeline"
-local protocol = require "net/protocol/protocol"
-local matches = require "net/handlers/main"
-local ClientPipe = require "net/pipelines/client"
-local List = require "lib/utils/list"
-local interceptors = require "api/v2/interceptors"
-local receiver = require "server:net/protocol/receiver"
+local Pipeline = import "lib/flow/async_pipeline"
+local protocol = import "net/protocol/protocol"
+local matches = import "net/handlers/main"
+local ClientPipe = import "net/pipelines/client"
+local List = import "lib/utils/list"
+local interceptors = import "api/v2/interceptors"
+local receiver = import "server:net/protocol/receiver"
 
 local ServerPipe = Pipeline.new()
 

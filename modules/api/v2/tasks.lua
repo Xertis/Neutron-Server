@@ -1,4 +1,4 @@
-local List = require "lib/utils/list"
+local List = import "lib/utils/list"
 
 local module = {}
 local tasks = List.new()
@@ -7,7 +7,7 @@ function module.add_task(func)
     List.pushleft(tasks, func)
 end
 
-events.on("server:client_pipe_start", function ()
+events.on("server:client_pipe_start", function()
     while not List.is_empty(tasks) do
         local func = List.popright(tasks)
         func()

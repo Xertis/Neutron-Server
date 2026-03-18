@@ -1,5 +1,5 @@
-local protocol = require "net/protocol/protocol"
-local server_echo = start_require("lib/flow/server_echo")
+local protocol = import "net/protocol/protocol"
+local server_echo = import("lib/flow/server_echo")
 
 local module = {}
 local handlers = {}

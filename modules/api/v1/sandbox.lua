@@ -1,6 +1,6 @@
-local sandbox = start_require("server:core/sandbox/methods")
-local account_manager = start_require("server:core/accounts/methods")
-local protocol = start_require("server:net/protocol/protocol")
+local sandbox = import("server:core/sandbox/methods")
+local account_manager = import("server:core/accounts/methods")
+local protocol = import("server:net/protocol/protocol")
 
 local module = {
     players = {},

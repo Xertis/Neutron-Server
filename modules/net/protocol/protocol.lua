@@ -1,7 +1,7 @@
-local bit_buffer = require "server:lib/io/bit_buffer"
-local kernel = require "server:net/protocol/kernel"
-local receiver = require "server:net/protocol/receiver"
-local http = require "server:lib/http/httprequestparser"
+local bit_buffer = import "server:lib/io/bit_buffer"
+local kernel = import "server:net/protocol/kernel"
+local receiver = import "server:net/protocol/receiver"
+local http = import "server:lib/http/httprequestparser"
 local protocol = {}
 
 logger.log("Initializing protocol...")

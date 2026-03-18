@@ -1,4 +1,4 @@
-local entities_manager = start_require "core/sandbox/managers/entities"
+local entities_manager = import "core/sandbox/managers/entities"
 
 logger.log("Patching the in-memory engine before start")
 
@@ -39,4 +39,4 @@ __skeleton.get_model = function(id, key)
 end
 
 -- Патчим глобальные модули
-require "api/v2/patched/patcher"
+import "api/v2/patched/patcher"

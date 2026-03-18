@@ -3,8 +3,9 @@ require "server:std/boot"
 LAUNCH_ATTEMPTS = 1
 
 local function main()
-    require "server:globals"
-    require "server:std/min"
+    import "server:globals"
+    import "server:std/min"
+    import "server:std/classes"
 
     if IS_RELEASE then
         logger.log("\n" .. LOGO)
@@ -20,11 +21,11 @@ local function main()
         version: %s
     ]], PROJECT_NAME, IS_RELEASE, SERVER_VERSION))
 
-    local lib = require "server:lib/utils/min"
+    local lib = import "server:lib/utils/min"
 
-    require "server:init/engine_patcher"
-    require "server:init/server"
-    require "server:core/sandbox/chat/commands"
+    import "server:init/engine_patcher"
+    import "server:init/server"
+    import "server:core/sandbox/chat/commands"
 
     if IS_FIRST_RUN then
         logger.log("The first startup was detected, server has been stopped.")
@@ -33,10 +34,10 @@ local function main()
         return
     end
 
-    local timeout_executor = require "server:lib/flow/timeout_executor"
-    local server = require "server:net/classes/server"
+    local timeout_executor = import "server:lib/flow/timeout_executor"
+    local server = import "server:net/classes/server"
 
-    local metadata = require "server:lib/data/metadata"
+    local metadata = import "server:lib/data/metadata"
     local world = lib.world
 
     _G["/$p"] = table.copy(package.loaded)

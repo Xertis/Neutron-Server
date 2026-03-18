@@ -1,4 +1,4 @@
-local chat = start_require "core/sandbox/chat/chat"
+local chat = import "core/sandbox/chat/chat"
 
 console.add_command(
     "chat message:str",

@@ -1,6 +1,6 @@
-local Account = require "core/accounts/classes/account"
-local sandbox = require "core/sandbox/methods"
-local container = require "core/container"
+local Account = import "core/accounts/classes/account"
+local sandbox = import "core/sandbox/methods"
+local container = import "core/container"
 local module = {
     by_username = {},
     by_identity = {}

@@ -1,4 +1,4 @@
-local compiler = require "net/protocol/compiler"
+local compiler = import "net/protocol/compiler"
 
 local module = {
     server = { letters = {}, ids = {} },

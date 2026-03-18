@@ -1,4 +1,4 @@
-local particles_manager = start_require("server:core/sandbox/managers/particles")
+local particles_manager = import("server:core/sandbox/managers/particles")
 local module = {}
 
 local function stop(id)

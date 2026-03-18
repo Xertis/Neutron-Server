@@ -1,5 +1,5 @@
-local bson = require "lib/data/bson"
-local bb = require "lib/io/bit_buffer"
+local bson = import "lib/data/bson"
+local bb = import "lib/io/bit_buffer"
 local module = {}
 
 function module.serialize(inv)
@@ -13,7 +13,7 @@ function module.serialize(inv)
 
     buf:put_uint16(#inv)
 
-    for i=1, #inv do
+    for i = 1, #inv do
         local slot = inv[i]
         local count = slot.count
         local id = slot.id
@@ -30,8 +30,8 @@ function module.serialize(inv)
 
     buf:put_bit(is_empty)
 
-    local needed_bits_id = math.bit_length(max_id-min_id)
-    local needed_bits_count = math.bit_length(max_count-min_count)
+    local needed_bits_id = math.bit_length(max_id - min_id)
+    local needed_bits_count = math.bit_length(max_count - min_count)
 
     local min_id_bits = math.bit_length(min_id)
     local min_count_bits = math.bit_length(min_count)
@@ -49,13 +49,13 @@ function module.serialize(inv)
     buf:put_uint(min_id, min_id_bits)
     buf:put_uint(min_count, min_count_bits)
 
-    for i=1, #inv do
+    for i = 1, #inv do
         local slot = inv[i]
 
         if slot.id ~= 0 then
             buf:put_bit(true)
-            buf:put_uint(slot.id-min_id, needed_bits_id)
-            buf:put_uint(slot.count-min_count, needed_bits_count)
+            buf:put_uint(slot.id - min_id, needed_bits_id)
+            buf:put_uint(slot.count - min_count, needed_bits_count)
 
             local has_meta = slot.meta ~= nil
             buf:put_bit(has_meta)
@@ -80,7 +80,7 @@ function module.deserialize(bytes)
     local size = buf:get_uint16()
 
     if buf:get_bit() then
-        return table.rep({}, {id = 0, count = 0}, size)
+        return table.rep({}, { id = 0, count = 0 }, size)
     end
 
     local needed_bits_id = buf:get_uint(4)
@@ -111,7 +111,7 @@ function module.deserialize(bytes)
 
             inv[i] = slot
         else
-            inv[i] = {id = 0, count = 0}
+            inv[i] = { id = 0, count = 0 }
         end
     end
 

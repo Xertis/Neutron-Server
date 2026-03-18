@@ -1,5 +1,5 @@
-local utils = require "lib/db/utils/utils"
-local parser = require "lib/db/files/db_parser"
+local utils = import "lib/db/utils/utils"
+local parser = import "lib/db/files/db_parser"
 local Query = {}
 Query.__index = Query
 
@@ -57,7 +57,7 @@ function Query:all()
 
             if a == nil and b ~= nil then
                 return true ~= is_reversed
-            elseif a ~= nil and b ==  nil then
+            elseif a ~= nil and b == nil then
                 return false ~= is_reversed
             elseif a == nil and b == nil then
                 return false ~= is_reversed
@@ -68,7 +68,7 @@ function Query:all()
     end
 
     if self.limit_value and #results > self.limit_value then
-        results = {unpack(results, 1, self.limit_value)}
+        results = { unpack(results, 1, self.limit_value) }
     end
 
     return results
@@ -99,7 +99,6 @@ function Query:_matches_filters(row)
     for _, filter in ipairs(self.filters) do
         for field, condition in pairs(filter) do
             if type(condition) == "table" then
-
                 for op, value in pairs(condition) do
                     if op == "==" and row[field] ~= value then
                         return false

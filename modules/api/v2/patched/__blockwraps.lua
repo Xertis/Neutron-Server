@@ -1,6 +1,6 @@
-local server_echo = start_require "server:lib/flow/server_echo"
-local protocol = start_require "server:net/protocol/protocol"
-local wraps = start_require "core/sandbox/managers/blockwraps"
+local server_echo = import "server:lib/flow/server_echo"
+local protocol = import "server:net/protocol/protocol"
+local wraps = import "core/sandbox/managers/blockwraps"
 
 local global_gfx = _G["gfx"]
 

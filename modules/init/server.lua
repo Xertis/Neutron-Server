@@ -1,4 +1,4 @@
-local lib = require "lib/utils/min"
+local lib = import "lib/utils/min"
 
 local world = lib.world
 
@@ -16,12 +16,12 @@ end
 do
     local default_config = json.parse(file.read(PACK_ID .. ":resources/server_config.json"))
     CONFIG = json.parse(file.read(CONFIG_PATH))
-    table.deep_merge(CONFIG, default_config)
+    table.apply(CONFIG, default_config)
 
     if CONFIG.server.chunks_loading_distance > 255 then
         CONFIG.server.chunks_loading_distance = 255
         logger.log(
-        "Chunks distance is too high. Please select a value in the range of 0-255. The current chunks distance is set to 255",
+            "Chunks distance is too high. Please select a value in the range of 0-255. The current chunks distance is set to 255",
             'W')
     end
 

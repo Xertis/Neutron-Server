@@ -1,6 +1,6 @@
-local protocol = require "net/protocol/protocol"
+local protocol = import "net/protocol/protocol"
 
-local server_matches = start_require("net/handlers/main")
+local server_matches = import("net/handlers/main")
 local switcher = server_matches.client_online_handler
 
 local receive_interceptors = {}

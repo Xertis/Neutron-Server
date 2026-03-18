@@ -1,10 +1,10 @@
-local Client = require "net/classes/client"
-local container = require "core/container"
-local main_pipe = require "net/pipelines/main"
-local http_pipe = require "net/pipelines/http"
-local server_echo = require "lib/flow/server_echo"
-local server_matches = require "net/handlers/main"
-local protocol = require "net/protocol/protocol"
+local Client = import "net/classes/client"
+local container = import "core/container"
+local main_pipe = import "net/pipelines/main"
+local http_pipe = import "net/pipelines/http"
+local server_echo = import "lib/flow/server_echo"
+local server_matches = import "net/handlers/main"
+local protocol = import "net/protocol/protocol"
 
 local server = {}
 server.__index = server

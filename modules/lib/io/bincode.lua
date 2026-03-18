@@ -1,4 +1,4 @@
-local data_buffer = require "lib/io/bit_buffer"
+local data_buffer = import "lib/io/bit_buffer"
 local bincode = {}
 
 -- нейронка вампала много помогла с кодированием в leb128
@@ -58,7 +58,7 @@ function bincode.bincode_varint_decode(data, pos)
         return result, pos + 3
     elseif firstByte == 252 then
         local result = string.byte(data, pos + 1) + string.byte(data, pos + 2) * 256 + string.byte(data, pos + 3) *
-                           65536 + string.byte(data, pos + 4) * 16777216
+            65536 + string.byte(data, pos + 4) * 16777216
         return result, pos + 5
     elseif firstByte == 253 then
         local result = 0
@@ -190,6 +190,5 @@ function bincode.zigzag_decode(encoded)
         return math.floor(encoded / 2)
     end
 end
-
 
 return bincode

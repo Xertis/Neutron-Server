@@ -1,3 +1,24 @@
+-- IMPORT
+
+function import(path)
+    local source = debug.getinfo(2).source
+    if not string.find(path, ':') then
+        local prefix, _ = parse_path(source)
+        return import(prefix .. ':' .. path)
+    end
+
+    local old_path = path
+    local prefix, file_path = parse_path(path)
+    local module_path = prefix .. ":modules/" .. file_path .. ".lua"
+
+    logger.log(string.format('import module "%s" to "%s"', file.name(module_path), file.name(source)), nil, nil, "import")
+    if _G["/$p"] and _G["/$p"][module_path] then
+        return _G["/$p"][module_path]
+    end
+
+    return require(old_path)
+end
+
 -- STRING
 function string.replace_substr(str1, str2, start, finish)
     if start < 1 or finish > #str1 or start > finish then
@@ -48,9 +69,7 @@ function logger.log(text, type, only_save, custom_source)
 
     local source = (debug.getinfo(2).source):match("([^/]+/[^/]+)$"):sub(1, -5)
 
-    if custom_source and source == "main.lua" then
-        source = custom_source
-    end
+    source = custom_source or source
 
     local out = '[' .. string.left_pad(source, 20) .. '] ' .. text
 

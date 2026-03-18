@@ -1,6 +1,6 @@
-local protocol = require "net/protocol/protocol"
-local List = require "lib/utils/list"
-local interceptors = require "api/v2/interceptors"
+local protocol = import "net/protocol/protocol"
+local List = import "lib/utils/list"
+local interceptors = import "api/v2/interceptors"
 
 local Client = {}
 local max_id = 0

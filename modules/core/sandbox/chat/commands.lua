@@ -1,7 +1,7 @@
-local sandbox = require "core/sandbox/methods"
-local account_manager = require "core/accounts/methods"
-local lib = require "lib/utils/min"
-local console = require "api/v2/console"
+local sandbox = import "core/sandbox/methods"
+local account_manager = import "core/accounts/methods"
+local lib = import "lib/utils/min"
+local console = import "api/v2/console"
 
 console.set_command("tell: username=<string> message=<string> -> Sends a private message to a specific player", {},
     function(args, client)

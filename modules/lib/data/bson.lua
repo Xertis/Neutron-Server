@@ -1,4 +1,4 @@
-local bb = require "lib/io/bit_buffer"
+local bb = import "lib/io/bit_buffer"
 
 
 local MAX_UINT16 = 65535
@@ -188,7 +188,7 @@ function bson.encode_array(buf, arr)
         buf:put_string(key)
     end
 
-    for i=1, array_length do
+    for i = 1, array_length do
         __put_item(buf, arr[i])
     end
 

@@ -1,9 +1,9 @@
-local protocol = require "net/protocol/protocol"
-local account_manager = require "core/accounts/methods"
-local sandbox = require "core/sandbox/methods"
+local protocol = import "net/protocol/protocol"
+local account_manager = import "core/accounts/methods"
+local sandbox = import "core/sandbox/methods"
 
-local xml = require "lib/xml/xml2lua"
-local tree = require "lib/xml/handler/tree"
+local xml = import "lib/xml/xml2lua"
+local tree = import "lib/xml/handler/tree"
 
 local module = {}
 

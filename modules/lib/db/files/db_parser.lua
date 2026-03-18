@@ -1,4 +1,4 @@
-local db = require "lib/io/bit_buffer"
+local db = import "lib/io/bit_buffer"
 
 local VERSION = 0
 
@@ -6,54 +6,54 @@ local module = {}
 
 local TYPES = {
     codes = {
-        null       = 0,
-        int8       = 1,
-        int16      = 2,
-        int32      = 3,
-        int64      = 4,
-        uint8      = 5,
-        uint16     = 6,
-        uint32     = 7,
-        string     = 8,
-        norm8      = 9,
-        norm16     = 10,
-        float32    = 11,
-        float64    = 12,
-        bool       = 13
+        null    = 0,
+        int8    = 1,
+        int16   = 2,
+        int32   = 3,
+        int64   = 4,
+        uint8   = 5,
+        uint16  = 6,
+        uint32  = 7,
+        string  = 8,
+        norm8   = 9,
+        norm16  = 10,
+        float32 = 11,
+        float64 = 12,
+        bool    = 13
     },
 
     indexes = {
-        [0] = "null",   -- код 0
-        "int8",         -- код 1
-        "int16",        -- код 2
-        "int32",        -- код 3
-        "int64",        -- код 4
-        "uint8",        -- код 5
-        "uint16",       -- код 6
-        "uint32",       -- код 7
-        "string",       -- код 8
-        "norm8",        -- код 9
-        "norm16",       -- код 10
-        "float32",      -- код 11
-        "float64",      -- код 12
-        "bool"          -- код 13
+        [0] = "null", -- код 0
+        "int8",       -- код 1
+        "int16",      -- код 2
+        "int32",      -- код 3
+        "int64",      -- код 4
+        "uint8",      -- код 5
+        "uint16",     -- код 6
+        "uint32",     -- код 7
+        "string",     -- код 8
+        "norm8",      -- код 9
+        "norm16",     -- код 10
+        "float32",    -- код 11
+        "float64",    -- код 12
+        "bool"        -- код 13
     },
 
     names = {
-        ["null"]      = "null",
-        ["int8"]      = "int8",
-        ["int16"]     = "int16",
-        ["int32"]     = "int32",
-        ["int64"]     = "int64",
-        ["uint8"]     = "uint8",
-        ["uint16"]    = "uint16",
-        ["uint32"]    = "uint32",
-        ["string"]    = "string",
-        ["norm8"]     = "norm8",
-        ["norm16"]    = "norm16",
-        ["float32"]   = "float32",
-        ["float64"]   = "float64",
-        ["bool"]      = "bool"
+        ["null"]    = "null",
+        ["int8"]    = "int8",
+        ["int16"]   = "int16",
+        ["int32"]   = "int32",
+        ["int64"]   = "int64",
+        ["uint8"]   = "uint8",
+        ["uint16"]  = "uint16",
+        ["uint32"]  = "uint32",
+        ["string"]  = "string",
+        ["norm8"]   = "norm8",
+        ["norm16"]  = "norm16",
+        ["float32"] = "float32",
+        ["float64"] = "float64",
+        ["bool"]    = "bool"
     }
 }
 
@@ -138,7 +138,7 @@ local function get_value(buf, type)
 end
 
 local function has_null(row, keys)
-    for i=1, #keys do
+    for i = 1, #keys do
         local annotation = keys[i]
         local value = row[annotation[1]]
         if value == nil then
@@ -153,7 +153,7 @@ local function encode_table(buf, array, keys)
     for _, row in ipairs(array) do
         local if_null = has_null(row, keys)
         buf:put_bool(if_null)
-        for i=1, #keys do
+        for i = 1, #keys do
             local annotation = keys[i]
             local type = annotation[2]
             local value = row[annotation[1]]
@@ -173,10 +173,10 @@ end
 
 local function decode_table(buf, size, keys)
     local tbl = {}
-    for _=1, size do
+    for _ = 1, size do
         local row = {}
         local if_null = buf:get_bool()
-        for i=1, #keys do
+        for i = 1, #keys do
             local annotation = keys[i]
             local key = annotation[1]
             local type = annotation[2]
@@ -203,7 +203,7 @@ function module.encode(buf, array, annotation, primary_key)
     local keys = {}
 
     for i, key in ipairs(annotation) do
-        keys[key[1]] = {i, key[2]}
+        keys[key[1]] = { i, key[2] }
         table.insert(keys, key)
 
         buf:put_string(key[1])
@@ -225,12 +225,12 @@ function module.decode(buf)
 
     local annotation_size = buf:get_byte()
     local keys = {}
-    for i=1, annotation_size do
+    for i = 1, annotation_size do
         local key = buf:get_string()
         local key_type = buf:get_byte()
 
-        table.insert(keys, {key, key_type})
-        keys[key] = {i, key_type}
+        table.insert(keys, { key, key_type })
+        keys[key] = { i, key_type }
     end
 
     local primary_key = buf:get_string()

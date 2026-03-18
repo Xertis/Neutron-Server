@@ -1,7 +1,7 @@
-local protocol = require "net/protocol/protocol"
-local server_echo = require "lib/flow/server_echo"
-local states = require "core/sandbox/classes/chat_states"
-local sandbox = require "core/sandbox/methods"
+local protocol = import "net/protocol/protocol"
+local server_echo = import "lib/flow/server_echo"
+local states = import "core/sandbox/classes/chat_states"
+local sandbox = import "core/sandbox/methods"
 local module = {}
 
 local no_logged_commands = {}

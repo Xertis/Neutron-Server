@@ -1,4 +1,4 @@
-local data_buffer = require "lib/io/bit_buffer"
+local data_buffer = import "lib/io/bit_buffer"
 
 _G['$Neutron'] = "server"
 _G['$Multiplayer'] = {
@@ -255,12 +255,12 @@ function table.freeze_unpack(arr)
     return res
 end
 
-function table.deep_merge(target, source)
+function table.apply(target, source)
     for key, value in pairs(source) do
         if target[key] == nil then
             target[key] = value
         elseif type(target[key]) == "table" then
-            table.deep_merge(target[key], source[key])
+            table.apply(target[key], source[key])
         end
     end
 end
@@ -502,6 +502,22 @@ function table.checksum(data)
     process(data)
 
     return hash % uint24_mask
+end
+
+function table.deep_merge(t1, t2)
+    for k, v in pairs(t2) do
+        if type(k) == "number" then
+            table.insert(t1, v)
+        else
+            if type(v) == "table" and type(t1[k]) == "table" then
+                table.deep_merge(t1[k], v)
+            elseif t1[k] == nil then
+                t1[k] = v
+            end
+        end
+    end
+
+    return t1
 end
 
 --- MATH
@@ -834,23 +850,6 @@ function cached_require(path)
     end
     local prefix, file = parse_path(path)
     return package.loaded[prefix .. ":modules/" .. file .. ".lua"]
-end
-
-function start_require(path)
-    if not string.find(path, ':') then
-        local prefix, _ = parse_path(debug.getinfo(2).source)
-        return start_require(prefix .. ':' .. path)
-    end
-
-    local old_path = path
-    local prefix, file = parse_path(path)
-    path = prefix .. ":modules/" .. file .. ".lua"
-
-    if not _G["/$p"] then
-        return require(old_path)
-    end
-
-    return _G["/$p"][path]
 end
 
 function tohex(num)

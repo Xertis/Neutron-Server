@@ -1,8 +1,8 @@
-local account_manager = start_require "server:core/accounts/methods"
-local protocol = start_require "server:net/protocol/protocol"
-local entities_manager = start_require "core/sandbox/managers/entities"
-local tasks = require "api/v2/tasks"
-local lib = require "lib/utils/min"
+local account_manager = import "server:core/accounts/methods"
+local protocol = import "server:net/protocol/protocol"
+local entities_manager = import "core/sandbox/managers/entities"
+local tasks = import "api/v2/tasks"
+local lib = import "lib/utils/min"
 local module = {
     roles = {},
     by_username = {},

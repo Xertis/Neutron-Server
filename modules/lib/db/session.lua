@@ -1,6 +1,6 @@
-local utils = require "lib/db/utils/utils"
-local parser = require "lib/db/files/db_parser"
-local Query = require "lib/db/logic/query_builder"
+local utils = import "lib/db/utils/utils"
+local parser = import "lib/db/files/db_parser"
+local Query = import "lib/db/logic/query_builder"
 local Session = {}
 Session.__index = Session
 
@@ -55,7 +55,7 @@ function Session:init_table(config)
             error("Invalid key type: " .. type.type)
         end
         res.keys[key] = type
-        table.insert(res.annotation_keys, {key, type.type})
+        table.insert(res.annotation_keys, { key, type.type })
     end
 
     if not primary_key then
@@ -98,7 +98,7 @@ function Session:add(table_name, data)
         max_primary_key = math.max(max_primary_key, row[table_info.primary_key])
     end
 
-    data[table_info.primary_key] = max_primary_key+1
+    data[table_info.primary_key] = max_primary_key + 1
 
     table.insert(table_data, data)
     file.write_bytes(table_path, parser.serialize(table_data, table_info.annotation_keys, table_info.primary_key))

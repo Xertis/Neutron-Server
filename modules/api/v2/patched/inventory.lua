@@ -1,4 +1,4 @@
-local inventories_manager = start_require("server:core/sandbox/managers/inventories")
+local inventories_manager = import("server:core/sandbox/managers/inventories")
 
 local global_inventory = _G["inventory"]
 

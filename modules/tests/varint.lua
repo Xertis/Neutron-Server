@@ -1,5 +1,5 @@
-local compiler = require "net/protocol/compiler"
-local bb = require "lib/io/bit_buffer"
+local compiler = import "net/protocol/compiler"
+local bb = import "lib/io/bit_buffer"
 
 local encoder = compiler.load(compiler.compile_encoder({ "varint", "varint" }))
 local decoder = compiler.load(compiler.compile_decoder({ "varint", "varint" }))

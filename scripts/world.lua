@@ -1,19 +1,3 @@
-local function start_require(path)
-    if not string.find(path, ':') then
-        local prefix, _ = parse_path(debug.getinfo(2).source)
-        return start_require(prefix .. ':' .. path)
-    end
-
-    local prefix, file = parse_path(path)
-    path = prefix .. ":modules/" .. file .. ".lua"
-
-    if not _G["/$p"] then
-        return
-    end
-
-    return _G["/$p"][path]
-end
-
 local server_echo = nil
 local protocol = nil
 local sandbox = nil
@@ -60,9 +44,9 @@ local function upd(blockid, x, y, z, playerid)
 end
 
 function on_world_open()
-    server_echo = start_require("server:multiplayer/server/server_echo")
-    protocol = start_require("server:multiplayer/protocol-kernel/protocol")
-    sandbox = start_require("server:lib/private/sandbox/sandbox")
+    server_echo = import("server:lib/flow/server_echo")
+    protocol = import("server:net/protocol/protocol")
+    sandbox = import("server:core/sandbox/methods")
 end
 
 function on_block_placed(...)

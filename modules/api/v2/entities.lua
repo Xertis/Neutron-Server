@@ -1,4 +1,4 @@
-local entities_manager = start_require "core/sandbox/managers/entities"
+local entities_manager = import "core/sandbox/managers/entities"
 
 local HUGE = math.huge
 

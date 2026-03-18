@@ -1,5 +1,5 @@
-local compiler = require "server:net/protocol/compiler"
-local bb = require "lib/io/bit_buffer"
+local compiler = import "server:net/protocol/compiler"
+local bb = import "lib/io/bit_buffer"
 
 local function deep_approx_equals(a, b, epsilon)
     if type(a) ~= type(b) then
@@ -27,8 +27,8 @@ local function deep_approx_equals(a, b, epsilon)
     end
 end
 
-local encoder = compiler.load(compiler.compile_encoder({"PlayerEntity"}))
-local decoder = compiler.load(compiler.compile_decoder({"PlayerEntity"}))
+local encoder = compiler.load(compiler.compile_encoder({ "PlayerEntity" }))
+local decoder = compiler.load(compiler.compile_decoder({ "PlayerEntity" }))
 
 local function roundtrip(tbl)
     local buf = bb:new()
@@ -50,7 +50,7 @@ local function run_test(name, fn)
     end
 end
 
-for i=1, 25 do
+for i = 1, 25 do
     run_test("PlayerEntity random test", function()
         local player = {}
         if math.random() > 0.5 then

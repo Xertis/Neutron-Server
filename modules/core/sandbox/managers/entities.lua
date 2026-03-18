@@ -1,5 +1,5 @@
-local protocol = require "net/protocol/protocol"
-local server_echo = require "lib/flow/server_echo"
+local protocol = import "net/protocol/protocol"
+local server_echo = import "lib/flow/server_echo"
 
 local module = {}
 local reg_entities = {}
