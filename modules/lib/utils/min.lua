@@ -28,9 +28,6 @@ function shared.world.preparation_main()
     table.insert(packs, "server")
     app.reset_content({ "server" })
 
-    debug.print(table.freeze_unpack(CONFIG.game.content_packs))
-    debug.print(plugins)
-
     app.config_packs(table.merge(packs, plugins), {})
     app.load_content()
 
