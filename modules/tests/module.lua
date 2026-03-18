@@ -105,6 +105,19 @@ run_test("AutoTable collision prevention", function()
     assert(built.get_players() == "ok", "Function return value mismatch")
 end)
 
+run_test("Large nesting AutoTable", function()
+    IS_HEADLESS = true
+    local my_module = Module()
+
+    function my_module.headless.a.b.c.d()
+        return "ok"
+    end
+
+    local built = my_module:build()
+
+    assert(built.a.b.c.d() == "ok", "Function return value mismatch")
+end)
+
 run_test("Nested structure existence", function()
     local built = create_test_module(false)
 

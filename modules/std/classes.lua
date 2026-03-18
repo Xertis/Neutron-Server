@@ -1,17 +1,32 @@
 AutoTable = {}
 
+local function reset_metatable(tbl)
+    local result = {}
+    for k, v in pairs(tbl) do
+        if type(v) == "table" and getmetatable(v) == AutoTable.mt then
+            result[k] = reset_metatable(v)
+        else
+            result[k] = v
+        end
+    end
+    return result
+end
+
+AutoTable.mt = {
+    __index = function(tbl, key)
+        if key == "to_table" then
+            return reset_metatable
+        end
+
+        local new_tbl = AutoTable()
+        rawset(tbl, key, new_tbl)
+        return new_tbl
+    end
+}
+
 setmetatable(AutoTable, {
     __call = function(_, tbl)
-        tbl = tbl or {}
-
-        setmetatable(tbl, {
-            __index = function(_tbl, key)
-                rawset(_tbl, key, {})
-                return _tbl[key]
-            end
-        })
-
-        return tbl
+        return setmetatable(tbl or {}, AutoTable.mt)
     end
 })
 
@@ -48,7 +63,8 @@ end
 
 function Module:build()
     local side = IS_HEADLESS and self.headless or self.single
-    self.module = table.deep_merge(setmetatable(side, {}), self.shared)
+
+    self.module = table.deep_merge(side:to_table(), self.shared)
 
     return self.module
 end
