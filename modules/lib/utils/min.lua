@@ -1,6 +1,6 @@
 local hash = import "lib/crypto/hash"
 
-local module = Module({
+local self = Module({
     server = {},
     world = {},
     roles = {},
@@ -8,11 +8,12 @@ local module = Module({
     hash = hash
 })
 
-local shared = module.shared
-local headless = module.headless
-local single = module.single
+local shared = self.shared
+local headless = self.headless
+local single = self.single
 
 ---WORLD---
+function single.world.preparation_main() end
 
 function shared.world.preparation_main()
     --Загружаем мир
@@ -20,7 +21,7 @@ function shared.world.preparation_main()
     local packs = table.freeze_unpack(CONFIG.game.content_packs)
     local plugins = table.freeze_unpack(CONFIG.game.plugins)
 
-    if not shared.validate.plugins() then
+    if not self.validate.plugins() then
         logger.log("Plugins should not add new content.", "E")
         error("Plugins should not add new content.")
     end
@@ -160,4 +161,4 @@ function shared.validate.plugins()
     return true
 end
 
-return module:build()
+return self:build()

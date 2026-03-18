@@ -8,7 +8,7 @@ logger.log("std initialized")
 do
     if not file.exists(CONFIG_PATH) then
         file.write(CONFIG_PATH, file.read(PACK_ID .. ":resources/server_config.json"))
-        IS_FIRST_RUN = true
+        if IS_HEADLESS then IS_FIRST_RUN = true end
     end
 end
 
@@ -46,7 +46,7 @@ end
 logger.log("sandbox const initialized")
 
 --Загружаем настройки
-do
+if IS_HEADLESS then
     local settings = {
         ["chunks_loading_distance"] = "chunks.load-distance",
         ["chunks_loading_speed"] = "chunks.load-speed"

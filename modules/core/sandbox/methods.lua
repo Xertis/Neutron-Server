@@ -1,13 +1,62 @@
 local container = import "core/container"
 local Player = import "core/sandbox/classes/player"
 local metadata = import "lib/data/metadata"
-local module = {
+local self = Module({
     by_identity = {},
     by_username = {},
     by_invid = {}
-}
+})
 
-function module.join_player(username, account)
+local shared = self.shared
+local headless = self.headless
+local single = self.single
+
+function headless.create_player(account_player)
+    local pid = player.create(account_player.username, table.count_pairs(metadata.players.get_all()) + 1)
+    logger.log(string.format('Player [#%s] has been created with pid: %s', logger.shorted(account_player.identity), pid))
+    account_player.pid = pid
+    account_player.entity_id = player.get_entity(account_player.pid)
+
+    local y = 0
+    local block_id = block.get(0, y, 0)
+    while block_id ~= 0 and block_id ~= -1 do
+        y = y + 1
+        block_id = block.get(0, y, 0)
+    end
+
+    player.set_pos(account_player.pid, 0, y + 1, 0)
+    player.set_spawnpoint(account_player.pid, 0, y + 1, 0)
+    account_player.world = CONFIG.game.main_world
+    account_player.active = true
+
+    local invid, _ = player.get_inventory(account_player.pid)
+    account_player.invid = invid
+end
+
+function single.create_player(account_player)
+    local pid = ROOT_PID
+
+    logger.log(string.format('Player [#%s] has been created with pid: %s', logger.shorted(identity), pid))
+    account_player.pid = pid
+    account_player.entity_id = player.get_entity(account_player.pid)
+
+    local y = 0
+    local block_id = block.get(0, y, 0)
+    while block_id ~= 0 and block_id ~= -1 do
+        y = y + 1
+        block_id = block.get(0, y, 0)
+    end
+
+    player.set_pos(account_player.pid, 0, y + 1, 0)
+    player.set_spawnpoint(account_player.pid, 0, y + 1, 0)
+    account_player.world = CONFIG.game.main_world
+    account_player.active = true
+
+    local invid, _ = player.get_inventory(account_player.pid)
+    account_player.invid = invid
+end
+
+function shared.join_player(username, account)
     local identity = account.identity
     if table.has(table.freeze_unpack(RESERVED_USERNAMES), username:lower()) then
         logger.log(string.format('The username "%s" is reserved for the system and cannot be used by a client.', username))
@@ -20,7 +69,7 @@ function module.join_player(username, account)
 
     if status == CODES.players.ReviveSuccess or status == CODES.players.WithoutChanges then
         if username ~= account_player.username then
-            if not module.is_username_available(account_player.username, identity) then
+            if not self.is_username_available(account_player.username, identity) then
                 logger.log(
                     string.format(
                         'The username "%s" is already taken by another user and is not available for [#%s]',
@@ -37,7 +86,7 @@ function module.join_player(username, account)
             account_player.username = username
         end
     elseif status == CODES.players.DataLoss then
-        if not module.is_username_available(account_player.username, identity) then
+        if not self.is_username_available(account_player.username, identity) then
             logger.log(
                 string.format(
                     'The username "%s" is already taken by another user and is not available for [#%s]',
@@ -50,25 +99,7 @@ function module.join_player(username, account)
             return
         end
 
-        local pid = player.create(account_player.username, table.count_pairs(metadata.players.get_all()) + 1)
-        logger.log(string.format('Player [#%s] has been created with pid: %s', logger.shorted(identity), pid))
-        account_player:set("pid", pid)
-        account_player:set("entity_id", player.get_entity(account_player.pid))
-
-        local y = 0
-        local block_id = block.get(0, y, 0)
-        while block_id ~= 0 and block_id ~= -1 do
-            y = y + 1
-            block_id = block.get(0, y, 0)
-        end
-
-        player.set_pos(account_player.pid, 0, y + 1, 0)
-        player.set_spawnpoint(account_player.pid, 0, y + 1, 0)
-        account_player:set("world", CONFIG.game.main_world)
-        account_player:set("active", true)
-
-        local invid, _ = player.get_inventory(account_player.pid)
-        account_player:set("invid", invid)
+        self.create_player(account_player)
     end
 
     if account_player:is_active() then
@@ -88,7 +119,7 @@ function module.join_player(username, account)
     return account_player
 end
 
-function module.leave_player(account_player)
+function shared.leave_player(account_player)
     account_player:abort()
 
     logger.log(string.format('Player "%s" [#%s] left.', account_player.username, logger.shorted(account_player.identity)))
@@ -101,7 +132,7 @@ function module.leave_player(account_player)
     return account_player
 end
 
-function module.get_client(player)
+function shared.get_client(player)
     if not player then
         error("Invalid player")
     end
@@ -119,7 +150,7 @@ function module.get_client(player)
     end
 end
 
-function module.is_username_available(username, identity)
+function shared.is_username_available(username, identity)
     local metadata_players = metadata.players.get_all()
     local online_players = container.player_online.get()
 
@@ -138,7 +169,7 @@ function module.is_username_available(username, identity)
     return true
 end
 
-function module.get_players(key_is_name)
+function shared.get_players(key_is_name)
     local players = container.player_online.get()
 
     if not key_is_name then
@@ -153,19 +184,19 @@ function module.get_players(key_is_name)
     return changed
 end
 
-function module.get_player(account)
+function shared.get_player(account)
     return container.player_online.get(account.identity)
 end
 
-function module.by_identity.get_player(identity)
+function shared.by_identity.get_player(identity)
     return container.player_online.get(identity)
 end
 
-function module.get_chunk(pos)
+function shared.get_chunk(pos)
     return world.get_chunk_data(pos.x, pos.z)
 end
 
-function module.place_block(block_state, pid)
+function shared.place_block(block_state, pid)
     if type(block_state.id)[1] == 's' then
         block_state.id = block.index(block_state.id)
     end
@@ -177,11 +208,11 @@ function module.place_block(block_state, pid)
     end
 end
 
-function module.destroy_block(pos, pid)
+function shared.destroy_block(pos, pid)
     block.destruct(pos.x, pos.y, pos.z, pid)
 end
 
-function module.set_player_state(account_player, state)
+function shared.set_player_state(account_player, state)
     local pid = account_player.pid
 
     if state.x and state.y and state.z then
@@ -210,7 +241,7 @@ function module.set_player_state(account_player, state)
     end
 end
 
-function module.get_player_state(account_player)
+function shared.get_player_state(account_player)
     local x, y, z = player.get_pos(account_player.pid)
     local x_rot, y_rot, z_rot = player.get_rot(account_player.pid)
     local noclip = player.is_noclip(account_player.pid)
@@ -234,7 +265,7 @@ function module.get_player_state(account_player)
     }
 end
 
-function module.set_day_time(time)
+function shared.set_day_time(time)
     if time == "day" then
         time = 0.5
     elseif time == "night" then
@@ -250,7 +281,7 @@ function module.set_day_time(time)
     return true
 end
 
-function module.by_identity.is_online(identity)
+function shared.by_identity.is_online(identity)
     if container.player_online.get(identity) then
         return true
     end
@@ -258,23 +289,23 @@ function module.by_identity.is_online(identity)
     return false
 end
 
-function module.by_username.is_online(username)
-    return module.by_username.get(username) ~= nil
+function shared.by_username.is_online(username)
+    return self.by_username.get(username) ~= nil
 end
 
-function module.by_username.get(username)
-    for _, player in pairs(module.get_players()) do
+function shared.by_username.get(username)
+    for _, player in pairs(self.get_players()) do
         if player.username == username then
             return player
         end
     end
 end
 
-function module.set_inventory(_player, inv)
+function shared.set_inventory(_player, inv)
     inventory.set_inv(player.get_inventory(_player.pid), inv)
 end
 
-function module.get_inventory(_player)
+function shared.get_inventory(_player)
     local invid, slot = player.get_inventory(_player.pid)
     return {
         invid = invid,
@@ -283,16 +314,16 @@ function module.get_inventory(_player)
     }
 end
 
-function module.set_selected_slot(_player, slot_id)
+function shared.set_selected_slot(_player, slot_id)
     player.set_selected_slot(_player.pid, slot_id)
 end
 
-function module.by_invid.get(invid)
-    for _, player in pairs(module.get_players()) do
+function shared.by_invid.get(invid)
+    for _, player in pairs(self.get_players()) do
         if player.invid == invid then
             return player
         end
     end
 end
 
-return module
+return self:build()

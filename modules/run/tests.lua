@@ -7,6 +7,7 @@ local function tests()
     import "server:tests/edd"
     import "server:tests/external_buffer"
     import "server:tests/varint"
+    import "server:tests/module"
 
     logger.log("All tests passed", "T")
 end
