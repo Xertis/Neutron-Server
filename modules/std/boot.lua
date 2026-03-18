@@ -11,7 +11,7 @@ function import(path)
     local prefix, file_path = parse_path(path)
     local module_path = prefix .. ":modules/" .. file_path .. ".lua"
 
-    logger.log(string.format('import module "%s" to "%s"', file.name(module_path), file.name(source)), nil, nil, "import")
+    --logger.log(string.format('import module "%s" to "%s"', file.name(module_path), file.name(source)), nil, true, "import")
     if _G["/$p"] and _G["/$p"][module_path] then
         return _G["/$p"][module_path]
     end
