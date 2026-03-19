@@ -1,10 +1,15 @@
-local server_echo = nil
-local protocol = nil
-local sandbox = nil
+local api = {}
 
-local function upd(blockid, x, y, z, playerid)
-    playerid = math.max(playerid, 0)
+local self = Module({
+    on_block_update = function() end,
+    on_world_open = function() end,
+    on_world_save = function() end
+})
 
+local headless = self.headless
+local single = self.single
+
+function headless.on_block_update(blockid, x, y, z, playerid)
     local data = {
         block = {
             pos = { x = x, y = y, z = z },
@@ -14,16 +19,13 @@ local function upd(blockid, x, y, z, playerid)
         pid = playerid
     }
 
-    local buffer = protocol.create_databuffer()
-    buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.BlockChanged, data))
+    local buffer = api.protocol.create_databuffer()
+    buffer:put_packet(api.protocol.build_packet("server", api.protocol.ServerMsg.BlockChanged, data))
 
-    server_echo.put_event(
+    api.server_echo.put_event(
         function(client)
-            if client.active ~= true then
-                return
-            end
-
-            local client_states = sandbox.get_player_state(client.player)
+            if client.active ~= true then return end
+            local client_states = api.sandbox.get_player_state(client.player)
 
             if math.euclidian2D(
                     client_states.x,
@@ -34,7 +36,7 @@ local function upd(blockid, x, y, z, playerid)
                 return
             end
 
-            if not client:interceptor_process(protocol.ServerMsg.BlockChanged, data) then
+            if not client:interceptor_process(api.protocol.ServerMsg.BlockChanged, data) then
                 return
             end
 
@@ -43,20 +45,32 @@ local function upd(blockid, x, y, z, playerid)
     )
 end
 
+function single.on_world_open()
+    require "run/standalone"
+end
+
 function on_world_open()
-    server_echo = import("server:lib/flow/server_echo")
-    protocol = import("server:net/protocol/protocol")
-    sandbox = import("server:core/sandbox/methods")
+    self:build()
+    self.on_world_open()
+    api = {
+        server_echo = import "lib/flow/server_echo",
+        protocol = import "net/protocol/protocol",
+        sandbox = import "core/sandbox/methods"
+    }
+end
+
+function on_world_save()
+    self.on_world_save()
 end
 
 function on_block_placed(...)
-    upd(...)
+    self.on_block_update(...)
 end
 
 function on_block_broken(...)
-    upd(...)
+    self.on_block_update(...)
 end
 
 events.on("server:block_interact", function(...)
-    upd(...)
+    self.on_block_update(...)
 end)

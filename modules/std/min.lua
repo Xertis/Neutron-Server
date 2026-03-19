@@ -2,7 +2,7 @@ local data_buffer = import "lib/io/bit_buffer"
 
 _G['$Neutron'] = "server"
 _G['$Multiplayer'] = {
-    side = "server",
+    side = IS_HEADLESS and "server" or "single",
     pack_id = "server",
     api_references = {
         Neutron = { "v1", "v2", latest = "v2" }

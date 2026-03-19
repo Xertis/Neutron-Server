@@ -77,6 +77,13 @@ function shared.world.preparation_main()
     end
 end
 
+function single.world.open_main()
+    logger.log("Discovery of the main world")
+
+    -- Загружаем команды
+    import "init/cmd"
+end
+
 function headless.world.open_main()
     logger.log("Discovery of the main world")
     app.reset_content({ "server" })
@@ -94,9 +101,7 @@ function headless.world.open_main()
     end)
 
     -- Загружаем команды
-    do
-        import "init/cmd"
-    end
+    import "init/cmd"
 end
 
 function headless.world.close_main()

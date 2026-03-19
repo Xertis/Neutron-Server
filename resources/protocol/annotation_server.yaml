@@ -138,7 +138,7 @@ ChatMessage:
 
 BlockChanged:
   fields:
-    - pid: var
+    - pid: var[W+1][R-1]
     - block: Block
 
 PacksList:
