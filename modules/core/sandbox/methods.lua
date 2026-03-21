@@ -36,7 +36,7 @@ end
 function single.create_player(account_player)
     local pid = ROOT_PID
 
-    logger.log(string.format('Player [#%s] has been created with pid: %s', logger.shorted(identity), pid))
+    logger.log(string.format('Player [#%s] has been created with pid: %s', logger.shorted(account_player.identity), pid))
     account_player.pid = pid
     account_player.entity_id = player.get_entity(account_player.pid)
 

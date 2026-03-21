@@ -1,15 +1,12 @@
 local api = {}
 
-local self = Module({
+local self = {
     on_block_update = function() end,
     on_world_open = function() end,
     on_world_save = function() end
-})
+}
 
-local headless = self.headless
-local single = self.single
-
-function headless.on_block_update(blockid, x, y, z, playerid)
+function self.on_block_update(blockid, x, y, z, playerid)
     local data = {
         block = {
             pos = { x = x, y = y, z = z },
@@ -45,13 +42,15 @@ function headless.on_block_update(blockid, x, y, z, playerid)
     )
 end
 
-function single.on_world_open()
-    require "run/standalone"
+function self.on_world_open()
+    require "run/single"
 end
 
 function on_world_open()
-    self:build()
-    self.on_world_open()
+    if IS_RUNNING ~= true then
+        self.on_world_open()
+    end
+
     api = {
         server_echo = import "lib/flow/server_echo",
         protocol = import "net/protocol/protocol",

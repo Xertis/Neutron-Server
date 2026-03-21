@@ -504,16 +504,13 @@ function table.checksum(data)
     return hash % uint24_mask
 end
 
+-- Не причёсывает индексы, как это делает обычный table.merge
 function table.deep_merge(t1, t2)
     for k, v in pairs(t2) do
-        if type(k) == "number" then
-            table.insert(t1, v)
-        else
-            if type(v) == "table" and type(t1[k]) == "table" then
-                table.deep_merge(t1[k], v)
-            elseif t1[k] == nil then
-                t1[k] = v
-            end
+        if type(v) == "table" and type(t1[k]) == "table" then
+            table.deep_merge(t1[k], v)
+        elseif t1[k] == nil then
+            t1[k] = v
         end
     end
 

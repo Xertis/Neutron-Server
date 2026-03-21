@@ -1,4 +1,4 @@
-import "server:std/boot"
+require "server:std/boot"
 import "server:globals"
 
 IS_HEADLESS = false
