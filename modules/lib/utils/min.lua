@@ -80,6 +80,11 @@ end
 function single.world.open_main()
     logger.log("Discovery of the main world")
 
+    time.post_runnable(function()
+        local root_entity = entities.get(player.get_entity(ROOT_PID))
+        PLAYER_ENTITY_ID = root_entity:def_index()
+    end)
+
     -- Загружаем команды
     import "init/cmd"
 end

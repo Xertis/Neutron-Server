@@ -7,7 +7,7 @@ local module = {
 
 local PATHS = {
     players = "world:players_data.dat",
-    server = "config:server.dat"
+    server = IS_HEADLESS and "config:server.dat" or "world:server.dat"
 }
 
 local PLAYERS_META = {}
