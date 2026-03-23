@@ -1,15 +1,14 @@
 local api = {}
 
-local self = Module({
+local self = {
     on_block_update = function() end,
     on_world_open = function() end,
     on_world_save = function() end
-})
+}
 
-local headless = self.headless
-local single = self.single
+function self.on_block_update(blockid, x, y, z, playerid)
+    if not IS_HEADLESS then return end
 
-function headless.on_block_update(blockid, x, y, z, playerid)
     local data = {
         block = {
             pos = { x = x, y = y, z = z },
@@ -45,7 +44,7 @@ function headless.on_block_update(blockid, x, y, z, playerid)
     )
 end
 
-function single.on_world_open()
+function self.on_world_open()
     events.emit("server:content_loaded")
     for i = 0, 10 do
         events.emit("server:.worldtick")
@@ -53,7 +52,6 @@ function single.on_world_open()
 end
 
 function on_world_open()
-    self:build()
     if not app then
         self.on_world_open()
     end
