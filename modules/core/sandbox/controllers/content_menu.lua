@@ -1,4 +1,5 @@
 function on_share(_player, _, _, item_id)
+    if not IS_HEADLESS then return end
     local inv = player.get_inventory(_player.pid)
     local size = inventory.size(inv)
     local stack_size = item.stack_size(item_id)

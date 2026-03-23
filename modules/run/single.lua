@@ -27,19 +27,25 @@ metadata.load()
 server = server.new(CONFIG.server.port)
 server:start_main()
 
+server.main_network:virtual_connect()
+
 -- Совершаем невозможное, знакомим сервер и клиент
 require(string.format("client:api/%s/shell/api", _G["$Multiplayer"].api_references.Neutron.latest)).__run_in_single(
     CONFIG.server.port)
 
-events.on("server:.worldtick", function()
+local function server_tick()
     timeout_executor.process()
     server:tick()
 
     events.emit("server:main_tick")
-end)
+end
 
-events.on("server:.worldsave", function()
-    logger.log("Saving world...")
-    events.emit("server:save")
-    metadata.save()
+events.on("server:content_loaded", function()
+    events.on("server:.worldtick", server_tick)
+
+    events.on("server:.worldsave", function()
+        logger.log("Saving world...")
+        events.emit("server:save")
+        metadata.save()
+    end)
 end)

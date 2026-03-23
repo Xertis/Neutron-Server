@@ -4,6 +4,7 @@ local main_pipe = import "net/pipelines/main"
 local http_pipe = import "net/pipelines/http"
 local server_echo = import "lib/flow/server_echo"
 local server_matches = import "net/handlers/main"
+local Network = import "net/classes/network"
 local protocol = import "net/protocol/protocol"
 
 local server = {}
@@ -13,6 +14,8 @@ function server.new(port)
     local self = setmetatable({}, server)
 
     self.port = port
+    self.main_network = nil
+    self.http_network = nil
 
     self.main_clients = {}
     self.http_clients = {}
@@ -27,7 +30,7 @@ end
 
 function server:start_main()
     logger.log(string.format("Starting main server on port: %s", self.port))
-    self.main_socket = network.tcp_open(self.port, function(client_socket)
+    self.main_network = Network.new("server", function(client_socket)
         client_socket:set_nodelay(true)
         local address, _ = client_socket:get_address()
 
@@ -46,13 +49,15 @@ function server:start_main()
 
         table.insert(self.tasks, { socket = client_socket, storage = self.main_clients })
     end)
+
+    self.main_socket = self.main_network:tcp_open(self.port)
 end
 
 function server:start_http()
     local http_port = self.port + 1
     logger.log(string.format("Starting http server on port: %s", http_port))
 
-    self.http_socket = network.tcp_open(http_port, function(client_socket)
+    self.http_network = Network.new("server", function(client_socket)
         client_socket:set_nodelay(true)
         local address, _ = client_socket:get_address()
 
@@ -71,6 +76,8 @@ function server:start_http()
 
         table.insert(self.tasks, { socket = client_socket, storage = self.http_clients })
     end)
+
+    self.http_socket = self.http_network:tcp_open(http_port)
 end
 
 function server:do_tasks()

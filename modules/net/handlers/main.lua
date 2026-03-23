@@ -391,10 +391,7 @@ Incorrect VoxelCore version:
         local inv, slot = data.inventory, data.slot
 
         inventories_manager.init(account_player, player_inventory_controller, content_menu_controller)
-        client:push_packet(protocol.ServerMsg.InventorySync, {
-            inventory_id = 1,
-            inventory = inv
-        })
+        inventories_manager.sync(account_player, 1)
 
         client:push_packet(protocol.ServerMsg.PlayerHandSlot, { slot })
 

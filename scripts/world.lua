@@ -1,12 +1,15 @@
 local api = {}
 
-local self = {
+local self = Module({
     on_block_update = function() end,
     on_world_open = function() end,
     on_world_save = function() end
-}
+})
 
-function self.on_block_update(blockid, x, y, z, playerid)
+local headless = self.headless
+local single = self.single
+
+function headless.on_block_update(blockid, x, y, z, playerid)
     local data = {
         block = {
             pos = { x = x, y = y, z = z },
@@ -42,12 +45,16 @@ function self.on_block_update(blockid, x, y, z, playerid)
     )
 end
 
-function self.on_world_open()
-    require "run/single"
+function single.on_world_open()
+    events.emit("server:content_loaded")
+    for i = 0, 10 do
+        events.emit("server:.worldtick")
+    end
 end
 
 function on_world_open()
-    if IS_RUNNING ~= true then
+    self:build()
+    if not app then
         self.on_world_open()
     end
 
@@ -56,6 +63,10 @@ function on_world_open()
         protocol = import "net/protocol/protocol",
         sandbox = import "core/sandbox/methods"
     }
+end
+
+function on_world_tick()
+    -- Просто, чтобы ивент зарегало
 end
 
 function on_world_save()

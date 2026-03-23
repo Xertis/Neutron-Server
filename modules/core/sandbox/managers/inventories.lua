@@ -5,7 +5,14 @@ local sandbox = import "core/sandbox/methods"
 local xml = import "lib/xml/xml2lua"
 local tree = import "lib/xml/handler/tree"
 
-local module = {}
+local self = Module({
+    sync = function() end,
+    echo_sync = function() end,
+    interact = function() end
+})
+local shared = self.shared
+local headless = self.headless
+local single = self.single
 
 -- id = общий идентификатор инвентаря (у клиента и у сервера)
 -- invid = локальный идентификатор инвентаря
@@ -139,7 +146,7 @@ local function create_virtual_inventory(path)
     return inventory.create(size)
 end
 
-function module.get_second_inventory(player)
+function shared.get_second_inventory(player)
     local p_id2Invid = id2Invid[player.identity]
 
     if not p_id2Invid then
@@ -153,7 +160,7 @@ function module.get_second_inventory(player)
     end
 end
 
-function module.open_block(player, pos)
+function shared.open_block(player, pos)
     local x, y, z = pos[1], pos[2], pos[3]
     local invid = inventory.get_block(x, y, z)
     if invid == 0 then return 0 end
@@ -168,7 +175,7 @@ function module.open_block(player, pos)
         controller:__on_open(player, invid, x, y, z)
     end
 
-    module.close_inventory(player)
+    self.close_inventory(player)
     open_inventory(player, invid, new_id, controller)
 
     local client = sandbox.get_client(player)
@@ -176,12 +183,12 @@ function module.open_block(player, pos)
         inventory_id = new_id,
         pos = { x = x, y = y, z = z }
     })
-    module.sync(player, new_id)
+    self.sync(player, new_id)
 
     return invid
 end
 
-function module.open_virtual(player, layout_path, disable_player_inventory, root_id)
+function shared.open_virtual(player, layout_path, disable_player_inventory, root_id)
     local invid = root_id
     if not root_id then
         invid = create_virtual_inventory(layout_path)
@@ -191,7 +198,7 @@ function module.open_virtual(player, layout_path, disable_player_inventory, root
     local p_data = id2Invid[player.identity] or {}
     local new_id = table.max_index(p_data) + 1
 
-    module.close_inventory(player)
+    self.close_inventory(player)
 
     if controller then
         controller:__on_open(player, invid)
@@ -207,12 +214,12 @@ function module.open_virtual(player, layout_path, disable_player_inventory, root
         inventory_id = new_id,
         disable_player_inventory = disable_player_inventory
     })
-    module.sync(player, new_id)
+    self.sync(player, new_id)
     return invid
 end
 
-function module.close_inventory(player, non_sync)
-    local second = module.get_second_inventory(player)
+function shared.close_inventory(player, non_sync)
+    local second = self.get_second_inventory(player)
     if not second then return end
 
     close_inventory(player, second)
@@ -223,23 +230,23 @@ function module.close_inventory(player, non_sync)
     end
 end
 
-function module.echo_close_inventory(invid)
+function shared.echo_close_inventory(invid)
     for identity, inventories in pairs(invid2Id) do
         local data = inventories[invid]
 
         if data then
             local target_player = sandbox.by_identity.get_player(identity)
-            module.close_inventory(target_player)
+            self.close_inventory(target_player)
         end
     end
 end
 
-function module.init(_player, pinv_controller, minv_controller)
+function shared.init(_player, pinv_controller, minv_controller)
     open_inventory(_player, player.get_inventory(_player.pid), 1, pinv_controller)
     open_inventory(_player, -1, 0, minv_controller)
 end
 
-function module.sync(player, ...)
+function headless.sync(player, ...)
     local client = sandbox.get_client(player)
 
     for _, id in ipairs({ ... }) do
@@ -257,7 +264,7 @@ function module.sync(player, ...)
     })
 end
 
-function module.echo_sync(invid, without_identity, action_type)
+function headless.echo_sync(invid, without_identity, action_type)
     -- action_type = true просто синкает
     -- action_type = false закрывает инвентарь
     if action_type == nil then action_type = true end
@@ -291,15 +298,15 @@ local function get_item(invid, slot)
     return { id = id, count = count, meta = meta }
 end
 
-function module.set_block_inventory_controller(id, controller)
+function shared.set_block_inventory_controller(id, controller)
     block_controllers[id] = controller
 end
 
-function module.set_virtual_inventory_controller(layout_path, controller)
+function shared.set_virtual_inventory_controller(layout_path, controller)
     virtual_controllers[abs_layout_path(layout_path)] = controller
 end
 
-function module.interact(player, id, slot, action, mode, item_id, client_checksum)
+function headless.interact(player, id, slot, action, mode, item_id, client_checksum)
     local client = sandbox.get_client(player)
     local grabbed = get_server_cursor(player)
     local stack = { id = 0, count = 0, meta = nil }
@@ -402,13 +409,34 @@ function module.interact(player, id, slot, action, mode, item_id, client_checksu
     if client_checksum then
         local current_server_checksum = server_checksum(player, id)
         if current_server_checksum ~= client_checksum then
-            module.sync(player, id)
+            self.sync(player, id)
         end
     end
 
-    module.echo_sync(invid, player.identity)
+    self.echo_sync(invid, player.identity)
 
     return true
 end
 
-return module
+function single.interact(player, id, slot, action, mode, item_id, client_checksum)
+    local client = sandbox.get_client(player)
+    local invid = idToInvid(player, id)
+
+    if not invid then
+        logger.log(
+            string.format('Player "%s" [#%s] tried to use unopened inventory. Aborting operation.',
+                client.player.username, client.player.identity), "W")
+        return
+    end
+
+    local controller = get_controller(player, invid)
+    if action ~= 2 and controller then
+        controller:__on_update(player, invid, slot, action, mode)
+    elseif controller then
+        controller:__on_share(player, invid, slot, item_id)
+    end
+
+    return true
+end
+
+return self:build()
