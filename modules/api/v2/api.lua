@@ -43,5 +43,11 @@ local api = {
     }
 
 }
+local returned_api = { server = api }
 
-return { server = api }
+if not IS_HEADLESS then
+    local m = _G["$Multiplayer"]
+    returned_api.client = require(string.format("client:api/%s/api", m.api_references.Neutron[2])).client
+end
+
+return returned_api
