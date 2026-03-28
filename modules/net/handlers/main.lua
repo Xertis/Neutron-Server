@@ -22,6 +22,9 @@ local player_inventory_controller = InventoryController.new(
 local content_menu_controller = InventoryController.new(
     "server:modules/core/sandbox/controllers/content_menu.lua")
 
+player_inventory_controller:add_global_variable("IS_HEADLESS", IS_HEADLESS)
+content_menu_controller:add_global_variable("IS_HEADLESS", IS_HEADLESS)
+
 local matches = {
     general_fsm = mfsm.new(),
     status_fsm = mfsm.new(),

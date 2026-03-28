@@ -18,6 +18,10 @@ function InventoryController.new(source)
     return self
 end
 
+function InventoryController:add_global_variable(key, val)
+    self.env[key] = val
+end
+
 function InventoryController:__on_open(player, invid, x, y, z)
     -- Если инвентарь виртуальный - x, y, z будут равны nil
     local on_open = self.env.on_open

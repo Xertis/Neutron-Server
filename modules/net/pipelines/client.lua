@@ -514,6 +514,16 @@ end)
 
 --Обновляем позицию у других
 ClientPipe:add_middleware(function(client)
+    local function approx_equals(a, b, eps)
+        eps = eps or 0.001
+        for k, v in pairs(a) do
+            if math.abs(v - (b[k] or 0)) >= eps then
+                return false
+            end
+        end
+        return true
+    end
+
     local client_states = sandbox.get_player_state(client.player)
     local prev_states = table.set_default(client.player.temp, "player-prev-states", {})
     local lib_player = player
@@ -521,65 +531,48 @@ ClientPipe:add_middleware(function(client)
         if table.has(RESERVED_USERNAMES, player.username) or player.username == client.player.username then
             goto continue
         end
-
         local state = sandbox.get_player_state(player)
-
-        if math.euclidian2D(
-                client_states.x,
-                client_states.z,
-                state.x,
-                state.z
-            ) > RENDER_DISTANCE then
+        if math.euclidian2D(client_states.x, client_states.z, state.x, state.z) > RENDER_DISTANCE then
             goto continue
         end
+        local prev_state                  = prev_states[player.pid] or {}
+        local changed_data                = { pid = player.pid, data = {} }
 
-        local prev_state = prev_states[player.pid] or {}
+        local current_pos                 = { x = state.x, y = state.y, z = state.z }
+        local current_rot                 = { x = state.x_rot, y = state.y_rot, z = state.z_rot }
+        local current_cheats              = { noclip = state.noclip, flight = state.flight }
+        local current_invid, current_slot = lib_player.get_inventory(player.pid)
+        local current_hand_item           = inventory.get(current_invid, current_slot)
 
-        local changed_data = {
-            pid = player.pid,
-            data = {}
-        }
-
-        local current_pos = { x = state.x, y = state.y, z = state.z }
-
-        changed_data.data.compressed = false
-
-        if not prev_state.pos or not table.deep_equals(prev_state.pos, current_pos) then
+        if not prev_state.pos or not approx_equals(prev_state.pos, current_pos) then
             changed_data.data.pos = current_pos
         end
-
-        local current_rot = { x = state.x_rot, y = state.y_rot, z = state.z_rot }
-        if not prev_state.rot or not table.deep_equals(prev_state.rot, current_rot) then
+        if not prev_state.rot or not approx_equals(prev_state.rot, current_rot) then
             changed_data.data.rot = current_rot
         end
 
-        local current_cheats = { noclip = state.noclip, flight = state.flight }
         if not prev_state.cheats or not table.deep_equals(prev_state.cheats, current_cheats) then
-            changed_data.data.cheats = current_cheats
+            changed_data.data.cheats =
+                current_cheats
         end
-
-        local current_invid, current_slot = lib_player.get_inventory(player.pid)
-        local current_hand_item = inventory.get(current_invid, current_slot)
         if not prev_state.hand_item or prev_state.hand_item ~= current_hand_item then
-            changed_data.data.hand_item = current_hand_item
+            changed_data.data.hand_item =
+                current_hand_item
         end
 
-        --debug.print(changed_data)
+        prev_states[player.pid] = table.deep_copy({
+            pos       = current_pos,
+            rot       = current_rot,
+            cheats    = current_cheats,
+            hand_item = current_hand_item,
+        })
 
         if changed_data.data.pos or changed_data.data.rot or changed_data.data.cheats or changed_data.data.hand_item then
             client:push_packet(protocol.ServerMsg.PlayerMoved, { pid = changed_data.pid, data = changed_data.data })
-
-            prev_states[player.pid] = table.deep_copy({
-                pos = current_pos or prev_state.pos,
-                rot = current_rot or prev_state.rot,
-                cheats = current_cheats or prev_state.cheats,
-                hand_item = current_hand_item or prev_state.hand_item
-            })
         end
 
         ::continue::
     end
-
     return client
 end)
 
