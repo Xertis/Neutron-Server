@@ -51,7 +51,7 @@ entities.register(entity_name, config, spawn_handler)
         },
     }
     models = {
-        ["index"] = { -- Индекс кости всегда надо записывать строчкой
+        [index] = {
             maximum_deviation = number, -- Максимальное отклонение
             evaluate_deviation = function(dist, cur_val, client_val) -- Оценка отклонения
         },
