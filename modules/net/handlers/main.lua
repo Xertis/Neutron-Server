@@ -346,7 +346,7 @@ Incorrect VoxelCore version:
 
                 if is_last then
                     _client.player.is_teleported = true
-                    events.emit("server:player_ground_landing", _client)
+                    events.emit("server:on_player_ready", _client)
                 end
             end,
             {
@@ -679,15 +679,39 @@ matches.client_online_handler:add_case(protocol.ClientMsg.BlockUpdate, (
 
         packet = packet.block
 
-        local block = {
+        local inventory = _G["inventory"]
+        local pid = client.player.pid
+
+        if player.is_infinite_items(pid) == false then
+            local placed_id = item.index(block.name(packet.id) .. ".item")
+
+            local invid, slot = player.get_inventory(pid)
+            local item_id, item_count = inventory.get(invid, slot)
+
+            if item_id ~= placed_id then
+                inventory.set(invid, slot, item_id, item_count)
+                return
+            end
+
+            local remains = item_count - 1
+
+            if remains == 0 then
+                item_id = 0
+            elseif remains < 0 then
+                inventory.set(invid, slot, item_id, item_count)
+                return
+            end
+
+            inventory.set(invid, slot, item_id, remains)
+        end
+
+        sandbox.place_block({
             x = packet.pos.x,
             y = packet.pos.y,
             z = packet.pos.z,
             states = packet.state,
             id = packet.id
-        }
-
-        sandbox.place_block(block, client.player.pid)
+        }, pid)
     end
 ))
 
@@ -704,15 +728,39 @@ matches.client_online_handler:add_case(protocol.ClientMsg.BlockRegionUpdate, (
         x = client.player.region_pos.x * 32 + x
         z = client.player.region_pos.z * 32 + z
 
-        local block = {
+        local inventory = _G["inventory"]
+        local pid = client.player.pid
+
+        if player.is_infinite_items(pid) == false then
+            local placed_id = item.index(block.name(packet.id) .. ".item")
+
+            local invid, slot = player.get_inventory(pid)
+            local item_id, item_count = inventory.get(invid, slot)
+
+            if item_id ~= placed_id then
+                inventory.set(invid, slot, item_id, item_count)
+                return
+            end
+
+            local remains = item_count - 1
+
+            if remains == 0 then
+                item_id = 0
+            elseif remains < 0 then
+                inventory.set(invid, slot, item_id, item_count)
+                return
+            end
+
+            inventory.set(invid, slot, item_id, remains)
+        end
+
+        sandbox.place_block({
             x = x,
             y = y,
             z = z,
             states = packet.state,
             id = packet.id
-        }
-
-        sandbox.place_block(block, client.player.pid)
+        }, pid)
     end
 ))
 
@@ -792,11 +840,40 @@ matches.client_online_handler:add_case(protocol.ClientMsg.PlayerHandSlot, (
 
 matches.client_online_handler:add_case(protocol.ClientMsg.EntitySpawnAttempt, (
     function(packet, client)
+        if not client.account or not client.account.is_logged or not client.player.is_teleported then
+            return
+        end
+
         local name = entities.def_name(packet.def)
         local conf = entities_manager.get_reg_config(name) or {}
 
         if conf.spawn_handler then
             conf.spawn_handler(name, packet.args, client)
+        end
+    end
+))
+
+matches.client_online_handler:add_case(protocol.ClientMsg.EntityInteract, (
+    function(packet, client)
+        if not client.account or not client.account.is_logged or not client.player.is_teleported then
+            return
+        end
+
+        local entity = entities.get(packet.uid)
+        local player_pid = client.player.pid
+        local player_eid = client.player.entity_id
+        if packet.action == 0 then
+            for _, component in pairs(entity.components) do
+                (component.on_attacked or function() end)(player_eid, player_pid)
+            end
+        elseif packet.action == 1 then
+            for _, component in pairs(entity.components) do
+                (component.on_used or function() end)(player_pid)
+            end
+        else
+            logger.log(string.format(
+                'The player "%s" [#%s] attempted to call a non-existent event type on an entity with uid = %s',
+                client.player.username, logger.shorted(client.account.identity, packet.uid)), "W")
         end
     end
 ))
