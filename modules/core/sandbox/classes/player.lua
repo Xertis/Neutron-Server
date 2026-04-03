@@ -58,7 +58,6 @@ function Player:to_save()
     return {
         identity = self.identity,
         username = self.username,
-        entity_id = self.entity_id,
         world = self.world,
         pid = self.pid,
         invid = self.invid,
@@ -69,7 +68,6 @@ end
 function Player:to_load(data)
     self.identity = data.identity
     self.username = data.username
-    self.entity_id = data.entity_id
     self.world = data.world
     self.pid = data.pid
     self.invid = data.invid

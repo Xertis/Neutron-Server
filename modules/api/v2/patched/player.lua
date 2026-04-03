@@ -28,22 +28,7 @@ function global_player.set_name(pid, name)
     end
 
     player.set_name(pid, name)
-
     player_obj.username = name
-
-    local data = { pid = pid, username = name }
-    local buffer = protocol.create_databuffer()
-    buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.PlayerUsername, data))
-
-    server_echo.put_event(
-        function(client)
-            if not client.active then return end
-
-            if client:interceptor_process(protocol.ServerMsg.PlayerUsername, data) then
-                client:queue_response(buffer.bytes)
-            end
-        end
-    )
 end
 
 function global_player.set_pos(pid, x, y, z)

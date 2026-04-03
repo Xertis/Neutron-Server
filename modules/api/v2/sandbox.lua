@@ -41,25 +41,6 @@ function module.players.by_identity.is_online(identity)
     return sandbox.by_identity.is_online(identity)
 end
 
-function module.players.sync_states(_player, states)
-    local client = account_manager.by_username.get_client(_player.username)
-
-    if states.pos then
-        player.set_pos(_player.pid, states.pos[1], states.pos[2], states.pos[3])
-    end
-
-    if states.rot then
-        player.set_rot(_player.pid, states.rot[1], states.rot[2], states.rot[3])
-    end
-
-    if states.cheats then
-        player.set_noclip(_player.pid, states.cheats.noclip)
-        player.set_flight(_player.pid, states.cheats.flight)
-    end
-
-    client:push_packet(protocol.ServerMsg.SynchronizePlayer, { data = states })
-end
-
 function module.players.get_in_radius(target_pos, radius)
     target_pos = target_pos or {}
 

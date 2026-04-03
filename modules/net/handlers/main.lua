@@ -367,29 +367,6 @@ Incorrect VoxelCore version:
 
         ---
 
-        local p_data = { username = account_player.username, pid = account_player.pid }
-
-        local buffer = protocol.create_databuffer()
-        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.PlayerListAdd, { p_data }))
-
-        echo.put_event(
-            function(c)
-                c:queue_response(buffer.bytes)
-            end,
-            client)
-
-        local player_online = sandbox.get_players()
-        local player_keys = table.keys(player_online)
-
-        table.map(player_keys, function(i, v)
-            return {
-                pid = player_online[v].pid,
-                username = player_online[v].username
-            }
-        end)
-
-        client:push_packet(protocol.ServerMsg.PlayerList, { player_keys })
-
         local data = sandbox.get_inventory(account_player)
         local inv, slot = data.inventory, data.slot
 
@@ -548,19 +525,21 @@ matches.client_online_handler:add_case(protocol.ClientMsg.Disconnect, (
 
         chat.echo(message)
 
-        entities_manager.clear_pid(pid)
-        inventories_manager.close_inventory(client.player, true)
-
         local buffer = protocol.create_databuffer()
-        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.PlayerListRemove,
-            { { username = username, pid = pid } }))
-        events.emit("server:client_disconnected", client)
+        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.EntityDespawn, {
+            uid = client.player.entity_id
+        }))
 
         echo.put_event(
             function(c)
                 c.socket:send(buffer.bytes)
             end, client
         )
+
+        entities_manager.clear_pid(pid)
+        inventories_manager.close_inventory(client.player, true)
+
+        events.emit("server:client_disconnected", client)
     end
 ))
 

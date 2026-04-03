@@ -3,7 +3,6 @@ local server_echo = import "lib/flow/server_echo"
 
 local module = {}
 local reg_entities = {}
-local player_fields = {}
 local entities_data = {}
 local notificated_entities = {}
 
@@ -38,16 +37,11 @@ local culling = function(pid, target_pos, target_size)
 end
 
 function module.register(entity_name, config, handler)
-    if PLAYER_ENTITY_ID == entities.def_name(entity_name) then
-        error(
-            "You cannot register an entity responsible for a player, to create custom fields use entities.players.add_custom_field")
-    end
-
     if config.models then
         local new_models = {}
         for index, value in pairs(config.models) do
             new_models[tonumber(index)] = value
-            logger.log("Entity model indexes must be of type number", "W")
+            logger.log("Entity model indexes must be number", "W")
         end
         config.models = new_models
     end
@@ -71,21 +65,6 @@ function module.clear_pid(pid)
     end
 end
 
-function module.add_field(type, key, field)
-    if not table.has({ "custom_fields", "models", "textures", "components" }, type) then
-        error("Incorrect type for entity field")
-    end
-
-    local fields = table.set_default(player_fields, type, {})
-    if fields[key] then
-        return false
-    end
-
-    fields[key] = field
-
-    return true
-end
-
 function module.despawn(uid)
     entities_data[uid] = nil
 
@@ -99,7 +78,7 @@ function module.despawn(uid)
     )
 end
 
-local function __create_data(entity, is_player)
+local function __create_data(entity)
     local uid = entity:get_uid()
     local str_name = entity:def_name()
     local tsf = entity.transform
@@ -108,17 +87,16 @@ local function __create_data(entity, is_player)
     local conf = nil
     local data = {}
 
-    if not is_player then
-        conf = reg_entities[str_name].config
-        data.standard_fields = {
-            tsf_rot = tsf:get_rot(),
-            tsf_pos = tsf:get_pos(),
-            tsf_size = tsf:get_size(),
-            body_size = body:get_size(),
-        }
-    else
-        conf = player_fields
-    end
+    conf = reg_entities[str_name].config
+    data.standard_fields = {
+        tsf_rot = tsf:get_rot(),
+        tsf_pos = tsf:get_pos(),
+        tsf_size = tsf:get_size(),
+        body_size = body:get_size(),
+        body_material = body:get_material(),
+        body_mass = body:get_mass(),
+        body_elastic = body:get_elasticity()
+    }
 
     if conf.textures then
         data.textures = {}
@@ -131,6 +109,13 @@ local function __create_data(entity, is_player)
         data.models = {}
         for key, _ in pairs(conf.models) do
             data.models[key] = rig:get_model(key)
+        end
+    end
+
+    if conf.matrix then
+        data.matrix = {}
+        for key, _ in pairs(conf.matrix) do
+            data.matrix[key] = rig:get_matrix(key)
         end
     end
 
@@ -147,8 +132,7 @@ local function __create_data(entity, is_player)
 
     local custom_fields = {}
     for field_name, field in pairs(conf.custom_fields or conf) do
-        if (conf == player_fields and field_name ~= "textures" and field_name ~= "models" and field_name ~= "components")
-            or (conf ~= player_fields and conf.custom_fields) then
+        if conf.custom_fields then
             local val = field.provider(uid, field_name)
             local val_type = type(val)
             if not table.has({ "number", "string", "boolean", "table" }, val_type) then
@@ -162,21 +146,19 @@ local function __create_data(entity, is_player)
     return data
 end
 
-local function __get_dirty(entity, data, cur_data, p_pos, e_pos, is_player)
+local function __get_dirty(entity, data, cur_data, p_pos, e_pos)
     local dirty = table.deep_copy(cur_data)
     local str_name = entity:def_name()
     local dist = 0
 
-    if not is_player then
-        dist = math.euclidian3D(
-            e_pos[1], e_pos[2], e_pos[3],
-            p_pos[1], p_pos[2], p_pos[3]
-        )
-    end
+    dist = math.euclidian3D(
+        e_pos[1], e_pos[2], e_pos[3],
+        p_pos[1], p_pos[2], p_pos[3]
+    )
 
     for fields_type, type in pairs(cur_data) do
         for field_name, cur_val in pairs(type) do
-            local config = is_player and player_fields[fields_type] or reg_entities[str_name].config[fields_type]
+            local config = reg_entities[str_name].config[fields_type]
             if config and config[field_name] then
                 table.set_default(data, fields_type, {})
                 local value = data[fields_type][field_name]
@@ -203,7 +185,7 @@ local function __update_data(data, dirty, cur_data)
     end
 end
 
-local function __send_dirty(entity, uid, id, dirty, client, is_player)
+local function __send_dirty(entity, uid, id, dirty, client)
     if table.count_pairs(dirty.standard_fields or {}) == 0 then
         dirty.standard_fields = nil
     end
@@ -219,6 +201,9 @@ local function __send_dirty(entity, uid, id, dirty, client, is_player)
     if table.count_pairs(dirty.models or {}) == 0 then
         dirty.models = nil
     end
+    if table.count_pairs(dirty.matrix or {}) == 0 then
+        dirty.matrix = nil
+    end
 
     if table.count_pairs(dirty) == 0 then
         return
@@ -226,13 +211,8 @@ local function __send_dirty(entity, uid, id, dirty, client, is_player)
 
     local buffer = protocol.create_databuffer()
 
-    if not is_player then
-        local data = { uid = uid, def = id, dirty = dirty }
-        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.EntityUpdate, data))
-    else
-        local data = { pid = entity:get_player(), dirty = dirty }
-        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.PlayerFieldsUpdate, data))
-    end
+    local data = { uid = uid, def = id, dirty = dirty }
+    buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.EntityUpdate, data))
 
     client:queue_response(buffer.bytes)
 end
@@ -253,18 +233,17 @@ function module.process(client)
         local body = entity.rigidbody
 
         local id = entity:def_index()
-        local is_player = PLAYER_ENTITY_ID == id
 
-        if is_player then
+        if PLAYER_ENTITY_ID == id then
             local entity_pid = entity:get_player()
-            if entity_pid == ROOT_PID then
+            if entity_pid == ROOT_PID or entity_pid == pid or player.is_suspended(entity_pid) then
                 goto continue
             end
         end
 
         local str_name = entity:def_name()
         local _data = reg_entities[str_name] or {}
-        if not _data.config and not is_player then
+        if not _data.config then
             if not table.has(notificated_entities, str_name) then
                 logger.log("Spawn of an unregistered entity: " .. str_name)
                 table.insert(notificated_entities, str_name)
@@ -272,7 +251,7 @@ function module.process(client)
             goto continue
         end
 
-        local cur_data = __create_data(entity, is_player)
+        local cur_data = __create_data(entity)
         local data = table.set_default(entities_data, uid, {})
 
         if not data[pid] then
@@ -283,20 +262,17 @@ function module.process(client)
         local e_size = body:get_size()
         data = data[pid]
 
-        if not is_player then
-            local cul_pos = table.get_default(data, "standard_fields", "tsf_pos") or
-                (is_player and e_pos or tsf:get_pos())
-            local last_culling = culling(pid, cul_pos, e_size)
-            local cur_culling = culling(pid, e_pos, e_size)
+        local cul_pos = table.get_default(data, "standard_fields", "tsf_pos") or tsf:get_pos()
+        local last_culling = culling(pid, cul_pos, e_size)
+        local cur_culling = culling(pid, e_pos, e_size)
 
-            if not (last_culling or cur_culling) then
-                goto continue
-            end
+        if not (last_culling or cur_culling) then
+            goto continue
         end
 
-        local dirty = __get_dirty(entity, data, cur_data, p_pos, e_pos, is_player)
+        local dirty = __get_dirty(entity, data, cur_data, p_pos, e_pos)
         __update_data(data, dirty, cur_data)
-        __send_dirty(entity, uid, id, dirty, client, is_player)
+        __send_dirty(entity, uid, id, dirty, client)
 
         ::continue::
     end

@@ -73,37 +73,9 @@ KeepAlive:
   fields:
     - challenge: uint8
 
-PlayerJoined:
-  fields:
-    - pid: var
-    - username: string
-    - data: PlayerEntity
-
-PlayerMoved:
-  fields:
-    - pid: var
-    - data: PlayerEntity
-
-PlayerList:
-  fields:
-    - list: Array<Player>
-
-PlayerListAdd:
-  fields:
-    - data: Player
-
-PlayerListRemove:
-  fields:
-    - data: Player
-
 PlayerHandSlot:
   fields:
     - slot: uint8
-
-PlayerUsername:
-  fields:
-    - pid: var
-    - username: string
 
 OpenVirtualInventory:
   fields:
@@ -167,11 +139,6 @@ EntityUpdate:
 EntityDespawn:
   fields:
     - uid: var
-
-PlayerFieldsUpdate:
-  fields:
-    - pid: var
-    - dirty: Edd
 
 ParticleEmit:
   fields:

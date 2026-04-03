@@ -163,3 +163,10 @@ EntitySpawnAttempt:
   fields:
     - def: uint16
     - args: bson
+
+# action - 0: Сущность была атакована
+# action - 1: Сущность была использована (как странно это звучит)
+EntityInteract:
+  fields:
+    - uid: var
+    - action: hex

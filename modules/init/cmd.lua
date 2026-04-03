@@ -1,4 +1,6 @@
 local chat = import "core/sandbox/chat/chat"
+local accounts = import "api/v2/accounts"
+local sandbox = import "api/v2/sandbox"
 
 console.add_command(
     "chat message:str",
@@ -14,6 +16,14 @@ console.add_command(
     "stop",
     "Stops the server",
     function(args)
+        local reason = "Server is shutting down"
+        local players = sandbox.players.get_all()
+        for _, player in pairs(players) do
+            local account = accounts.by_identity.get_account(player.identity)
+            if account then
+                accounts.kick(account, reason)
+            end
+        end
         time.post_runnable(function() IS_RUNNING = false end)
         return "done"
     end

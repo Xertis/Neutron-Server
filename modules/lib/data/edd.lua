@@ -68,6 +68,10 @@ local function __get_item(buf)
     end
 end
 
+local function __get_string(buf)
+    return buf:get_string()
+end
+
 local function __decode_vec(buf)
     return {
         buf:get_float32(),
@@ -105,10 +109,17 @@ local function __get_standard(buf, has_standard)
     local has_pos = buf:get_bit()
     local has_size = buf:get_bit()
     local has_body = buf:get_bit()
+    local has_material = buf:get_bit()
+    local has_mass = buf:get_bit()
+    local has_elastic = buf:get_bit()
+
     if has_rot then standard.tsf_rot = __decode_rot(buf) end
     if has_pos then standard.tsf_pos = __decode_vec(buf) end
     if has_size then standard.tsf_size = __decode_vec(buf) end
     if has_body then standard.body_size = __decode_vec(buf) end
+    if has_material then standard.body_material = __get_string(buf) end
+    if has_mass then standard.body_mass = __get_item(buf) end
+    if has_elastic then standard.body_elastic = __get_item(buf) end
     return standard
 end
 
@@ -143,6 +154,21 @@ local function __get_models(buf, has_models)
         models[key] = buf:get_string()
     end
     return models
+end
+
+local function __get_matrix(buf, has_matrix)
+    if not has_matrix then return nil end
+    local matrix = {}
+    local count = buf:get_byte()
+    for _ = 1, count do
+        local key = buf:get_byte()
+        local unit = {}
+        for i = 1, 16 do
+            unit[i] = buf:get_float32()
+        end
+        matrix[key] = unit
+    end
+    return matrix
 end
 
 local function __get_components(buf, has_components)
@@ -215,6 +241,10 @@ local function __encode_item(buf, item)
     end
 end
 
+local function __encode_string(buf, str)
+    buf:put_string(str)
+end
+
 local function __encode_vec(buf, vec)
     buf:put_float32(vec[1])
     buf:put_float32(vec[2])
@@ -237,14 +267,23 @@ local function __encode_standard(buf, standard)
     local has_pos = standard.tsf_pos ~= nil
     local has_size = standard.tsf_size ~= nil
     local has_body = standard.body_size ~= nil
+    local has_material = standard.body_material ~= nil
+    local has_mass = standard.body_mass ~= nil
+    local has_elastic = standard.body_elastic ~= nil
     buf:put_bit(has_rot)
     buf:put_bit(has_pos)
     buf:put_bit(has_size)
     buf:put_bit(has_body)
+    buf:put_bit(has_material)
+    buf:put_bit(has_mass)
+    buf:put_bit(has_elastic)
     if has_rot then __encode_rot(buf, standard.tsf_rot) end
     if has_pos then __encode_vec(buf, standard.tsf_pos) end
     if has_size then __encode_vec(buf, standard.tsf_size) end
     if has_body then __encode_vec(buf, standard.body_size) end
+    if has_material then __encode_string(buf, standard.body_material) end
+    if has_mass then __encode_num(buf, standard.body_mass) end
+    if has_elastic then __encode_num(buf, standard.has_elastic) end
 end
 
 local function __encode_custom(buf, custom)
@@ -274,6 +313,17 @@ local function __encode_models(buf, models)
     end
 end
 
+local function __encode_matrix(buf, matrix)
+    local count = table.count_pairs(matrix)
+    buf:put_byte(count)
+    for key, val in pairs(matrix) do
+        buf:put_byte(tonumber(key))
+        for _, elem in ipairs(val) do
+            buf:put_float32(elem)
+        end
+    end
+end
+
 local function __encode_components(buf, components)
     local count = table.count_pairs(components)
     buf:put_byte(count)
@@ -289,11 +339,13 @@ function module.decode(buf)
     local has_custom = buf:get_bit()
     local has_textures = buf:get_bit()
     local has_models = buf:get_bit()
+    local has_matrix = buf:get_bit()
     local has_components = buf:get_bit()
     dirty.standard_fields = __get_standard(buf, has_standard)
     dirty.custom_fields = __get_custom(buf, has_custom)
     dirty.textures = __get_textures(buf, has_textures)
     dirty.models = __get_models(buf, has_models)
+    dirty.matrix = __get_matrix(buf, has_matrix)
     dirty.components = __get_components(buf, has_components)
     return dirty
 end
@@ -303,16 +355,19 @@ function module.encode(buf, dirty)
     local has_custom = dirty.custom_fields ~= nil
     local has_textures = dirty.textures ~= nil
     local has_models = dirty.models ~= nil
+    local has_matrix = dirty.matrix ~= nil
     local has_components = dirty.components ~= nil
     buf:put_bit(has_standard)
     buf:put_bit(has_custom)
     buf:put_bit(has_textures)
     buf:put_bit(has_models)
+    buf:put_bit(has_matrix)
     buf:put_bit(has_components)
     if has_standard then __encode_standard(buf, dirty.standard_fields) end
     if has_custom then __encode_custom(buf, dirty.custom_fields) end
     if has_textures then __encode_textures(buf, dirty.textures) end
     if has_models then __encode_models(buf, dirty.models) end
+    if has_matrix then __encode_matrix(buf, dirty.matrix) end
     if has_components then __encode_components(buf, dirty.components) end
 end
 

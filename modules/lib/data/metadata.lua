@@ -1,4 +1,4 @@
-local bson = import "lib/data/bson"
+--local bson = import "lib/data/bson"
 
 local module = {
     server = {},
@@ -6,8 +6,8 @@ local module = {
 }
 
 local PATHS = {
-    players = "world:players_data.dat",
-    server = IS_HEADLESS and "config:server.dat" or "world:server.dat"
+    players = "world:players_data.bjson",
+    server = IS_HEADLESS and "config:server.bjson" or "world:server.bjson"
 }
 
 local PLAYERS_META = {}
@@ -54,12 +54,12 @@ function module.load()
 
     if file.exists(PATHS.players) then
         local bytes = file.read_bytes(PATHS.players)
-        PLAYERS_META = bson.deserialize(bytes)
+        PLAYERS_META = bjson.frombytes(bytes)
     end
 
     if file.exists(PATHS.server) then
         local bytes = file.read_bytes(PATHS.server)
-        SERVER_META = bson.deserialize(bytes)
+        SERVER_META = bjson.frombytes(bytes)
     end
 
     logger.log(string.format("PLAYERS_META:\n\n%s\n", json.tostring(PLAYERS_META)), nil, true)
@@ -69,8 +69,8 @@ end
 function module.save()
     logger.log("Saving metadata...")
 
-    file.write_bytes(PATHS.players, bson.serialize(PLAYERS_META))
-    file.write_bytes(PATHS.server, bson.serialize(SERVER_META))
+    file.write_bytes(PATHS.players, bjson.tobytes(PLAYERS_META, true))
+    file.write_bytes(PATHS.server, bjson.tobytes(SERVER_META, true))
 
     logger.log(string.format("PLAYERS_META:\n\n%s\n", json.tostring(PLAYERS_META)), nil, true)
     logger.log(string.format("SERVER_META:\n\n%s\n", json.tostring(SERVER_META)), nil, true)

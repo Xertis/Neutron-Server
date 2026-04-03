@@ -24,6 +24,12 @@ IS_RUNNING = true
 world.open_main()
 
 metadata.load()
+
+time.post_runnable(function()
+    logger.log("run post init")
+    import "server:init/post"
+end)
+
 server = server.new(CONFIG.server.port)
 server:start_main()
 

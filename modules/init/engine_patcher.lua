@@ -13,7 +13,8 @@ end
 if IS_HEADLESS then
     local skeletons_info = {
         textures = {},
-        models = {}
+        models = {},
+        matrix = {}
     }
 
     __skeleton.set_texture = function(id, key, texture)
@@ -22,6 +23,10 @@ if IS_HEADLESS then
 
     __skeleton.set_model = function(id, key, model)
         table.set_default(skeletons_info.models, id, {})[key] = model
+    end
+
+    __skeleton.set_matrix = function(id, key, matrix)
+        table.set_default(skeletons_info.matrix, id, {})[key] = matrix
     end
 
     __skeleton.get_texture = function(id, key)
@@ -33,6 +38,13 @@ if IS_HEADLESS then
 
     __skeleton.get_model = function(id, key)
         local skeleton = skeletons_info.models[id]
+        if skeleton then
+            return skeleton[key]
+        end
+    end
+
+    __skeleton.get_matrix = function(id, key)
+        local skeleton = skeletons_info.matrix[id]
         if skeleton then
             return skeleton[key]
         end

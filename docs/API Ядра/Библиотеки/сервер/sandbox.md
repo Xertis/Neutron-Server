@@ -93,15 +93,3 @@ api.sandbox.players.by_username.is_online(username: string) -> boolean
 api.sandbox.players.by_identity.is_online(identity: string) -> boolean
 
 ```
-
-## Синхронизация игроков
-
-```lua
--- Изменяет состояние игрока (позиция, ротация, читы)
--- и синхронизирует эти данные с клиентом.
-api.sandbox.players.sync_states(
-    player: Player,
-    states: {pos?={x,y,z}, rot?={x,y,z}, cheats?={noclip, flight}}
-)
-
-```

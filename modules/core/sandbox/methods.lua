@@ -15,7 +15,10 @@ function headless.create_player(account_player)
     local pid = player.create(account_player.username, table.count_pairs(metadata.players.get_all()) + 1)
     logger.log(string.format('Player [#%s] has been created with pid: %s', logger.shorted(account_player.identity), pid))
     account_player.pid = pid
-    account_player.entity_id = player.get_entity(account_player.pid)
+
+    time.post_runnable(function()
+        account_player.entity_id = player.get_entity(pid)
+    end)
 
     local y = 0
     local block_id = block.get(0, y, 0)
@@ -83,6 +86,8 @@ function shared.join_player(username, account)
             end
 
             player.set_name(account_player.pid, username)
+            logger.log(string.format('The username of player "%s" [#%s] has been changed to "%s"',
+                account_player.username, logger.shorted(identity), username))
             account_player.username = username
         end
     elseif status == CODES.players.DataLoss then
@@ -115,6 +120,10 @@ function shared.join_player(username, account)
         player.set_suspended(account_player.pid, false)
         logger.log(string.format('Suspend state of player "%s" changed to false', account_player.username))
     end
+
+    time.post_runnable(function()
+        account_player.entity_id = player.get_entity(account_player.pid)
+    end)
 
     return account_player
 end
