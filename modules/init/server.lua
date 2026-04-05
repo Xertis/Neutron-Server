@@ -27,7 +27,7 @@ do
 
     CONFIG = table.freeze(CONFIG)
 
-    RENDER_DISTANCE = (CONFIG.server.chunks_loading_distance + 2) * 16
+    RENDER_DISTANCE = (CONFIG.server.chunks_loading_distance - 1) * 16
 end
 
 logger.log("config initialized")

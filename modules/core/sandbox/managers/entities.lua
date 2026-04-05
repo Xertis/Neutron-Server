@@ -65,6 +65,12 @@ function module.clear_pid(pid)
     end
 end
 
+function module.clear_entity_for_pid(pid, uid)
+    if entities_data[uid] then
+        entities_data[uid][pid] = nil
+    end
+end
+
 function module.despawn(uid)
     entities_data[uid] = nil
 
