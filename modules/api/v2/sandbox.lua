@@ -11,7 +11,7 @@ local module = {
         by_identity = {}
     },
     world = {},
-    blocks = {},
+    block = {},
     inventories = {}
 }
 
@@ -105,6 +105,10 @@ end
 
 function module.inventories.get_second_inventory(player)
     return inventories_managers.get_second_inventory(player)
+end
+
+function module.block.unsync_set(...)
+    block.set(...)
 end
 
 return module
