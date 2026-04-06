@@ -107,7 +107,7 @@ function module.inventories.get_second_inventory(player)
     return inventories_managers.get_second_inventory(player)
 end
 
-function module.block.unsync_set(...)
+function module.block.unsynced_set(...)
     block.set(...)
 end
 
