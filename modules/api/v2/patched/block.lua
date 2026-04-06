@@ -1,12 +1,19 @@
-local server_echo = import "server:lib/flow/server_echo"
-local protocol = import "server:net/protocol/protocol"
+local server_echo = import "lib/flow/server_echo"
+local protocol = import "net/protocol/protocol"
 local sandbox = import "core/sandbox/methods"
 
 local global_block = _G["block"]
-
-PACK_ENV["block"] = setmetatable({}, {
-    __index = global_block,
-    __newindex = global_block,
+PACK_ENV["block"] = {
+    set = global_block.set
+}
+setmetatable(PACK_ENV["block"], {
+    __index = function(t, key)
+        local val = rawget(t, key)
+        if val ~= nil then
+            return val
+        end
+        return global_block[key]
+    end
 })
 
 local function update(x, y, z, id)
