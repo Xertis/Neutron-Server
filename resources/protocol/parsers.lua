@@ -291,14 +291,14 @@ end --@
 -- VARIABLES
 -- TO_SAVE val
 do
-    buf:put_sint16(val)
+    buf:put_int16(val)
 end --@
 
 -- @int16.read
 -- VARIABLES
 -- TO_LOAD result
 do
-    result = buf:get_sint16()
+    result = buf:get_int16()
 end --@
 
 -- @uint16.write
@@ -333,14 +333,14 @@ end --@
 -- VARIABLES
 -- TO_SAVE val
 do
-    buf:put_sint32(val)
+    buf:put_int32(val)
 end --@
 
 -- @int32.read
 -- VARIABLES
 -- TO_LOAD result
 do
-    result = buf:get_sint32()
+    result = buf:get_int32()
 end --@
 
 -- @uint32.write
@@ -492,8 +492,8 @@ end --@
 -- VARIABLES
 -- TO_SAVE chunk
 do
-    buf:put_sint16(chunk.x)
-    buf:put_sint16(chunk.z)
+    buf:put_int16(chunk.x)
+    buf:put_int16(chunk.z)
 
     buf:put_bytes(bincode.encode_varint(#chunk.data))
     buf:put_bytes(chunk.data)
@@ -503,7 +503,7 @@ end --@
 -- VARIABLES xx zz len
 -- TO_LOAD chunk
 do
-    xx, zz = buf:get_sint16(), buf:get_sint16()
+    xx, zz = buf:get_int16(), buf:get_int16()
     len = bincode.decode_varint(buf)
     chunk = {
         x = xx,

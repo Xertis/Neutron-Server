@@ -70,9 +70,9 @@ local function put_value(buf, value, type)
             buf:put_byte(127 - value)
         end
     elseif type == TYPES.names.int16 then
-        buf:put_sint16(value)
+        buf:put_int16(value)
     elseif type == TYPES.names.int32 then
-        buf:put_sint32(value)
+        buf:put_int32(value)
     elseif type == TYPES.names.int64 then
         buf:put_int64(value)
     elseif type == TYPES.names.uint8 then
@@ -109,9 +109,9 @@ local function get_value(buf, type)
             return 127 - value
         end
     elseif type == TYPES.codes.int16 then
-        return buf:get_sint16()
+        return buf:get_int16()
     elseif type == TYPES.codes.int32 then
-        return buf:get_sint32()
+        return buf:get_int32()
     elseif type == TYPES.codes.int64 then
         return buf:get_int64()
     elseif type == TYPES.codes.uint8 then

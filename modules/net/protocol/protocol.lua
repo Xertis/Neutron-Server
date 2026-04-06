@@ -11,16 +11,8 @@ logger.log("Protocol initialized")
 function protocol.create_databuffer(bytes)
     local buf = bit_buffer:new(bytes, "BE")
 
-    function buf.ownDb:put_packet(packet)
+    function buf:put_packet(packet)
         self:put_bytes(packet)
-    end
-
-    function buf.ownDb:set_be()
-        self:set_order("BE")
-    end
-
-    function buf.ownDb:set_le()
-        self:set_order("LE")
     end
 
     return buf

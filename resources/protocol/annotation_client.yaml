@@ -164,6 +164,10 @@ EntitySpawnAttempt:
     - def: uint16
     - args: bson
 
+EntityDespawn:
+  fields:
+    - uid: var
+
 # action - 0: Сущность была атакована
 # action - 1: Сущность была использована (как странно это звучит)
 EntityInteract:

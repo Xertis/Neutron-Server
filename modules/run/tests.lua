@@ -3,6 +3,7 @@ require "server:std/boot"
 LAUNCH_ATTEMPTS = 1
 
 local function tests()
+    import "server:tests/bit_buffer"
     import "server:tests/player_entity"
     import "server:tests/edd"
     import "server:tests/external_buffer"
