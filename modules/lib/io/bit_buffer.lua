@@ -184,25 +184,54 @@ function bit_buffer:get_bit()
     return bit
 end
 
-function bit_buffer:get_uint(width)
-    if width % 8 == 0 and (self.pos - 1) % 8 == 0 then
-        local num = 0
-        local bytes = self.bytes
-        local pos = self.pos
-        for i = 0, width / 8 - 1 do
-            local idx = math.ceil((pos + i * 8) / 8)
-            local byte = nil
-            if self.external_buffer then
-                byte = bytes[idx] or self.recv_func(self.external_buffer, idx)
-                while not byte do
-                    coroutine.yield()
-                    byte = self.recv_func(self.external_buffer, idx)
-                end
-            else
-                byte = bytes[idx]
-            end
-            num = num + byte * (256 ^ i)
+function bit_buffer:__get_byte(idx)
+    local bytes = self.bytes
+    local byte = nil
+    if self.external_buffer then
+        byte = self.recv_func(self.external_buffer, idx)
+        while not byte do
+            coroutine.yield()
+            byte = self.recv_func(self.external_buffer, idx)
         end
+    else
+        byte = bytes[idx]
+    end
+
+    return byte
+end
+
+function bit_buffer:__get_bytes(idx, count)
+    local bytes = Bytearray()
+
+    for i = idx, idx + count - 1 do
+        bytes:append(self:__get_byte(i))
+    end
+
+    return bytes
+end
+
+function bit_buffer:get_uint(width)
+    if width % 8 == 0 then
+        local size = width / 8
+        local bits_offset = (self.pos - 1) % 8
+        local pos = self.pos
+        local num = 0
+
+        if bits_offset == 0 then
+            for i = 0, size - 1 do
+                local idx = math.ceil((pos + i * 8) / 8)
+                local byte = self:__get_byte(idx)
+                num = num + byte * (256 ^ i)
+            end
+        else
+            local bytes = self:__get_bytes(math.ceil(pos / 8), size + 1)
+            for i = 1, size + 1 do
+                num = num + bytes[i] * (256 ^ (i - 1))
+            end
+
+            num = bit.band(bit.rshift(num, bits_offset), bit.lshift(1, width) - 1)
+        end
+
         self.pos = pos + width
         return num
     end
