@@ -41,6 +41,7 @@ entities_api.register(
                     if not pid then return end
 
                     local current_invid, current_slot = player.get_inventory(pid)
+                    if current_invid == nil then return end
                     local current_hand_item = inventory.get(current_invid, current_slot)
                     return current_hand_item
                 end

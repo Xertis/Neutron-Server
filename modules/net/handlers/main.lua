@@ -314,51 +314,27 @@ Incorrect VoxelCore version:
             table.insert(array_rules, { rule_name, rules[rule_name] })
         end
 
-        local DATA = {
-            pid = account_player.pid,
-            game_time = time.day_time_to_uint16(world.get_day_time()),
-            rules = array_rules,
-            chunks_loading_distance = math.clamp(CONFIG.server.chunks_loading_distance, 0, 255)
-        }
-
-        client:push_packet(protocol.ServerMsg.JoinSuccess, DATA)
-        logger.log("JoinSuccess has been sended")
-
         ---
 
         local state = sandbox.get_player_state(account_player)
         account_player.region_pos = { x = math.floor(state.x / 32), z = math.floor(state.z / 32) }
         client:set_active(true)
 
-        timeout_executor.push(
-            function(_client, x, y, z, x_rot, y_rot, z_rot, noclip, flight, infinite_items, instant_destruction,
-                     interaction_distance, is_last)
-                local _DATA = {
-                    pos = { x = x, y = y, z = z },
-                    rot = { x = x_rot, y = y_rot, z = z_rot },
-                    cheats = { noclip = noclip, flight = flight },
-                    infinite_items = infinite_items,
-                    instant_destruction = instant_destruction,
-                    interaction_distance = interaction_distance
-                }
-
-                client:push_packet(protocol.ServerMsg.SynchronizePlayer, { _DATA })
-
-                if is_last then
-                    _client.player.is_teleported = true
-                    events.emit("server:on_player_ready", _client)
-                end
-            end,
-            {
-                client,
-                state.x, state.y, state.z,
-                state.x_rot, state.y_rot, state.z_rot,
-                state.noclip, state.flight,
-                state.infinite_items,
-                state.instant_destruction,
-                state.interaction_distance
-            }, 3
-        )
+        client:push_packet(protocol.ServerMsg.JoinSuccess, {
+            pid = account_player.pid,
+            game_time = time.day_time_to_uint16(world.get_day_time()),
+            rules = array_rules,
+            chunks_loading_distance = math.clamp(CONFIG.server.chunks_loading_distance, 0, 255),
+            player = {
+                pos = { x = state.x, y = state.y, z = state.z },
+                rot = { x = state.x_rot, y = state.y_rot, z = state.z_rot },
+                cheats = { noclip = state.noclip, flight = state.flight },
+                infinite_items = state.infinite_items,
+                instant_destruction = state.instant_destruction,
+                interaction_distance = state.interaction_distance
+            }
+        })
+        logger.log("JoinSuccess has been sended")
 
         ---
 
@@ -374,7 +350,7 @@ Incorrect VoxelCore version:
         inventories_manager.sync(account_player, 1)
 
         client:push_packet(protocol.ServerMsg.PlayerHandSlot, { slot })
-
+        events.emit("server:on_player_ready", client)
         ---
 
         if not CONFIG.server.password_auth then
@@ -415,7 +391,7 @@ matches.general_fsm:set_default_state("idle")
 --- CASES
 matches.client_online_handler:add_case(protocol.ClientMsg.PlayerCheats, (
     function(packet, client)
-        if not client.account or not client.account.is_logged or not client.player.is_teleported then
+        if not client.account or not client.account.is_logged then
             return
         end
 
@@ -428,7 +404,7 @@ matches.client_online_handler:add_case(protocol.ClientMsg.PlayerCheats, (
 
 matches.client_online_handler:add_case(protocol.ClientMsg.PlayerRotation, (
     function(packet, client)
-        if not client.account or not client.account.is_logged or not client.player.is_teleported then
+        if not client.account or not client.account.is_logged then
             return
         end
 
@@ -442,7 +418,7 @@ matches.client_online_handler:add_case(protocol.ClientMsg.PlayerRotation, (
 
 matches.client_online_handler:add_case(protocol.ClientMsg.PlayerPosition, (
     function(packet, client)
-        if not client.account or not client.account.is_logged or not client.player.is_teleported then
+        if not client.account or not client.account.is_logged then
             return
         end
 
@@ -461,7 +437,7 @@ matches.client_online_handler:add_case(protocol.ClientMsg.PlayerPosition, (
 
 matches.client_online_handler:add_case(protocol.ClientMsg.PlayerRegion, (
     function(packet, client)
-        if not client.account or not client.account.is_logged or not client.player.is_teleported then
+        if not client.account or not client.account.is_logged then
             return
         end
 
@@ -613,7 +589,7 @@ matches.client_online_handler:add_case(protocol.ClientMsg.RequestChunks, chunks_
 
 matches.client_online_handler:add_case(protocol.ClientMsg.BlockInteract, (
     function(packet, client)
-        if not client.account or not client.account.is_logged or not client.player.is_teleported then
+        if not client.account or not client.account.is_logged then
             return
         end
 
@@ -628,7 +604,7 @@ matches.client_online_handler:add_case(protocol.ClientMsg.BlockInteract, (
 
 matches.client_online_handler:add_case(protocol.ClientMsg.BlockRegionInteract, (
     function(packet, client)
-        if not client.account or not client.account.is_logged or not client.player.is_teleported then
+        if not client.account or not client.account.is_logged then
             return
         end
 
@@ -646,9 +622,38 @@ matches.client_online_handler:add_case(protocol.ClientMsg.BlockRegionInteract, (
 
 --------
 
+local function infinite_items_check(pid, id)
+    local inventory = _G["inventory"]
+    if player.is_infinite_items(pid) == false then
+        local placed_id = item.index(block.name(id) .. ".item")
+
+        local invid, slot = player.get_inventory(pid)
+        local item_id, item_count = inventory.get(invid, slot)
+
+        if item_id ~= placed_id then
+            inventory.set(invid, slot, item_id, item_count)
+            return
+        end
+
+        local remains = item_count - 1
+
+        if remains == 0 then
+            item_id = 0
+        elseif remains < 0 then
+            inventory.set(invid, slot, item_id, item_count)
+            return
+        end
+
+        inventory.set(invid, slot, item_id, remains)
+        return true
+    end
+
+    return true
+end
+
 matches.client_online_handler:add_case(protocol.ClientMsg.BlockUpdate, (
     function(packet, client)
-        if not client.account or not client.account.is_logged or not client.player.is_teleported then
+        if not client.account or not client.account.is_logged then
             return
         end
 
@@ -657,32 +662,9 @@ matches.client_online_handler:add_case(protocol.ClientMsg.BlockUpdate, (
         end
 
         packet = packet.block
-
-        local inventory = _G["inventory"]
         local pid = client.player.pid
 
-        if player.is_infinite_items(pid) == false then
-            local placed_id = item.index(block.name(packet.id) .. ".item")
-
-            local invid, slot = player.get_inventory(pid)
-            local item_id, item_count = inventory.get(invid, slot)
-
-            if item_id ~= placed_id then
-                inventory.set(invid, slot, item_id, item_count)
-                return
-            end
-
-            local remains = item_count - 1
-
-            if remains == 0 then
-                item_id = 0
-            elseif remains < 0 then
-                inventory.set(invid, slot, item_id, item_count)
-                return
-            end
-
-            inventory.set(invid, slot, item_id, remains)
-        end
+        if not infinite_items_check(pid, packet.id) then return end
 
         sandbox.place_block({
             x = packet.pos.x,
@@ -696,7 +678,7 @@ matches.client_online_handler:add_case(protocol.ClientMsg.BlockUpdate, (
 
 matches.client_online_handler:add_case(protocol.ClientMsg.BlockRegionUpdate, (
     function(packet, client)
-        if not client.account or not client.account.is_logged or not client.player.is_teleported then
+        if not client.account or not client.account.is_logged then
             return
         end
 
@@ -707,31 +689,9 @@ matches.client_online_handler:add_case(protocol.ClientMsg.BlockRegionUpdate, (
         x = client.player.region_pos.x * 32 + x
         z = client.player.region_pos.z * 32 + z
 
-        local inventory = _G["inventory"]
         local pid = client.player.pid
 
-        if player.is_infinite_items(pid) == false then
-            local placed_id = item.index(block.name(packet.id) .. ".item")
-
-            local invid, slot = player.get_inventory(pid)
-            local item_id, item_count = inventory.get(invid, slot)
-
-            if item_id ~= placed_id then
-                inventory.set(invid, slot, item_id, item_count)
-                return
-            end
-
-            local remains = item_count - 1
-
-            if remains == 0 then
-                item_id = 0
-            elseif remains < 0 then
-                inventory.set(invid, slot, item_id, item_count)
-                return
-            end
-
-            inventory.set(invid, slot, item_id, remains)
-        end
+        if not infinite_items_check(pid, packet.id) then return end
 
         sandbox.place_block({
             x = x,
@@ -747,7 +707,7 @@ matches.client_online_handler:add_case(protocol.ClientMsg.BlockRegionUpdate, (
 
 matches.client_online_handler:add_case(protocol.ClientMsg.BlockDestroy, (
     function(packet, client)
-        if not client.account or not client.account.is_logged or not client.player.is_teleported then
+        if not client.account or not client.account.is_logged then
             return
         end
 
@@ -763,7 +723,7 @@ matches.client_online_handler:add_case(protocol.ClientMsg.BlockDestroy, (
 
 matches.client_online_handler:add_case(protocol.ClientMsg.BlockRegionDestroy, (
     function(packet, client)
-        if not client.account or not client.account.is_logged or not client.player.is_teleported then
+        if not client.account or not client.account.is_logged then
             return
         end
 
@@ -809,7 +769,7 @@ matches.client_online_handler:add_case(protocol.ClientMsg.KeepAlive, (
 
 matches.client_online_handler:add_case(protocol.ClientMsg.PlayerHandSlot, (
     function(packet, client)
-        if not client.account or not client.account.is_logged or not client.player.is_teleported then
+        if not client.account or not client.account.is_logged then
             return
         end
 
@@ -819,7 +779,7 @@ matches.client_online_handler:add_case(protocol.ClientMsg.PlayerHandSlot, (
 
 matches.client_online_handler:add_case(protocol.ClientMsg.EntitySpawnAttempt, (
     function(packet, client)
-        if not client.account or not client.account.is_logged or not client.player.is_teleported then
+        if not client.account or not client.account.is_logged then
             return
         end
 
@@ -834,7 +794,7 @@ matches.client_online_handler:add_case(protocol.ClientMsg.EntitySpawnAttempt, (
 
 matches.client_online_handler:add_case(protocol.ClientMsg.EntityInteract, (
     function(packet, client)
-        if not client.account or not client.account.is_logged or not client.player.is_teleported then
+        if not client.account or not client.account.is_logged then
             return
         end
 
@@ -870,7 +830,7 @@ matches.client_online_handler:add_case(protocol.ClientMsg.KeepAlive, (
 
 matches.client_online_handler:add_case(protocol.ClientMsg.InventoryClose, (
     function(packet, client)
-        if not client.account or not client.account.is_logged or not client.player.is_teleported then
+        if not client.account or not client.account.is_logged then
             return
         end
 
@@ -880,7 +840,7 @@ matches.client_online_handler:add_case(protocol.ClientMsg.InventoryClose, (
 
 matches.client_online_handler:add_case(protocol.ClientMsg.InventoryInteract, (
     function(packet, client)
-        if not client.account or not client.account.is_logged or not client.player.is_teleported then
+        if not client.account or not client.account.is_logged then
             return
         end
 

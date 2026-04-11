@@ -56,6 +56,7 @@ JoinSuccess:
     - game_time: uint16
     - rules: Array<Rule>
     - chunks_loading_distance: uint8
+    - player: PlayerEntity
 
 # -----------------------------------------------------------------
 # In-Game
