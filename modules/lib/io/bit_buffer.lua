@@ -184,20 +184,48 @@ function bit_buffer:get_bit()
     return bit
 end
 
-function bit_buffer:put_uint(num, width)
-    for i = 1, width do
-        self:put_bit(getExp(num, i - 1) ~= 0)
-    end
-end
-
 function bit_buffer:get_uint(width)
-    local num = 0
+    if width % 8 == 0 and (self.pos - 1) % 8 == 0 then
+        local num = 0
+        local bytes = self.bytes
+        local pos = self.pos
+        for i = 0, width / 8 - 1 do
+            local idx = math.ceil((pos + i * 8) / 8)
+            local byte = nil
+            if self.external_buffer then
+                byte = bytes[idx] or self.recv_func(self.external_buffer, idx)
+                while not byte do
+                    coroutine.yield()
+                    byte = self.recv_func(self.external_buffer, idx)
+                end
+            else
+                byte = bytes[idx]
+            end
+            num = num + byte * (256 ^ i)
+        end
+        self.pos = pos + width
+        return num
+    end
 
+    local num = 0
     for i = 1, width do
         num = putExp(num, self:get_bit() and 1 or 0, i - 1)
     end
-
     return num
+end
+
+function bit_buffer:put_uint(num, width)
+    if width % 8 == 0 and (self.pos - 1) % 8 == 0 then
+        for i = 0, width / 8 - 1 do
+            self.bytes:append(math.floor(num / (256 ^ i)) % 256)
+        end
+        self.pos = self.pos + width
+        return
+    end
+
+    for i = 1, width do
+        self:put_bit(getExp(num, i - 1) ~= 0)
+    end
 end
 
 function bit_buffer:get_position()
