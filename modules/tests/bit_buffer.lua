@@ -62,6 +62,20 @@ run_test("put_uint32/get_uint32: границы", function()
     )
 end)
 
+run_test("put_uint32/get_uint32: границы с битовым смещением", function()
+    roundtrip(
+        function(buf, v)
+            buf:put_bit(0)
+            buf:put_uint32(v)
+        end,
+        function(buf)
+            buf:get_bit()
+            return buf:get_uint32()
+        end,
+        { 0, 1, 65535, 65536, 2147483647, 4294967295 }
+    )
+end)
+
 run_test("put_int8/get_int8: -128..127", function()
     roundtrip(
         function(buf, v) buf:put_int8(v) end,
