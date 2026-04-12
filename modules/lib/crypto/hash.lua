@@ -23,6 +23,8 @@ function module.hash_mods(packs)
         pack_path = pack_path .. ':'
         local files = file.recursive_list(pack_path)
 
+        table.sort(files)
+
         files = table.filter(files, function(_, path)
             if string.ends_with(path, "png") or
                 string.starts_with(path, '.') or
