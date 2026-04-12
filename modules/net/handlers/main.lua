@@ -817,6 +817,12 @@ matches.client_online_handler:add_case(protocol.ClientMsg.EntityInteract, (
     end
 ))
 
+matches.client_online_handler:add_case(protocol.ClientMsg.EntityDespawn, (
+    function(packet, client)
+        entities_manager.clear_entity_for_pid(client.player.pid, packet.uid)
+    end
+))
+
 matches.client_online_handler:add_case(protocol.ClientMsg.KeepAlive, (
     function(packet, client)
         local challenge = packet.challenge
