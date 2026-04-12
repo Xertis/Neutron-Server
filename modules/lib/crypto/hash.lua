@@ -17,7 +17,7 @@ end
 function module.hash_mods(packs)
     packs = packs or pack.get_installed()
 
-    local data_line = ""
+    local data_hash = ""
 
     for _, pack_path in ipairs(packs) do
         pack_path = pack_path .. ':'
@@ -26,23 +26,21 @@ function module.hash_mods(packs)
         table.sort(files)
 
         files = table.filter(files, function(_, path)
-            if string.ends_with(path, "png") or
+            return not (
+                string.ends_with(path, "png") or
                 string.starts_with(path, '.') or
                 string.ends_with(path, "vec3") or
                 string.ends_with(path, "ogg") or
                 string.find(path, ".git")
-            then
-                return false
-            end
-            return true
+            )
         end)
 
         for _, abs_file_path in ipairs(files) do
-            data_line = data_line .. base64.encode(file.read_bytes(abs_file_path))
+            data_hash = sha256.sha256(data_hash .. base64.encode(file.read_bytes(abs_file_path)))
         end
     end
 
-    return module.sha256(data_line)
+    return data_hash
 end
 
 function module.equals(str, hash)
