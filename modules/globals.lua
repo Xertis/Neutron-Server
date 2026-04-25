@@ -6,7 +6,8 @@ CONFIG = {} --Инициализируется в std
 LAST_SERVER_UPDATE = -1
 
 --Песочница
-RENDER_DISTANCE = 0
+VIEW_DISTANCE = 0
+VIEW_PADDING_DEFAULT = 2
 PLAYER_ENTITY_ID = nil
 ROOT_PID = 0
 COMMAND_PREFIX = "/"

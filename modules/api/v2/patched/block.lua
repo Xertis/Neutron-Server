@@ -1,6 +1,6 @@
 local server_echo = import "lib/flow/server_echo"
 local protocol = import "net/protocol/protocol"
-local sandbox = import "core/sandbox/methods"
+local chunks_manager = import "core/sandbox/managers/chunks"
 
 local global_block = _G["block"]
 PACK_ENV["block"] = {
@@ -32,20 +32,15 @@ local function update(x, y, z, id)
     server_echo.put_event(
         function(client)
             if client.active ~= true then return end
-            local client_states = sandbox.get_player_state(client.player)
 
-            if math.euclidian2D(
-                    client_states.x,
-                    client_states.z,
-                    x,
-                    z
-                ) > RENDER_DISTANCE then
+            if not chunks_manager.is_loaded(client.player, math.floor(x / 16), math.floor(z / 16)) then
                 return
             end
 
             if not client:interceptor_process(protocol.ServerMsg.BlockChanged, data) then
                 return
             end
+
             client:queue_response(buffer.bytes)
         end
     )

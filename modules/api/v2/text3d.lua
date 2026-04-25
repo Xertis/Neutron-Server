@@ -6,6 +6,7 @@ local defaultFunctions = {
     "get_axis_x", "get_axis_y",
     "set_axis_x", "set_axis_y",
     "set_rotation", "update_settings",
+    "get_entity", "set_entity",
     "hide"
 }
 
@@ -65,6 +66,14 @@ end
 
 function Text:update_settings(preset)
     text3d_manager.update_settings(self.id, preset)
+end
+
+function Text:get_entity()
+    return text3d_manager.get_entity(self.id)
+end
+
+function Text:set_entity(entity)
+    text3d_manager.set_entity(self.id, entity)
 end
 
 for _, key in ipairs(defaultFunctions) do

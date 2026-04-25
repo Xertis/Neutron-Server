@@ -14,6 +14,9 @@ function Player.new(username, identity)
     self.pid = nil
     self.world = nil
     self.region_pos = { x = 0, z = 0 }
+    self.view_distance = VIEW_DISTANCE
+    self.view_padding = VIEW_PADDING_DEFAULT
+    self.entity_observers = {}
     self.invid = 0
     self.pending_inventories = {}
     self.temp = {}

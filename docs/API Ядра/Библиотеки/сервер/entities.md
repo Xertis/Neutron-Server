@@ -12,8 +12,9 @@
   - `body_phys` (boolean): состояние физики (вкл/выкл).
   - `body_size` (vec3): размер физического тела.
 - **custom_fields**: пользовательские поля, например, `hp`.
-- **textures**: Ключи текстур с их значениями
-- **models**: Индексы (String) костей с их моделями
+- **textures**: Ключи (string) текстур с их значениями
+- **models**: Индексы (number) костей с их моделями
+- **matrix**: Индексы (number) костей с их матрицами
 - **components**: Названия компонентов сущностей со значением их активности (true/false)
 
 ### 1.2. Основные функции
@@ -30,6 +31,20 @@ entities.register(entity_name, config, spawn_handler)
 **Сигнатура config:**
 ```lua
 {
+    -- Вызывается при первом появлении сущности на клиенте
+    -- Принимает объект игрока и uid сущности.
+    -- Возвращает таблицу аргументов, которая будет отправлена на клиент
+    on_client_spawn = function(player, uid)
+        ...
+        return { ... } -- args: table | nil
+    end,
+
+    -- Вызывается при удалении сущности на клиенте
+    -- Принимает объект игрока и uid сущности.
+    on_client_despawn = function(player, uid)
+        ...
+    end,
+
     standard_fields = {
         tsf_pos = {
             maximum_deviation = number, -- Максимальное отклонение
@@ -48,12 +63,21 @@ entities.register(entity_name, config, spawn_handler)
         key1 = {
             maximum_deviation = number, -- Максимальное отклонение
             evaluate_deviation = function(dist, cur_val, client_val) -- Оценка отклонения
+            [Необязательно] provider = function(uid, field_name) -- Получение значения поля
         },
     }
     models = {
         [index] = {
             maximum_deviation = number, -- Максимальное отклонение
             evaluate_deviation = function(dist, cur_val, client_val) -- Оценка отклонения
+            [Необязательно] provider = function(uid, field_name) -- Получение значения поля
+        },
+    }
+    matrix = {
+        [index] = {
+            maximum_deviation = number, -- Максимальное отклонение
+            evaluate_deviation = function(dist, cur_val, client_val) -- Оценка отклонения
+            [Необязательно] provider = function(uid, field_name) -- Получение значения поля
         },
     }
     components = {
@@ -74,6 +98,10 @@ entities.register(entity_name, config, spawn_handler)
     3. Значения поля на клиенте (client_val: any)
 
     функция возвращает величину отклонения, назовём это **d**, после чего, если значение выражения: `math.abs(d) > maximum_devitation` истинно, то новое значение поля отправляется на клиент
+
+>[!NOTE]
+> В связи с тем, что entity.skeleton по умолчанию не доступен в headless режиме, поля из **textures**, **models**, **matrix**
+> Имеют альтернативный способ получения значений из **provider**
 
 #### Удаление сущности
 ```lua

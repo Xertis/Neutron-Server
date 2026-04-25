@@ -1,13 +1,14 @@
 local protocol = import "net/protocol/protocol"
 local server_echo = import "lib/flow/server_echo"
+local chunks_manager = import "core/sandbox/managers/chunks"
+local EntityObserver = import "core/sandbox/classes/entity_observer"
 
 local module = {}
 local reg_entities = {}
-local entities_data = {}
 local notificated_entities = {}
 
 
-function module.register(entity_name, config, handler)
+function module.register(entity_name, config, spawn_handler)
     if config.models then
         local new_models = {}
         for index, value in pairs(config.models) do
@@ -19,7 +20,7 @@ function module.register(entity_name, config, handler)
 
     reg_entities[entity_name] = {
         config = config,
-        spawn_handler = handler
+        spawn_handler = spawn_handler
     }
     logger.log(string.format('The entity "%s" is registered.', entity_name))
 end
@@ -28,188 +29,54 @@ function module.get_reg_config(entity_name)
     return reg_entities[entity_name]
 end
 
-function module.clear_pid(pid)
-    for _, data in pairs(entities_data) do
-        if data[pid] then
-            data[pid] = nil
-        end
-    end
+function module.unload_entity(player, uid)
+    player.entity_observers[uid] = nil
 end
 
-function module.clear_entity_for_pid(pid, uid)
-    if entities_data[uid] then
-        entities_data[uid][pid] = nil
-    end
+function module.despawn_for_player(client, uid)
+    local player_obj = client.player
+
+    local observer = player_obj.entity_observers[uid]
+    if observer then observer:despawn() end
+
+    player_obj.entity_observers[uid] = nil
+    client:push_packet(protocol.ServerMsg.EntityDespawn, { uid })
 end
 
 function module.despawn(uid)
-    entities_data[uid] = nil
-
     local buffer = protocol.create_databuffer()
     buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.EntityDespawn, { uid }))
 
     server_echo.put_event(
         function(client)
-            client:queue_response(buffer.bytes)
+            local observer = client.player.entity_observers[uid]
+            if observer then
+                client.player.entity_observers[uid] = nil
+                client:queue_response(buffer.bytes)
+                observer:despawn()
+            end
         end
     )
 end
 
-local function __create_data(entity)
-    local uid = entity:get_uid()
-    local str_name = entity:def_name()
-    local tsf = entity.transform
-    local body = entity.rigidbody
-    local rig = entity.skeleton
-    local conf = nil
-    local data = {}
+function module.binding(client)
+    local player_obj = client.player
+    local pid = player_obj.pid
+    local player_pos = { player.get_pos(pid) }
 
-    conf = reg_entities[str_name].config
-    data.standard_fields = {
-        tsf_rot = tsf:get_rot(),
-        tsf_pos = tsf:get_pos(),
-        tsf_size = tsf:get_size(),
-        body_size = body:get_size(),
-        body_material = body:get_material(),
-        body_mass = body:get_mass(),
-        body_elastic = body:get_elasticity()
-    }
+    for _, uid in pairs(entities.get_all_in_radius(player_pos, player_obj.view_distance * 16)) do
+        if player_obj.entity_observers[uid] then goto continue end
 
-    if conf.textures then
-        data.textures = {}
-        for key, _ in pairs(conf.textures) do
-            data.textures[key] = rig:get_texture(key)
-        end
-    end
-
-    if conf.models then
-        data.models = {}
-        for key, _ in pairs(conf.models) do
-            data.models[key] = rig:get_model(key)
-        end
-    end
-
-    if conf.matrix then
-        data.matrix = {}
-        for key, _ in pairs(conf.matrix) do
-            data.matrix[key] = rig:get_matrix(key)
-        end
-    end
-
-    if conf.components then
-        data.components = {}
-        for component, val in pairs(conf.components) do
-            local is_on = val.provider(uid, component)
-            if type(is_on) ~= "boolean" then
-                error("Incorrect state of the component")
-            end
-            data.components[component] = is_on
-        end
-    end
-
-    local custom_fields = {}
-    for field_name, field in pairs(conf.custom_fields or conf) do
-        if conf.custom_fields then
-            local val = field.provider(uid, field_name)
-            local val_type = type(val)
-            if not table.has({ "number", "string", "boolean", "table" }, val_type) then
-                error("Non-serializable data type got: " .. val_type)
-            end
-            custom_fields[field_name] = val
-        end
-    end
-    data.custom_fields = custom_fields
-
-    return data
-end
-
-local function __get_dirty(entity, data, cur_data, p_pos, e_pos)
-    local dirty = table.deep_copy(cur_data)
-    local str_name = entity:def_name()
-    local dist = 0
-
-    dist = math.euclidian3D(
-        e_pos[1], e_pos[2], e_pos[3],
-        p_pos[1], p_pos[2], p_pos[3]
-    )
-
-    for fields_type, type in pairs(cur_data) do
-        for field_name, cur_val in pairs(type) do
-            local config = reg_entities[str_name].config[fields_type]
-            if config and config[field_name] then
-                table.set_default(data, fields_type, {})
-                local value = data[fields_type][field_name]
-                local max_deviation = config[field_name].maximum_deviation
-                local eval = config[field_name].evaluate_deviation
-                local deviation = math.abs(eval(dist, cur_val, value))
-                if deviation <= max_deviation then
-                    dirty[fields_type][field_name] = nil
-                end
-            else
-                dirty[fields_type][field_name] = nil
-            end
-        end
-    end
-
-    return dirty
-end
-
-local function __update_data(data, dirty, cur_data)
-    for fields_type, type in pairs(dirty) do
-        for field_name, _ in pairs(type) do
-            data[fields_type][field_name] = cur_data[fields_type][field_name]
-        end
-    end
-end
-
-local function __send_dirty(entity, uid, id, dirty, client)
-    if table.count_pairs(dirty.standard_fields or {}) == 0 then
-        dirty.standard_fields = nil
-    end
-    if table.count_pairs(dirty.custom_fields or {}) == 0 then
-        dirty.custom_fields = nil
-    end
-    if table.count_pairs(dirty.textures or {}) == 0 then
-        dirty.textures = nil
-    end
-    if table.count_pairs(dirty.components or {}) == 0 then
-        dirty.components = nil
-    end
-    if table.count_pairs(dirty.models or {}) == 0 then
-        dirty.models = nil
-    end
-    if table.count_pairs(dirty.matrix or {}) == 0 then
-        dirty.matrix = nil
-    end
-
-    if table.count_pairs(dirty) == 0 then
-        return
-    end
-
-    local buffer = protocol.create_databuffer()
-
-    local data = { uid = uid, def = id, dirty = dirty }
-    buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.EntityUpdate, data))
-
-    client:queue_response(buffer.bytes)
-end
-
-function module.process(client)
-    local c_player = client.player
-    local pid = c_player.pid
-    local p_pos = { player.get_pos(pid) }
-
-    for _, uid in pairs(entities.get_all_in_radius(p_pos, RENDER_DISTANCE)) do
         local entity = entities.get(uid)
-
-        if not entity then
-            goto continue
-        end
-
-        local tsf = entity.transform
-        --local body = entity.rigidbody
+        if not entity then goto continue end
 
         local id = entity:def_index()
+        local str_id = entity:def_name()
+        local entity_pos = entity.transform:get_pos()
+
+        if not chunks_manager.is_loaded(player_obj, math.floor(entity_pos[1] / 16), math.floor(entity_pos[3] / 16)) then
+            goto continue
+        end
 
         if PLAYER_ENTITY_ID == id then
             local entity_pid = entity:get_player()
@@ -218,32 +85,44 @@ function module.process(client)
             end
         end
 
-        local str_name = entity:def_name()
-        local _data = reg_entities[str_name] or {}
-        if not _data.config then
-            if not table.has(notificated_entities, str_name) then
-                logger.log("Spawn of an unregistered entity: " .. str_name)
-                table.insert(notificated_entities, str_name)
+        local info = reg_entities[str_id] or {}
+        local config = info.config
+
+        if not config then
+            if not table.has(notificated_entities, str_id) then
+                logger.log("Spawn of an unregistered entity: " .. str_id)
+                table.insert(notificated_entities, str_id)
             end
             goto continue
         end
 
-        local cur_data = __create_data(entity)
-        local data = table.set_default(entities_data, uid, {})
-
-        if not data[pid] then
-            data[pid] = {}
-        end
-
-        local e_pos = tsf:get_pos()
-        data = data[pid]
-
-        local dirty = __get_dirty(entity, data, cur_data, p_pos, e_pos)
-        __update_data(data, dirty, cur_data)
-        __send_dirty(entity, uid, id, dirty, client)
+        player_obj.entity_observers[uid] = EntityObserver.new(client, uid, config)
 
         ::continue::
     end
+end
+
+function module.update(client)
+    local player_obj = client.player
+
+    for uid, observer in pairs(player_obj.entity_observers) do
+        local entity = observer.entity
+        local entity_pos = entity.transform:get_pos()
+        if entities.get(observer.uid) and chunks_manager.is_loaded(
+                player_obj,
+                math.floor(entity_pos[1] / 16),
+                math.floor(entity_pos[3] / 16
+                )) then
+            observer:process()
+        else
+            module.despawn_for_player(client, uid)
+        end
+    end
+end
+
+function module.process(client)
+    module.binding(client)
+    module.update(client)
 end
 
 return module

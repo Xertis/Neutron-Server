@@ -38,7 +38,6 @@ local api = {
     tasks = tasks,
     constants = {
         config = CONFIG,
-        render_distance = RENDER_DISTANCE,
         tps = TPS
     }
 

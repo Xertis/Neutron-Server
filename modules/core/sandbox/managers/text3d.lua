@@ -1,3 +1,5 @@
+local chunks_manager = import "core/sandbox/managers/chunks"
+
 local module = {}
 
 local TEXTS = {}
@@ -106,14 +108,39 @@ function module.update_settings(id, preset)
     TEXTS[id].preset = preset
 end
 
-function module.get_in_radius(x, z, radius)
+function module.get_entity(id)
+    ensureText(id)
+    return TEXTS[id].entity
+end
+
+function module.set_entity(id, entity)
+    ensureText(id)
+    TEXTS[id].entity = entity
+end
+
+function module.get_in_radius(player_obj)
     local texts = {}
 
+    local radius = player_obj.view_distance
+    local x, y, z = player.get_pos(player_obj.pid)
+
     for id, text in pairs(TEXTS) do
-        local sx, sz = text.position[1], text.position[3]
-        if math.euclidian2D(x, z, sx, sz) <= radius then
-            table.insert(texts, text)
+        local tx, tz = text.position[1], text.position[3]
+        if text.entity then
+            local entity = entities.get(text.entity)
+            if entity then
+                local pos = entity.transform:get_pos()
+                tx, tz = tx + pos[1], tz + pos[3]
+            else
+                goto continue
+            end
         end
+        if math.euclidian2D(x, z, tx, tz) <= radius * 16 then
+            if chunks_manager.is_loaded(player_obj, math.floor(tx / 16), math.floor(tz / 16)) then
+                table.insert(texts, text)
+            end
+        end
+        ::continue::
     end
 
     return texts

@@ -36,7 +36,11 @@ ServerPipe:add_middleware(function(client)
     end
 
     receiver.recv(meta.buffer, client)
-    coroutine.resume(co)
+    local success, err = coroutine.resume(co)
+    if not success then
+        logger.log(err, 'P')
+        error(err)
+    end
 
     return client
 end)

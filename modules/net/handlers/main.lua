@@ -9,6 +9,7 @@ local echo = import "lib/flow/server_echo"
 local api_events = import "api/v2/events"
 local api_env = import "api/v2/env"
 local entities_manager = import "core/sandbox/managers/entities"
+local chunks_manager = import "core/sandbox/managers/chunks"
 local lib = import "lib/utils/min"
 local mfsm = import "lib/flow/multifsm"
 
@@ -91,9 +92,6 @@ end
 
 function matches.actions.Disconnect(client, reason)
     reason = reason or "No reason"
-    if client.player then
-        entities_manager.clear_pid(client.player.pid)
-    end
 
     logger.log("Aborted message: " .. reason, 'W')
 
@@ -350,7 +348,9 @@ Incorrect VoxelCore version:
         inventories_manager.sync(account_player, 1)
 
         client:push_packet(protocol.ServerMsg.PlayerHandSlot, { slot })
-        events.emit("server:on_player_ready", client)
+        time.post_runnable(function()
+            events.emit("server:on_player_ready", client)
+        end)
         ---
 
         if not CONFIG.server.password_auth then
@@ -512,7 +512,7 @@ matches.client_online_handler:add_case(protocol.ClientMsg.Disconnect, (
             end, client
         )
 
-        entities_manager.clear_pid(pid)
+        chunks_manager.unload_player(client.player)
         inventories_manager.close_inventory(client.player, true)
 
         events.emit("server:client_disconnected", client)
@@ -544,6 +544,7 @@ local function chunk_responce(packet, client, is_timeout)
         data = chunk
     }
 
+    chunks_manager.load_chunk(client.player, packet.x, packet.z)
     client:push_packet(protocol.ServerMsg.ChunkData, { chunk = DATA })
 
     return true
@@ -568,6 +569,7 @@ local function chunks_responce_optimizate(packet, client)
         local chunk = sandbox.get_chunk({ x = x, z = z })
         if chunk then
             table.insert(chunks_list, { x = x, z = z, data = chunk })
+            chunks_manager.load_chunk(client.player, x, z)
         else
             local pseudo_packet = {
                 x = x,
@@ -819,7 +821,7 @@ matches.client_online_handler:add_case(protocol.ClientMsg.EntityInteract, (
 
 matches.client_online_handler:add_case(protocol.ClientMsg.EntityDespawn, (
     function(packet, client)
-        entities_manager.clear_entity_for_pid(client.player.pid, packet.uid)
+        entities_manager.unload_entity(client.player, packet.uid)
     end
 ))
 
@@ -866,6 +868,11 @@ matches.client_online_handler:add_case(protocol.ClientMsg.InventoryInteract, (
     end
 ))
 
+matches.client_online_handler:add_case(protocol.ClientMsg.ViewDistance, (
+    function(packet, client)
+        client.player.view_distance = packet.distance
+    end
+))
 
 
 return matches

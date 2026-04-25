@@ -30,7 +30,6 @@ function module.kick(account, reason, is_soft)
         client:push_packet(protocol.ServerMsg.Disconnect, { reason = reason or "No reason" })
         logger.log(string.format('The account [#%s] was kicked for the reason: %s', account.identity, reason))
 
-        entities_manager.clear_pid(client.player.pid)
         client:kick()
     end
 

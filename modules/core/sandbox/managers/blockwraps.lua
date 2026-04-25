@@ -1,3 +1,5 @@
+local chunks_manager = import "core/sandbox/managers/chunks"
+
 local module = {}
 local WRAPS = {}
 
@@ -72,14 +74,19 @@ function module.set_tints(id, face1, face2, face3, face4, face5, face6)
     }
 end
 
-function module.get_in_radius(x, z, radius)
+function module.get_in_radius(player_obj)
     local wraps = {}
+
+    local radius = player_obj.view_distance
+    local x, y, z = player.get_pos(player_obj.pid)
 
     for _, wrap in pairs(WRAPS) do
         local pos = wrap.pos
 
-        if math.euclidian2D(x, z, pos[1], pos[3]) <= radius then
-            table.insert(wraps, wrap)
+        if math.euclidian2D(x, z, pos[1], pos[3]) <= radius * 16 then
+            if chunks_manager.is_loaded(player_obj, math.floor(pos[1] / 16), math.floor(pos[3] / 16)) then
+                table.insert(wraps, wrap)
+            end
         end
     end
 

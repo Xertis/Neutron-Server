@@ -155,10 +155,9 @@ ClientPipe:add_middleware(function(client)
     end
 
     local cplayer = client.player
-    local pos = { player.get_pos(cplayer.pid) }
 
     local cur_particles = table.set_default(cplayer.temp, "current-particles", {})
-    local particles = particles_manager.get_in_radius(pos[1], pos[3], RENDER_DISTANCE)
+    local particles = particles_manager.get_in_radius(cplayer)
     local particles_with_pid = {}
     local dirty_particles = {}
     local changed_origin_particles = {}
@@ -222,7 +221,7 @@ ClientPipe:add_middleware(function(client)
 
     for _, pid in ipairs(changed_origin_particles) do
         local particle = particles_with_pid[pid]
-        client:push_packet(protocol.ServerMsg.ParticleOrigin, { origin = particle })
+        client:push_packet(protocol.ServerMsg.ParticleOrigin, { pid = particle.pid, origin = particle.origin })
     end
 
     return client
@@ -235,10 +234,9 @@ ClientPipe:add_middleware(function(client)
     end
 
     local cplayer = client.player
-    local pos = { player.get_pos(cplayer.pid) }
 
     local client_speakers = table.set_default(cplayer.temp, "current-speakers", {})
-    local speakers = audio_manager.get_in_radius(pos[1], pos[2], pos[3], RENDER_DISTANCE)
+    local speakers = audio_manager.get_in_radius(cplayer)
 
     local stopped_speakers = {}
     local spawned_speakers = {}
@@ -289,83 +287,100 @@ ClientPipe:add_middleware(function(client)
         return client
     end
 
-    local cplayer = client.player
-    local pos = { player.get_pos(cplayer.pid) }
-
-    local client_text3ds = table.set_default(cplayer.temp, "current-text3ds", {})
-    local text3ds = text3d_manager.get_in_radius(pos[1], pos[3], RENDER_DISTANCE)
+    local cplayer         = client.player
+    local client_text3ds  = table.set_default(cplayer.temp, "current-text3ds", {})
+    local text3ds         = text3d_manager.get_in_radius(cplayer)
 
     local stopped_text3ds = {}
     local spawned_text3ds = {}
-    local changed_text3ds = {}
-    local changed_axis = {}
+    local changed_state   = {}
+    local changed_pos     = {}
+    local changed_entity  = {}
+    local changed_axis    = {}
 
-    local server_text3ds_ids = {}
-    for _, text3d in ipairs(text3ds) do
-        server_text3ds_ids[text3d.id] = true
+    local server_ids      = {}
+    for _, t in ipairs(text3ds) do
+        server_ids[t.id] = true
     end
 
-    for id, client_text3d in pairs(client_text3ds) do
-        if not server_text3ds_ids[id] then
-            table.insert(stopped_text3ds, { id = id })
+    for id in pairs(client_text3ds) do
+        if not server_ids[id] then
+            table.insert(stopped_text3ds, id)
             client_text3ds[id] = nil
         end
     end
 
-    for _, server_text3d in ipairs(text3ds) do
-        local client_text3d = client_text3ds[server_text3d.id]
+    for _, srv in ipairs(text3ds) do
+        local cli = client_text3ds[srv.id]
 
-        if not client_text3d then
-            client_text3ds[server_text3d.id] = table.copy(server_text3d)
-            table.insert(spawned_text3ds, server_text3d)
-        elseif not table.deep_equals(server_text3d, client_text3d) then
-            local temp1 = table.copy(server_text3d)
-            local temp2 = table.copy(client_text3d)
+        if not cli then
+            client_text3ds[srv.id] = table.copy(srv)
+            table.insert(spawned_text3ds, srv)
+        elseif not table.deep_equals(srv, cli) then
+            client_text3ds[srv.id] = table.copy(srv)
 
-            temp1.axisX, temp1.axisY = nil, nil
-            temp2.axisX, temp2.axisY = nil, nil
-            if not table.deep_equals(temp1, temp2) then
-                client_text3ds[server_text3d.id] = table.copy(server_text3d)
-                local text = table.conj(server_text3d, client_text3d)
-                text.id = server_text3d.id
-                table.insert(changed_text3ds, text)
-            else
-                client_text3ds[server_text3d.id] = table.copy(server_text3d)
-                if not table.deep_equals(server_text3d.axisX, client_text3d.axisX) then
-                    table.insert(changed_axis, { text = server_text3d, is_x = true })
-                end
+            local pos_changed      = not table.deep_equals(srv.position, cli.position)
+            local entity_changed   = srv.entity ~= cli.entity
+            local axisX_changed    = not table.deep_equals(srv.axisX, cli.axisX)
+            local axisY_changed    = not table.deep_equals(srv.axisY, cli.axisY)
 
-                if not table.deep_equals(server_text3d.axisY, client_text3d.axisY) then
-                    table.insert(changed_axis, { text = server_text3d, is_x = false })
-                end
+            local function core_changed(a, b)
+                return a.text ~= b.text
+                    or not table.deep_equals(a.preset, b.preset)
+                    or not table.deep_equals(a.extension, b.extension)
+            end
+
+            if core_changed(srv, cli) then
+                local diff = table.conj(srv, cli)
+                diff.id = srv.id
+                diff.axisX, diff.axisY = nil, nil
+                diff.position, diff.entity = nil, nil
+                table.insert(changed_state, diff)
+            end
+
+            if pos_changed then
+                table.insert(changed_pos, { id = srv.id, pos = srv.position })
+            end
+
+            if entity_changed then
+                table.insert(changed_entity, { id = srv.id, uid = srv.entity })
+            end
+
+            if axisX_changed then
+                table.insert(changed_axis, { id = srv.id, axis = srv.axisX or { 1, 0, 0 }, is_x = true })
+            end
+
+            if axisY_changed then
+                table.insert(changed_axis, { id = srv.id, axis = srv.axisY or { 0, 1, 0 }, is_x = false })
             end
         end
     end
 
-    for _, stopped in ipairs(stopped_text3ds) do
-        client:push_packet(protocol.ServerMsg.Text3DHide, { stopped.id })
+    -- Отправка пакетов
+    for _, id in ipairs(stopped_text3ds) do
+        client:push_packet(protocol.ServerMsg.Text3DHide, { id })
     end
 
     for _, spawned in ipairs(spawned_text3ds) do
         client:push_packet(protocol.ServerMsg.Text3DShow, { spawned })
     end
 
-    for _, changed in ipairs(changed_text3ds) do
-        client:push_packet(protocol.ServerMsg.Text3DState, { changed })
+    for _, state in ipairs(changed_state) do
+        client:push_packet(protocol.ServerMsg.Text3DState, { state })
     end
 
-    for _, changed in ipairs(changed_axis) do
-        local axis = nil
-        if changed.is_x then
-            axis = changed.text.axisX
-        else
-            axis = changed.text.axisY
-        end
+    for _, p in ipairs(changed_pos) do
+        client:push_packet(protocol.ServerMsg.Text3DPos, { p.id, p.pos })
+    end
 
+    for _, e in ipairs(changed_entity) do
+        client:push_packet(protocol.ServerMsg.Text3DEntity, { e.id, e.uid })
+    end
+
+    for _, ax in ipairs(changed_axis) do
         client:push_packet(protocol.ServerMsg.Text3DAxis, {
-            id = changed.text.id, axis = axis, is_x = changed.is_x
-        }
-        )
+            id = ax.id, axis = ax.axis, is_x = ax.is_x
+        })
     end
 
     return client
@@ -378,10 +393,9 @@ ClientPipe:add_middleware(function(client)
     end
 
     local cplayer = client.player
-    local pos = { player.get_pos(cplayer.pid) }
 
     local client_wraps = table.set_default(cplayer.temp, "current-wraps", {})
-    local wraps = wraps_manager.get_in_radius(pos[1], pos[3], RENDER_DISTANCE)
+    local wraps = wraps_manager.get_in_radius(cplayer)
 
     local to_show = {}
     local to_hide = {}
@@ -533,7 +547,7 @@ end)
 --             goto continue
 --         end
 --         local state = sandbox.get_player_state(player)
---         if math.euclidian2D(client_states.x, client_states.z, state.x, state.z) > RENDER_DISTANCE then
+--         if math.euclidian2D(client_states.x, client_states.z, state.x, state.z) > VIEW_DISTANCE then
 --             goto continue
 --         end
 --         local prev_state                  = prev_states[player.pid] or {}

@@ -15,8 +15,8 @@ local module = {
     }
 }
 
-function module.register(entity_name, config, handler)
-    entities_manager.register(entity_name, config, handler)
+function module.register(entity_name, config, spawn_handler)
+    entities_manager.register(entity_name, config, spawn_handler)
 end
 
 function module.eval.NotEquals(dist, cur_val, client_val)

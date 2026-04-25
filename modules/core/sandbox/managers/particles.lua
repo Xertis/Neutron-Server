@@ -1,3 +1,5 @@
+local chunks_manager = import "core/sandbox/managers/chunks"
+
 local module = {}
 
 local PARTICLES = {}
@@ -49,14 +51,18 @@ function module.get_pos(pid)
     return half_get_pos(particle)
 end
 
-function module.get_in_radius(x, z, radius)
+function module.get_in_radius(player_obj)
     local particles = {}
+    local radius = player_obj.view_distance
+    local x, y, z = player.get_pos(player_obj.pid)
 
     for _, particle in pairs(PARTICLES) do
         local pos = half_get_pos(particle)
         if pos then
-            if math.euclidian2D(x, z, pos[1], pos[3]) <= radius then
-                table.insert(particles, particle)
+            if math.euclidian2D(x, z, pos[1], pos[3]) <= radius * 16 then
+                if chunks_manager.is_loaded(player_obj, math.floor(pos[1] / 16), math.floor(pos[3] / 16)) then
+                    table.insert(particles, particle)
+                end
             end
         end
     end

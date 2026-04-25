@@ -97,6 +97,14 @@ PlayerRegion:
     - x: int16
     - z: int16
 
+ViewDistance:
+  fields:
+    - distance: uint8
+
+ViewPadding:
+  fields:
+    - padding: uint8
+
 InventoryInteract:
   fields:
     - inventory_id: var[W+2][R-2]

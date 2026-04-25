@@ -535,27 +535,19 @@ end --@
 -- TO_SAVE value
 do
     config = (type(value.origin) == "number" and 1 or 0) + (value.extension and 2 or 0)
-    -- 0: origin - позиция, ext нету
-    -- 1: origin - uid, ext нету
-    -- 2: origin - позиция, ext есть
-    -- 3: origin - uid, ext есть
 
-    buf:put_uint32(value.pid)
+    buf:put_bytes(bincode.encode_varint(value.pid))
     buf:put_byte(config)
 
-    --ORIGIN
-    if config == 0 or config == 3 then
+    if config == 0 or config == 2 then
         buf:put_float32(value.origin[1])
         buf:put_float32(value.origin[2])
         buf:put_float32(value.origin[3])
     else
-        buf:put_uint32(value.origin)
+        buf:put_bytes(bincode.encode_varint(value.origin))
     end
 
-    --COUNT
-    buf:put_uint16(math.clamp(value.count + 1, 0, MAX_UINT16))
-
-    --PRESET
+    buf:put_uint16(value.count + 1)
     bson.encode(buf, value.preset)
 
     if config == 2 or config == 3 then
@@ -568,56 +560,103 @@ end --@
 -- TO_LOAD value
 do
     value = {}
-    value.pid = buf:get_uint32()
+    value.pid = bincode.decode_varint(buf)
     config = buf:get_byte()
 
-    --ORIGIN
-    if config == 0 or config == 3 then
+    if config == 0 or config == 2 then
         value.origin = {
             buf:get_float32(),
             buf:get_float32(),
             buf:get_float32()
         }
     else
-        value.origin = buf:get_uint32()
+        value.origin = bincode.decode_varint(buf)
     end
 
-    --COUNT
     value.count = buf:get_uint16() - 1
-
-    --PRESET
     value.preset = bson.decode(buf)
 
-    --EXTENSION
     if config == 2 or config == 3 then
         value.extension = bson.decode(buf)
     end
 end --@
 
--- @particle_origin.write
--- VARIABLES
+-- @Text3D.write
+-- VARIABLES config
 -- TO_SAVE value
 do
-    buf:put_uint32(value.pid)
-    if type(value.origin) == "number" then
-        buf:put_bool(false)
-        buf:put_uint32(value.origin)
-    else
-        buf:put_bool(true)
-        buf:put_float32(value.origin[1])
-        buf:put_float32(value.origin[2])
-        buf:put_float32(value.origin[3])
+    config = (value.entity ~= nil and 1 or 0) + (value.extension ~= nil and 2 or 0)
+
+    buf:put_bytes(bincode.encode_varint(value.id))
+    buf:put_byte(config)
+
+    buf:put_float32(value.position[1])
+    buf:put_float32(value.position[2])
+    buf:put_float32(value.position[3])
+
+    if config == 1 or config == 3 then
+        buf:put_bytes(bincode.encode_varint(value.entity))
+    end
+
+    buf:put_string(value.text)
+
+    bson.encode(buf, value.preset)
+
+    if config == 2 or config == 3 then
+        bson.encode(buf, value.extension)
     end
 end --@
 
--- @particle_origin.read
+-- @Text3D.read
+-- VARIABLES config
+-- TO_LOAD value
+do
+    value = {}
+    value.id = bincode.decode_varint(buf)
+    config = buf:get_byte()
+
+    value.position = {
+        buf:get_float32(),
+        buf:get_float32(),
+        buf:get_float32()
+    }
+
+    if config == 1 or config == 3 then
+        value.entity = bincode.decode_varint(buf)
+    end
+
+    value.text = buf:get_string()
+
+    value.preset = bson.decode(buf)
+
+    if config == 2 or config == 3 then
+        value.extension = bson.decode(buf)
+    end
+end --@
+
+-- @origin.write
+-- VARIABLES _origin
+-- TO_SAVE value
+do
+    _origin = value.origin
+    if type(_origin) == "number" then
+        buf:put_bool(false)
+        buf:put_bytes(bincode.encode_varint(_origin))
+    else
+        buf:put_bool(true)
+        buf:put_float32(_origin[1])
+        buf:put_float32(_origin[2])
+        buf:put_float32(_origin[3])
+    end
+end --@
+
+-- @origin.read
 -- VARIABLES
 -- TO_LOAD value
 do
     value = {}
-    value.pid = buf:get_uint32()
     if not buf:get_bool() then
-        value.origin = buf:get_uint32()
+        value.origin = bincode.decode_varint(buf)
     else
         value.origin = {
             buf:get_float32(),

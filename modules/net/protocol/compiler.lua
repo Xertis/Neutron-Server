@@ -235,9 +235,26 @@ function module.load(code)
         MIN_INT64 = -9223372036854775808
     }
 
-    local func = load(code)()
-    setfenv(func, env)
-    return func
+    local keys = {}
+    local values = {}
+
+    for key in pairs(env) do
+        table.insert(keys, key)
+        table.insert(values, "e." .. key)
+    end
+
+    local header = string.format("local e = ...; local %s = %s;\n",
+        table.concat(keys, ", "),
+        table.concat(values, ", "))
+
+    local final_code = header .. code
+
+    local loader, err = load(final_code)
+    if not loader then
+        error("Ошибка компиляции байт-кода: " .. tostring(err))
+    end
+
+    return loader(env)
 end
 
 return module

@@ -1,4 +1,5 @@
 local bson = import "lib/data/bson"
+local bit_buffer = import "lib/io/bit_buffer"
 
 local MAX_UINT16 = 65535
 local MIN_UINT16 = 0
@@ -162,11 +163,55 @@ local function __get_matrix(buf, has_matrix)
     local count = buf:get_byte()
     for _ = 1, count do
         local key = buf:get_byte()
-        local unit = {}
-        for i = 1, 16 do
-            unit[i] = buf:get_float32()
+
+        local has_scale = buf:get_bit()
+        local has_rot = buf:get_bit()
+        local has_trans = buf:get_bit()
+        local has_skew = buf:get_bit()
+        local has_persp = buf:get_bit()
+
+        local scale, rot, trans, skew, persp
+
+        if has_scale then
+            scale = {}
+            scale[1] = buf:get_float16()
+            scale[2] = buf:get_float16()
+            scale[3] = buf:get_float16()
         end
-        matrix[key] = unit
+
+        if has_rot then
+            rot = __decode_rot(buf)
+        end
+
+        if has_trans then
+            trans = {}
+            trans[1] = buf:get_float32()
+            trans[2] = buf:get_float32()
+            trans[3] = buf:get_float32()
+        end
+
+        if has_skew then
+            skew = {}
+            skew[1] = buf:get_float16()
+            skew[2] = buf:get_float16()
+            skew[3] = buf:get_float16()
+        end
+
+        if has_persp then
+            persp = {}
+            persp[1] = buf:get_float32()
+            persp[2] = buf:get_float32()
+            persp[3] = buf:get_float32()
+            persp[4] = buf:get_float32()
+        end
+
+        matrix[key] = mat4.compose({
+            scale = scale,
+            rotation = rot,
+            translation = trans,
+            skew = skew,
+            perspective = persp
+        })
     end
     return matrix
 end
@@ -318,8 +363,51 @@ local function __encode_matrix(buf, matrix)
     buf:put_byte(count)
     for key, val in pairs(matrix) do
         buf:put_byte(tonumber(key))
-        for _, elem in ipairs(val) do
-            buf:put_float32(elem)
+        local decompose = mat4.decompose(val)
+        if decompose == nil then
+            debug.print(val)
+            error("алё декомпос нил")
+        end
+
+        local scale = decompose.scale
+        local rot = decompose.rotation
+        local trans = decompose.translation
+        local skew = decompose.skew
+        local persp = decompose.perspective
+
+        buf:put_bit(scale ~= nil)
+        buf:put_bit(rot ~= nil)
+        buf:put_bit(trans ~= nil)
+        buf:put_bit(skew ~= nil)
+        buf:put_bit(persp ~= nil)
+
+        if scale then
+            buf:put_float16(scale[1])
+            buf:put_float16(scale[2])
+            buf:put_float16(scale[3])
+        end
+
+        if rot then
+            __encode_rot(buf, rot)
+        end
+
+        if trans then
+            buf:put_float32(trans[1])
+            buf:put_float32(trans[2])
+            buf:put_float32(trans[3])
+        end
+
+        if skew then
+            buf:put_float16(skew[1])
+            buf:put_float16(skew[2])
+            buf:put_float16(skew[3])
+        end
+
+        if persp then
+            buf:put_float32(persp[1])
+            buf:put_float32(persp[2])
+            buf:put_float32(persp[3])
+            buf:put_float32(persp[4])
         end
     end
 end
@@ -333,7 +421,9 @@ local function __encode_components(buf, components)
     end
 end
 
-function module.decode(buf)
+function module.decode(main_buf)
+    local size = main_buf:get_uint32()
+    local buf = bit_buffer(main_buf:get_bytes(size))
     local dirty = {}
     local has_standard = buf:get_bit()
     local has_custom = buf:get_bit()
@@ -350,7 +440,8 @@ function module.decode(buf)
     return dirty
 end
 
-function module.encode(buf, dirty)
+function module.encode(main_buf, dirty)
+    local buf = bit_buffer()
     local has_standard = dirty.standard_fields ~= nil
     local has_custom = dirty.custom_fields ~= nil
     local has_textures = dirty.textures ~= nil
@@ -369,6 +460,11 @@ function module.encode(buf, dirty)
     if has_models then __encode_models(buf, dirty.models) end
     if has_matrix then __encode_matrix(buf, dirty.matrix) end
     if has_components then __encode_components(buf, dirty.components) end
+    buf:flush()
+
+    local compressed_bytes = buf.bytes
+    main_buf:put_uint32(#compressed_bytes)
+    main_buf:put_bytes(compressed_bytes)
 end
 
 return module

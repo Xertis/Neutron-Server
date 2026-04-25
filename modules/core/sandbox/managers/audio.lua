@@ -2,6 +2,8 @@
   Work In Progress
 ]]
 
+local chunks_manager = import "core/sandbox/managers/chunks"
+
 local module = {}
 
 local SPEAKERS = {}
@@ -280,7 +282,7 @@ function module.get_time_left(speaker)
 
     if not SOUNDS_DURATIONS[sound.path] then
         logger.log(
-        'The "audio.get_duration" function in the API returns 0 for technical reasons, please use "audio.register_duration" to fix it',
+            'The "audio.get_duration" function in the API returns 0 for technical reasons, please use "audio.register_duration" to fix it',
             'W')
         return 0
     else
@@ -301,8 +303,10 @@ function module.register_duration(path, duration)
     SOUNDS_DURATIONS[path] = duration
 end
 
-function module.get_in_radius(x, y, z, radius)
+function module.get_in_radius(player_obj)
     local speakers = {}
+    local radius = player_obj.view_distance
+    local x, y, z = player.get_pos(player_obj.pid)
 
     for id, speaker in pairs(SPEAKERS) do
         local sx, sy, sz = speaker.x, speaker.y, speaker.z
@@ -313,8 +317,10 @@ function module.get_in_radius(x, y, z, radius)
         end
 
         if sx then
-            if math.euclidian3D(x, y, z, sx, sy, sz) <= radius then
-                table.insert(speakers, speaker)
+            if math.euclidian3D(x, y, z, sx, sy, sz) <= radius * 16 then
+                if chunks_manager.is_loaded(player_obj, math.floor(sx / 16), math.floor(sz / 16)) then
+                    table.insert(speakers, speaker)
+                end
             end
         else
             table.insert(speakers, speaker)

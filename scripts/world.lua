@@ -24,14 +24,8 @@ function self.on_block_update(blockid, x, y, z, playerid)
     api.server_echo.put_event(
         function(client)
             if client.active ~= true then return end
-            local client_states = api.sandbox.get_player_state(client.player)
 
-            if math.euclidian2D(
-                    client_states.x,
-                    client_states.z,
-                    x,
-                    z
-                ) > RENDER_DISTANCE then
+            if not api.chunks_manager.is_loaded(client.player, math.floor(x / 16), math.floor(z / 16)) then
                 return
             end
 
@@ -59,7 +53,8 @@ function on_world_open()
     api = {
         server_echo = import "lib/flow/server_echo",
         protocol = import "net/protocol/protocol",
-        sandbox = import "core/sandbox/methods"
+        sandbox = import "core/sandbox/methods",
+        chunks_manager = import "core/sandbox/managers/chunks"
     }
 end
 
