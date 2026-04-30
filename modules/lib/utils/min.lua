@@ -32,7 +32,9 @@ function shared.world.preparation_main()
     app.config_packs(table.merge(packs, plugins), {})
     app.load_content()
 
-    if not file.exists("user:worlds/" .. CONFIG.game.main_world .. "/world.json") then
+    local world_path = "user:worlds/" .. CONFIG.game.main_world
+
+    if not file.exists(world_path .. "/world.json") then
         logger.log("Creating a main world...")
         local name = CONFIG.game.main_world
         local main_world = CONFIG.game.worlds[name]
@@ -93,6 +95,20 @@ function headless.world.open_main()
     logger.log("Discovery of the main world")
     app.reset_content({ "server" })
     app.open_world(CONFIG.game.main_world)
+
+    do
+        local world_path = "user:worlds/" .. CONFIG.game.main_world
+        local player_json_path = world_path .. "/player.json"
+        local player_json = json.parse(file.read(player_json_path))
+
+        for id, _player in ipairs(player_json.players) do
+            if _player.suspended == false and _player.id ~= ROOT_PID then
+                logger.log(string.format("Suspend state of player \"%s\" changed to true", _player.name or "nil"))
+                player.set_suspended(_player.id, true)
+            end
+        end
+    end
+
     player.set_suspended(ROOT_PID, false)
 
     time.post_runnable(function()

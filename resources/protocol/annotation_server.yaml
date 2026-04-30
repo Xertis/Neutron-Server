@@ -78,6 +78,18 @@ PlayerHandSlot:
   fields:
     - slot: uint8
 
+OnlinePlayersList:
+  fields:
+    - list: Array<Pair<string, var>>
+
+OnlinePlayersListAdd:
+  fields:
+    - data: Pair<string, var>
+
+OnlinePlayersListRemove:
+  fields:
+    - pid: var
+
 OpenVirtualInventory:
   fields:
     - layout: string
@@ -174,7 +186,7 @@ AudioStop:
 
 Text3DShow:
   fields:
-    - data: bson
+    - data: Text3D
 
 Text3DPos:
   fields:
@@ -188,8 +200,7 @@ Text3DEntity:
 
 Text3DState:
   fields:
-    - state: bson
-
+    - state: Text3D
 Text3DAxis:
   fields:
     - id: var

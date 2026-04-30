@@ -27,49 +27,115 @@ local function replace_substr(str, replacement, start_pos, end_pos)
     return str:sub(1, start_pos - 1) .. replacement .. str:sub(end_pos + 1)
 end
 
+local function split_top_level(str)
+    local parts        = {}
+    local depth_angle  = 0
+    local depth_square = 0
+    local depth_curly  = 0
+    local current      = ""
+
+    for i = 1, #str do
+        local c = str:sub(i, i)
+        if c == "<" then
+            depth_angle = depth_angle + 1
+        elseif c == ">" then
+            depth_angle = depth_angle - 1
+        elseif c == "[" then
+            depth_square = depth_square + 1
+        elseif c == "]" then
+            depth_square = depth_square - 1
+        elseif c == "{" then
+            depth_curly = depth_curly + 1
+        elseif c == "}" then
+            depth_curly = depth_curly - 1
+        elseif c == "," and depth_angle == 0 and depth_square == 0 and depth_curly == 0 then
+            table.insert(parts, current:match("^%s*(.-)%s*$"))
+            current = ""
+            goto continue
+        end
+        current = current .. c
+        ::continue::
+    end
+
+    if #current > 0 then
+        table.insert(parts, current:match("^%s*(.-)%s*$"))
+    end
+    return parts
+end
+
 local function find_foreign_call(code)
-    local pattern = "Foreign%s*%(%s*([^)]*)%s*%)"
-    local start_pos, end_pos, arg = code:find(pattern)
+    local pattern = "Foreign(%d*)%s*%(%s*([^)]*)%s*%)"
+    local start_pos, end_pos, num_str, arg = code:find(pattern)
     if start_pos then
         arg = arg and arg:match("^%s*(.-)%s*$") or ""
-        return { start = start_pos, finish = end_pos, res_token = arg }
+        local index = 1
+        if num_str ~= "" then
+            index = tonumber(num_str)
+            if index == 0 then index = 1 end
+        end
+        return { start = start_pos, finish = end_pos, res_token = arg, index = index }
     end
     return nil
 end
 
+local function pop_last_bracket(str)
+    local s = str:match("^(.-)%s*$")
+    if s:sub(-1) ~= "]" then return nil, str end
+
+    local depth = 0
+    for i = #s, 1, -1 do
+        local c = s:sub(i, i)
+        if c == "]" then
+            depth = depth + 1
+        elseif c == "[" then
+            depth = depth - 1
+            if depth == 0 then
+                local content   = s:sub(i + 1, #s - 1)
+                local remaining = s:sub(1, i - 1)
+                return content, remaining
+            end
+        end
+    end
+    return nil, str
+end
+
 local function parse_type(str)
-    local w_expr = nil
-    local r_expr = nil
+    local w_expr, r_expr = nil, nil
     local base_str = str
 
     while true do
-        local content = base_str:match("%[([^%]]+)%]%s*$")
+        local content, remaining = pop_last_bracket(base_str)
         if not content then break end
-        content = content:match("^%s*(.-)%s*$")
 
+        content = content:match("^%s*(.-)%s*$")
         if content:find("W") then
             w_expr = content
         elseif content:find("R") then
             r_expr = content
         end
 
-        base_str = base_str:gsub("%[%s*[^%]]+%s*%]%s*$", "")
+        base_str = remaining
     end
 
     local outer, inner_str = base_str:match("^%s*([^<>]+)%s*<%s*(.*)%s*>%s*$")
     if outer then
+        local parts = split_top_level(inner_str)
+        local inners = {}
+        for _, part in ipairs(parts) do
+            table.insert(inners, parse_type(part))
+        end
         return {
             type_name = outer:match("^%s*(.-)%s*$"),
-            inner = parse_type(inner_str),
-            w_expr = w_expr,
-            r_expr = r_expr
+            inners    = inners,
+            w_expr    = w_expr,
+            r_expr    = r_expr,
         }
     else
         return {
             type_name = base_str:match("^%s*(.-)%s*$"),
-            inner = nil,
-            w_expr = w_expr,
-            r_expr = r_expr
+            inners    = nil,
+            w_expr    = w_expr,
+            r_expr    = r_expr,
         }
     end
 end
@@ -92,20 +158,26 @@ local function compile_encode_type(type_node, cur_index, override_save_token)
     local save_token = tokens[to_save]
 
     if type_node.w_expr then
-        local w_tokens = { W = save_token }
-        local expr = tokenizer.variables_replace(type_node.w_expr, w_tokens)
+        local expr = tokenizer.variables_replace(type_node.w_expr, { W = save_token })
         code = string.format("    %s = %s\n%s", save_token, expr, code)
     end
 
-    if type_node.inner then
+    if type_node.inners then
         local replaced = true
         while replaced do
             replaced = false
             local foreign = find_foreign_call(code)
             if foreign then
                 replaced = true
-                local res_token = foreign.res_token
-                local inner_code, _, new_cur_index = compile_encode_type(type_node.inner, cur_index, res_token)
+                local inner = type_node.inners[foreign.index]
+                if not inner then
+                    error(string.format(
+                        "Foreign%d: тип '%s' имеет только %d inner-типов",
+                        foreign.index, type_name, #type_node.inners
+                    ))
+                end
+                local res_token = foreign.res_token ~= "" and foreign.res_token or nil
+                local inner_code, _, new_cur_index = compile_encode_type(inner, cur_index, res_token)
                 code = replace_substr(code, inner_code, foreign.start, foreign.finish)
                 cur_index = new_cur_index
             end
@@ -132,15 +204,22 @@ local function compile_decode_type(type_node, cur_index, override_load_token)
     local code = tokenizer.variables_replace(info.code, tokens)
     local load_token = tokens[to_load]
 
-    if type_node.inner then
+    if type_node.inners then
         local replaced = true
         while replaced do
             replaced = false
             local foreign = find_foreign_call(code)
             if foreign then
                 replaced = true
-                local res_token = foreign.res_token
-                local inner_code, _, new_cur_index = compile_decode_type(type_node.inner, cur_index, res_token)
+                local inner = type_node.inners[foreign.index]
+                if not inner then
+                    error(string.format(
+                        "Foreign%d: тип '%s' имеет только %d inner-типов",
+                        foreign.index, type_name, #type_node.inners
+                    ))
+                end
+                local res_token = foreign.res_token ~= "" and foreign.res_token or nil
+                local inner_code, _, new_cur_index = compile_decode_type(inner, cur_index, res_token)
                 code = replace_substr(code, inner_code, foreign.start, foreign.finish)
                 cur_index = new_cur_index
             end
@@ -148,8 +227,7 @@ local function compile_decode_type(type_node, cur_index, override_load_token)
     end
 
     if type_node.r_expr then
-        local r_tokens = { R = load_token }
-        local expr = tokenizer.variables_replace(type_node.r_expr, r_tokens)
+        local expr = tokenizer.variables_replace(type_node.r_expr, { R = load_token })
         code = code .. string.format("\n    %s = %s", load_token, expr)
     end
 

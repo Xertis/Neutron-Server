@@ -26,7 +26,8 @@ function module.show(position, text, preset, extension)
         text = text,
         preset = preset,
         extension = extension,
-        id = NEXT_ID
+        id = NEXT_ID,
+        blind = {}
     }
 
     NEXT_ID = NEXT_ID + 1
@@ -118,13 +119,26 @@ function module.set_entity(id, entity)
     TEXTS[id].entity = entity
 end
 
+function module.add_blind(id, player)
+    ensureText(id)
+    TEXTS[id].blind[player.pid] = true
+end
+
+function module.remove_blind(id, player)
+    ensureText(id)
+    TEXTS[id].blind[player.pid] = nil
+end
+
 function module.get_in_radius(player_obj)
     local texts = {}
 
     local radius = player_obj.view_distance
     local x, y, z = player.get_pos(player_obj.pid)
+    local pid = player_obj.pid
 
     for id, text in pairs(TEXTS) do
+        if text.blind[pid] then goto continue end
+
         local tx, tz = text.position[1], text.position[3]
         if text.entity then
             local entity = entities.get(text.entity)

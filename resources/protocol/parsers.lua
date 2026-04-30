@@ -793,6 +793,25 @@ do
     Foreign(vec[4])
 end --@
 
+-- @Pair.write
+-- VARIABLES
+-- TO_SAVE pair
+-- FOREIGN
+do
+    Foreign1(pair[1])
+    Foreign2(pair[2])
+end --@
+
+-- @Pair.read
+-- VARIABLES
+-- TO_LOAD pair
+-- FOREIGN
+do
+    pair = {}
+    Foreign1(pair[1])
+    Foreign2(pair[2])
+end --@
+
 -- @Vec3.write
 -- VARIABLES
 -- TO_SAVE vec

@@ -195,10 +195,8 @@ function bit_buffer:__get_byte(idx)
         end
     else
         byte = bytes[idx]
-        if byte == nil and not self.current_is_zero then
-            byte = self.current
-        end
     end
+
     return byte
 end
 
@@ -231,7 +229,7 @@ function bit_buffer:get_uint(width)
                 num = num + bytes[i] * (256 ^ (i - 1))
             end
 
-            num = math.floor(num / (2 ^ bits_offset)) % (2 ^ width)
+            num = bit.band(bit.rshift(num, bits_offset), bit.lshift(1, width) - 1)
         end
 
         self.pos = pos + width
@@ -245,40 +243,12 @@ function bit_buffer:get_uint(width)
     return num
 end
 
---[[
-Лежит:
-0 - 1 бит
-надо положить (1111 1111)
-мы у (1111 1111) удаляем из начала 8-offset битов
-(...1)
-выполняем bor для offset битов и кладём туда биты из байт
-]]
 function bit_buffer:put_uint(num, width)
-    if width % 8 == 0 then
-        local size = width / 8
-        local bits_offset = (self.pos - 1) % 8
-        local pos = self.pos
-
-        if bits_offset == 0 then
-            for i = 0, size - 1 do
-                self.bytes:append(math.floor(num / (256 ^ i)) % 256)
-            end
-        else
-            local low_part = 8 - bits_offset
-            local low_bits = num % (2 ^ low_part)
-            self.bytes:append(self.current + low_bits * (2 ^ bits_offset))
-
-            local remaining = math.floor(num / (2 ^ low_part))
-            for _ = 1, size - 1 do
-                self.bytes:append(remaining % 256)
-                remaining = math.floor(remaining / 256)
-            end
-
-            self.current = remaining % 256
-            self.current_is_zero = false
+    if width % 8 == 0 and (self.pos - 1) % 8 == 0 then
+        for i = 0, width / 8 - 1 do
+            self.bytes:append(math.floor(num / (256 ^ i)) % 256)
         end
-
-        self.pos = pos + width
+        self.pos = self.pos + width
         return
     end
 
@@ -395,18 +365,13 @@ function bit_buffer:put_float16(val)
         sign = 1
         val = -val
     end
-
     local mantissa, exponent = 0, 0
-
-    if val == math.huge then
-        exponent = 31
-        mantissa = 0
-    elseif val ~= 0 then
+    if val ~= 0 then
         local m, e = math.frexp(val)
         mantissa = (m * 2 - 1) * 1024.0
         exponent = e + 14
         if exponent < 1 then
-            mantissa = math.max(0, math.floor(m * math.ldexp(1.0, e + 24) + 0.5))
+            mantissa = math.floor(mantissa * math.ldexp(0.5, 1 - exponent) + 0.5)
             exponent = 0
         elseif exponent >= 31 then
             exponent = 31
@@ -420,7 +385,6 @@ function bit_buffer:put_float16(val)
             end
         end
     end
-
     local byte0 = mantissa % 256
     local byte1 = math.floor(mantissa / 256) + (exponent % 32) * 4 + sign * 128
 

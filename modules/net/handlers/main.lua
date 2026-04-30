@@ -351,6 +351,18 @@ Incorrect VoxelCore version:
         time.post_runnable(function()
             events.emit("server:on_player_ready", client)
         end)
+
+        local online_players = {}
+        for name, obj in pairs(sandbox.get_players()) do
+            online_players[#online_players + 1] = { name, obj.pid }
+        end
+
+        client:push_packet(protocol.ServerMsg.OnlinePlayersList, { list = online_players })
+        echo.put_event(function(_client)
+            _client:push_packet(protocol.ServerMsg.OnlinePlayersListAdd, {
+                { account_player.username, account_player.pid }
+            })
+        end, client)
         ---
 
         if not CONFIG.server.password_auth then
@@ -494,6 +506,7 @@ matches.client_online_handler:add_case(protocol.ClientMsg.Disconnect, (
         end
 
         local pid = client.player.pid
+        local uid = client.player.entity_id
         local username = client.player.username
 
         local message = string.format("[#ffff00] [%s] %s", username, "left the game")
@@ -503,7 +516,10 @@ matches.client_online_handler:add_case(protocol.ClientMsg.Disconnect, (
 
         local buffer = protocol.create_databuffer()
         buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.EntityDespawn, {
-            uid = client.player.entity_id
+            uid = uid
+        }))
+        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.OnlinePlayersListRemove, {
+            pid = pid,
         }))
 
         echo.put_event(

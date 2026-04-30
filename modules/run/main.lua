@@ -110,16 +110,6 @@ local function main()
     world.close_main()
 end
 
--- do
---     local compiler = require "server:net/protocol/compiler"
---     local bb = require "server:lib/io/bit_buffer":new()
-
---     local decoder = compiler.compile_decoder({"particle"})
---     local encoder = compiler.compile_encoder({"particle"})
-
---     print(encoder)
---     print(decoder)
--- end
 
 local PROCESS_NAME = "KERNEL-BOOTLOADER"
 while LAUNCH_ATTEMPTS <= 1 do
