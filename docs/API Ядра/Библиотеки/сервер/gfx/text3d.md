@@ -29,6 +29,7 @@ text3d.set_axis_x(id, axis)
 text3d.set_axis_y(id, axis)
 text3d.set_rotation(id, rotation)
 text3d.update_settings(id, preset)
+...
 ```
 
 ## Объект Text
@@ -88,6 +89,20 @@ text:set_rotation(rotation: mat4)
 text:update_settings(preset: table)
 ```
 Обновляет настройки отображения текста.
+
+```lua
+text:add_blind(player: Player)
+text:remove_blind(player: Player)
+```
+Добавляет/убирает игроков из списка тех, кто не может видеть этот 3d text
+
+
+```lua
+text:get_entity() -> int
+text:set_entity(entity: int)
+```
+Геттер и сеттер сущности, к позиции которой привязан 3D текст. Позиция, устанавливаемая через text:set_pos, в таком случае, относительна позиции сущности.
+
 ## Пример использования
 
 ```lua
