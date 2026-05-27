@@ -7,7 +7,9 @@ local defaultFunctions = {
     "set_axis_x", "set_axis_y",
     "set_rotation", "update_settings",
     "get_entity", "set_entity",
-    "hide", "add_blind", "remove_blind"
+    "hide",
+    "add_blind", "remove_blind",
+    "add_sighted", "remove_sighted"
 }
 
 local module = {}
@@ -82,6 +84,14 @@ end
 
 function Text:remove_blind(player_obj)
     text3d_manager.remove_blind(self.id, player_obj)
+end
+
+function Text:add_sighted(player_obj)
+    text3d_manager.add_sighted(self.id, player_obj)
+end
+
+function Text:remove_sighted(player_obj)
+    text3d_manager.remove_sighted(self.id, player_obj)
 end
 
 for _, key in ipairs(defaultFunctions) do

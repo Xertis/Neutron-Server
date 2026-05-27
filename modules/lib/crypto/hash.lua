@@ -36,7 +36,14 @@ function module.hash_mods(packs)
         end)
 
         for _, abs_file_path in ipairs(files) do
-            data_hash = sha256.sha256(data_hash .. base64.encode(file.read_bytes(abs_file_path)))
+            local bytes = file.read_bytes(abs_file_path)
+            local validated_bytes = Bytearray()
+            for byte in ipairs(bytes) do
+                if byte ~= 13 then
+                    validated_bytes:append(byte)
+                end
+            end
+            data_hash = sha256.sha256(data_hash .. base64.encode(validated_bytes))
         end
     end
 

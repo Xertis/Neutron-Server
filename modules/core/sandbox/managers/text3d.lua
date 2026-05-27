@@ -27,7 +27,8 @@ function module.show(position, text, preset, extension)
         preset = preset,
         extension = extension,
         id = NEXT_ID,
-        blind = {}
+        blind = {},
+        sighted = {}
     }
 
     NEXT_ID = NEXT_ID + 1
@@ -129,6 +130,16 @@ function module.remove_blind(id, player)
     TEXTS[id].blind[player.pid] = nil
 end
 
+function module.add_sighted(id, player)
+    ensureText(id)
+    TEXTS[id].sighted[player.pid] = true
+end
+
+function module.remove_sighted(id, player)
+    ensureText(id)
+    TEXTS[id].sighted[player.pid] = nil
+end
+
 function module.get_in_radius(player_obj)
     local texts = {}
 
@@ -138,6 +149,7 @@ function module.get_in_radius(player_obj)
 
     for id, text in pairs(TEXTS) do
         if text.blind[pid] then goto continue end
+        if table.count_pairs(text.sighted) > 0 and not text.sighted[pid] then goto continue end
 
         local tx, tz = text.position[1], text.position[3]
         if text.entity then
@@ -146,6 +158,7 @@ function module.get_in_radius(player_obj)
                 local pos = entity.transform:get_pos()
                 tx, tz = tx + pos[1], tz + pos[3]
             else
+                module.hide(id)
                 goto continue
             end
         end

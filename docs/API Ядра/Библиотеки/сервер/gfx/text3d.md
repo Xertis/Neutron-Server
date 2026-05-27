@@ -94,7 +94,14 @@ text:update_settings(preset: table)
 text:add_blind(player: Player)
 text:remove_blind(player: Player)
 ```
-Добавляет/убирает игроков из списка тех, кто не может видеть этот 3d text
+Добавляет/убирает игроков из списка тех, кто НЕ может видеть этот 3d text
+
+```lua
+text:add_sighted(player: Player)
+text:remove_sighted(player: Player)
+```
+Добавляет/убирает игроков из списка тех, кто может видеть этот 3d text
+Если список пуст, текст может видеть каждый
 
 
 ```lua
