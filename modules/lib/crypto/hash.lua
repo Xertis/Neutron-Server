@@ -38,7 +38,7 @@ function module.hash_mods(packs)
         for _, abs_file_path in ipairs(files) do
             local bytes = file.read_bytes(abs_file_path)
             local validated_bytes = Bytearray()
-            for byte in ipairs(bytes) do
+            for _, byte in ipairs(bytes) do
                 if byte ~= 13 then
                     validated_bytes:append(byte)
                 end
