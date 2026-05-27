@@ -60,7 +60,7 @@ function module.load()
     if file.exists(READ_PATH) then
         local data = bson.deserialize(file.read_bytes(READ_PATH))
         MAX_WID = data.max_wid
-        WEATHERS = data["weather-conditions"]
+        WEATHERS = data["weather-conditions"] or {}
     end
 end
 
