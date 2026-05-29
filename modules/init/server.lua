@@ -56,7 +56,7 @@ if IS_HEADLESS then
         app.set_setting(sname, CONFIG.server[cname])
     end
 
-    app.set_setting("debug.do-write-lights", false)
+    --app.set_setting("debug.do-write-lights", false)
 end
 
 --Другое
