@@ -817,6 +817,8 @@ matches.client_online_handler:add_case(protocol.ClientMsg.EntityInteract, (
         end
 
         local entity = entities.get(packet.uid)
+        if not entity or entity == -1 then return end
+
         local player_pid = client.player.pid
         local player_eid = client.player.entity_id
         if packet.action == 0 then
