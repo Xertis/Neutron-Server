@@ -110,6 +110,7 @@ function headless.world.open_main()
     end
 
     player.set_suspended(ROOT_PID, false)
+    player.set_loading_chunks(ROOT_PID, true)
 
     time.post_runnable(function()
         player.set_noclip(ROOT_PID, true)
