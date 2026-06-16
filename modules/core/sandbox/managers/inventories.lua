@@ -402,11 +402,11 @@ function module.interact(player, id, slot, action, mode, item_id, client_checksu
     if client_checksum then
         local current_server_checksum = server_checksum(player, id)
         if current_server_checksum ~= client_checksum then
-            mode.sync(player, id)
+            module.sync(player, id)
         end
     end
 
-    mode.echo_sync(invid, player.identity)
+    module.echo_sync(invid, player.identity)
 
     return true
 end
