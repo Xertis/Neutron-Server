@@ -1,27 +1,22 @@
 local hash = import "lib/crypto/hash"
 
-local self = Module({
+local module = {
     server = {},
     world = {},
     roles = {},
     validate = {},
     hash = hash
-})
-
-local shared = self.shared
-local headless = self.headless
-local single = self.single
+}
 
 ---WORLD---
-function single.world.preparation_main() end
 
-function shared.world.preparation_main()
+function module.world.preparation_main()
     --Загружаем мир
     logger.log("Preparing world for run...")
     local packs = table.freeze_unpack(CONFIG.game.content_packs)
     local plugins = table.freeze_unpack(CONFIG.game.plugins)
 
-    if not self.validate.plugins() then
+    if not module.validate.plugins() then
         logger.log("Plugins should not add new content.", "E")
         error("Plugins should not add new content.")
     end
@@ -79,19 +74,7 @@ function shared.world.preparation_main()
     end
 end
 
-function single.world.open_main()
-    logger.log("Discovery of the main world")
-
-    time.post_runnable(function()
-        local root_entity = entities.get(player.get_entity(ROOT_PID))
-        PLAYER_ENTITY_ID = root_entity:def_index()
-    end)
-
-    -- Загружаем команды
-    import "init/cmd"
-end
-
-function headless.world.open_main()
+function module.world.open_main()
     logger.log("Discovery of the main world")
     app.reset_content({ "server" })
     app.open_world(CONFIG.game.main_world)
@@ -126,13 +109,13 @@ function headless.world.open_main()
     import "init/cmd"
 end
 
-function headless.world.close_main()
+function module.world.close_main()
     player.set_suspended(ROOT_PID, true)
 
     app.close_world(true)
 end
 
-function shared.roles.is_higher(role1, role2)
+function module.roles.is_higher(role1, role2)
     if role1.priority > role2.priority then
         return true
     end
@@ -140,11 +123,11 @@ function shared.roles.is_higher(role1, role2)
     return false
 end
 
-function shared.roles.exists(role)
+function module.roles.exists(role)
     return CONFIG.roles[role] and true or false
 end
 
-function shared.validate.username(name)
+function module.validate.username(name)
     name = name:lower()
     local alphabet = {
         'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
@@ -176,7 +159,7 @@ function shared.validate.username(name)
     return true
 end
 
-function shared.validate.plugins()
+function module.validate.plugins()
     for _, plugin in ipairs(table.freeze_unpack(CONFIG.game.plugins)) do
         local info = pack.get_info(plugin)
 
@@ -188,4 +171,4 @@ function shared.validate.plugins()
     return true
 end
 
-return self:build()
+return module

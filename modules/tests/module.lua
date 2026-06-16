@@ -1,10 +1,10 @@
-IS_HEADLESS = false
-
 local total, passed = 0, 0
 
 local function run_test(name, fn)
     total = total + 1
+
     local ok, err = pcall(fn)
+
     if ok then
         print(string.format("%-40s: PASS", name))
         passed = passed + 1
@@ -13,8 +13,16 @@ local function run_test(name, fn)
     end
 end
 
+local HEADLESS = false
+
+vc = {}
+
+function vc.is_headless()
+    return HEADLESS
+end
+
 local function create_test_module(is_headless)
-    IS_HEADLESS = is_headless
+    HEADLESS = is_headless
 
     local m = Module({
         by_identity = {},
@@ -22,133 +30,145 @@ local function create_test_module(is_headless)
         by_invid = {}
     })
 
-    local shared = m.shared
-    local headless = m.headless
-    local single = m.single
-
-    function shared.get_players()
+    function m.shared.get_players()
         return "player"
     end
 
-    function shared.by_username.get(username)
+    function m.shared.by_username.get(username)
         return username
     end
 
-    function shared.by_identity.is_online(id)
+    function m.shared.by_identity.is_online(id)
         return id == "ID1"
     end
 
-    function headless.mode_check() return "headless" end
+    function m.server.mode_check()
+        return "server"
+    end
 
-    function single.mode_check() return "single" end
+    function m.client.mode_check()
+        return "client"
+    end
 
     return m:build()
 end
 
 run_test("Module initialization", function()
-    local my_module = Module({
-        get_players = function() return "players_list" end
+    local m = Module({
+        get_players = function()
+            return "players"
+        end
     })
 
-    assert(type(my_module.shared) == "table", "Shared data missing")
-    assert(type(my_module.single) == "table", "Single storage missing")
+    assert(type(m.shared) == "table")
+    assert(type(m.client) == "table")
+    assert(type(m.server) == "table")
 end)
 
-run_test("Build: Single mode methods", function()
-    IS_HEADLESS = false
-    local my_module = Module({
-        shared_fn = function() return "shared" end
+run_test("Build: Client mode methods", function()
+    HEADLESS = false
+
+    local m = Module({
+        shared_fn = function()
+            return "shared"
+        end
     })
 
-    my_module.single.create_player = function() return "created_single" end
+    function m.client.create_player()
+        return "created_client"
+    end
 
-    local built = my_module:build()
+    local built = m:build()
 
-    assert(built.shared_fn() == "shared", "Shared function lost")
-    assert(built.create_player() == "created_single", "Single function lost")
+    assert(built.shared_fn() == "shared")
+    assert(built.create_player() == "created_client")
 end)
 
-run_test("Build: Headless isolation", function()
-    IS_HEADLESS = true
-    local my_module = Module({
+run_test("Build: Server isolation", function()
+    HEADLESS = true
+
+    local m = Module({
         data = "base"
     })
 
-    my_module.headless.mode = "headless_active"
-    my_module.single.mode = "single_active"
+    m.server.mode = "server_active"
+    m.client.mode = "client_active"
 
-    local built = my_module:build()
+    local built = m:build()
 
-    assert(built.mode == "headless_active", "Wrong side data merged in headless")
-    assert(built.data == "base", "Shared data lost in headless")
+    assert(built.mode == "server_active")
+    assert(built.data == "base")
 end)
 
 run_test("Module __index proxy check", function()
-    local my_module = Module({
+    local m = Module({
         test_val = 123
     })
 
-    my_module:build()
+    m:build()
 
-    assert(my_module.test_val == 123, "Proxy __index failed to find value")
+    assert(m.test_val == 123)
 end)
 
 run_test("AutoTable collision prevention", function()
-    IS_HEADLESS = false
-    local my_module = Module({
-        get_players = function() return "ok" end
+    local m = Module({
+        get_players = function()
+            return "ok"
+        end
     })
 
-    local built = my_module:build()
+    local built = m:build()
 
-    assert(type(built.get_players) == "function", "Function replaced by table")
-    assert(built.get_players() == "ok", "Function return value mismatch")
+    assert(type(built.get_players) == "function")
+    assert(built.get_players() == "ok")
 end)
 
 run_test("Large nesting AutoTable", function()
-    IS_HEADLESS = true
-    local my_module = Module()
+    HEADLESS = true
 
-    function my_module.headless.a.b.c.d()
+    local m = Module()
+
+    function m.server.a.b.c.d()
         return "ok"
     end
 
-    local built = my_module:build()
+    local built = m:build()
 
-    assert(built.a.b.c.d() == "ok", "Function return value mismatch")
+    assert(built.a.b.c.d() == "ok")
 end)
 
 run_test("Nested structure existence", function()
     local built = create_test_module(false)
 
-    assert(type(built.by_username) == "table", "by_username missing")
-    assert(type(built.by_identity) == "table", "by_identity missing")
-    assert(type(built.by_username.get) == "function", "Nested function lost")
+    assert(type(built.by_username) == "table")
+    assert(type(built.by_identity) == "table")
+    assert(type(built.by_username.get) == "function")
 end)
 
-run_test("Nested function execution & cross-call", function()
+run_test("Nested function execution", function()
     local built = create_test_module(false)
 
-    local player = built.by_username.get("Dev")
-    assert(player ~= nil, "Could not find player via nested method")
-
-    assert(built.by_identity.is_online("ID1") == true, "by_identity logic failed")
+    assert(built.by_username.get("Dev") == "Dev")
+    assert(built.by_identity.is_online("ID1") == true)
+    assert(built.by_identity.is_online("ID2") == false)
 end)
 
-run_test("Side-specific nested isolation (Single)", function()
+run_test("Side-specific method (Client)", function()
     local built = create_test_module(false)
-    assert(built.mode_check() == "single", "Should use single method")
+
+    assert(built.mode_check() == "client")
 end)
 
-run_test("Side-specific nested isolation (Headless)", function()
+run_test("Side-specific method (Server)", function()
     local built = create_test_module(true)
-    assert(built.mode_check() == "headless", "Should use headless method")
+
+    assert(built.mode_check() == "server")
 end)
 
 run_test("Deep Table Identity Check", function()
     local built = create_test_module(false)
-    local val = built.by_username.non_existent_key
-    assert(val == nil, "Nested table is still an AutoTable (unexpected behavior)")
+
+    assert(built.by_username.non_existent_key == nil)
 end)
 
 print("---")

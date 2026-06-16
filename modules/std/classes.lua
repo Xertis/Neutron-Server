@@ -55,14 +55,14 @@ function Module.new(module)
 
     self.module = {}
     self.shared = table.deep_copy(module)
-    self.single = AutoTable()
-    self.headless = AutoTable()
+    self.client = AutoTable()
+    self.server = AutoTable()
 
     return self
 end
 
 function Module:build()
-    local side = IS_HEADLESS and self.headless or self.single
+    local side = vc.is_headless() and self.server or self.client
 
     self.module = table.deep_merge(side:to_table(), self.shared)
 
@@ -71,7 +71,7 @@ end
 
 ----------------
 
--- Запрещён на территории РФ
+-- этот не запрещён на территории РФ
 SpeedTest = {}
 SpeedTest.__index = SpeedTest
 setmetatable(SpeedTest, {

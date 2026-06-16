@@ -39,6 +39,11 @@ local api = {
     constants = {
         config = CONFIG,
         tps = TPS
+    },
+    utils = {
+        classes = {
+            module = Module
+        }
     }
 
 }
