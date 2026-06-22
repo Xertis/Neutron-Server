@@ -1,4 +1,4 @@
-local events = import("server:api/v2/events")
+local events = import "server:api/v2/events"
 local bson = import "lib/data/bson"
 
 local module = {

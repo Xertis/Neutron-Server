@@ -179,25 +179,34 @@ module.set_command("help: command=[string] -> Shows a list of available commands
     local handlers = chat.get_handlers()
     local message = string.format("\n%s----- Help (/help) -----\n", module.colors.yellow)
 
-    local function concat(schem)
-        local main_part = schem[1]
-
-        local action = schem[#schem]
-
+    local function concat_decl(schem)
+        local def = schem[1]
         local _args = {}
+
         for i = 2, #schem - 1 do
             table.insert(_args, schem[i])
         end
 
         local args_part = table.concat(_args, ", ")
+        return def .. ": " .. args_part
+    end
 
-        local scheme = main_part .. ": " .. args_part .. " -> " .. action
+    local function concat(schem, size)
+        local action = schem[#schem]
+
+        local decl = concat_decl(schem)
+
+        local scheme = string.right_pad(decl, size) .. "-> " .. action
         return scheme
     end
 
     if not command then
+        local max_size = 0
         for _, com in pairs(handlers) do
-            local schem = concat(com.schem)
+            max_size = math.max(max_size, #concat_decl(com.schem))
+        end
+        for _, com in pairs(handlers) do
+            local schem = concat(com.schem, max_size + 1)
             message = message .. module.colors.yellow .. schem .. '\n'
         end
     else

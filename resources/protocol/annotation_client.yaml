@@ -77,6 +77,12 @@ PlayerPosition:
   fields:
     - pos: PlayerPos
 
+PlayerRegion:
+  fields:
+    - x: int16
+    - y: int16
+    - z: int16
+
 PlayerRotation:
   fields:
     - x: degree
@@ -91,11 +97,6 @@ PlayerCheats:
 PlayerHandSlot:
   fields:
     - slot: uint8
-
-PlayerRegion:
-  fields:
-    - x: int16
-    - z: int16
 
 ViewDistance:
   fields:

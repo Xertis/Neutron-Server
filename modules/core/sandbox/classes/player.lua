@@ -13,7 +13,7 @@ function Player.new(username, identity)
     self.entity_id = nil
     self.pid = nil
     self.world = nil
-    self.region_pos = { x = 0, z = 0 }
+    self.region_pos = { x = 0, y = 0, z = 0 }
     self.view_distance = VIEW_DISTANCE
     self.view_padding = VIEW_PADDING_DEFAULT
     self.entity_observers = {}
@@ -73,7 +73,7 @@ function Player:to_load(data)
     self.world = data.world
     self.pid = data.pid
     self.invid = data.invid
-    self.region_pos = data.region_pos or { x = 0, z = 0 }
+    self.region_pos = data.region_pos or { x = 0, y = 0, z = 0 }
 end
 
 return Player

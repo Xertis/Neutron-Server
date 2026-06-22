@@ -191,7 +191,7 @@ Text3DShow:
 Text3DPos:
   fields:
     - id: var
-    - pos: Vec3<f32>
+    - pos: Vec3<float32>
 
 Text3DEntity:
   fields:
@@ -204,7 +204,7 @@ Text3DState:
 Text3DAxis:
   fields:
     - id: var
-    - axis: Vec3<f32>
+    - axis: Vec3<float32>
     - is_x: boolean
 
 Text3DHide:

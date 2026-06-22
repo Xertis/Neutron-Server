@@ -315,7 +315,11 @@ Incorrect VoxelCore version:
         ---
 
         local state = sandbox.get_player_state(account_player)
-        account_player.region_pos = { x = math.floor(state.x / 32), z = math.floor(state.z / 32) }
+        account_player.region_pos = {
+            x = math.floor(state.x / 64),
+            y = math.floor(state.y / 64),
+            z = math.floor(state.z / 64),
+        }
         client:set_active(true)
 
         client:push_packet(protocol.ServerMsg.JoinSuccess, {
@@ -434,14 +438,15 @@ matches.client_online_handler:add_case(protocol.ClientMsg.PlayerPosition, (
             return
         end
 
-        local x, z = packet.pos.x, packet.pos.z
+        local x, y, z = packet.pos.x, packet.pos.y, packet.pos.z
 
-        x = x + client.player.region_pos.x * 32
-        z = z + client.player.region_pos.z * 32
+        x = x + client.player.region_pos.x * 64
+        y = y + client.player.region_pos.y * 64
+        z = z + client.player.region_pos.z * 64
 
         sandbox.set_player_state(client.player, {
             x = x,
-            y = packet.pos.y,
+            y = y,
             z = z
         })
     end
@@ -453,7 +458,7 @@ matches.client_online_handler:add_case(protocol.ClientMsg.PlayerRegion, (
             return
         end
 
-        client.player.region_pos = { x = packet.x, z = packet.z }
+        client.player.region_pos = packet
     end
 ))
 
@@ -628,8 +633,8 @@ matches.client_online_handler:add_case(protocol.ClientMsg.BlockRegionInteract, (
 
         local x, y, z = packet.pos.x, packet.pos.y, packet.pos.z
 
-        x = client.player.region_pos.x * 32 + x
-        z = client.player.region_pos.z * 32 + z
+        x = client.player.region_pos.x * 64 + x
+        z = client.player.region_pos.z * 64 + z
 
         local block_id = block.get(x, y, z)
         local block_name = block.name(block_id)
@@ -704,8 +709,8 @@ matches.client_online_handler:add_case(protocol.ClientMsg.BlockRegionUpdate, (
 
         local x, y, z = packet.pos.x, packet.pos.y, packet.pos.z
 
-        x = client.player.region_pos.x * 32 + x
-        z = client.player.region_pos.z * 32 + z
+        x = client.player.region_pos.x * 64 + x
+        z = client.player.region_pos.z * 64 + z
 
         local pid = client.player.pid
 
@@ -749,8 +754,8 @@ matches.client_online_handler:add_case(protocol.ClientMsg.BlockRegionDestroy, (
 
         local x, y, z = packet.x, packet.y, packet.z
 
-        x = client.player.region_pos.x * 32 + x
-        z = client.player.region_pos.z * 32 + z
+        x = client.player.region_pos.x * 64 + x
+        z = client.player.region_pos.z * 64 + z
 
         if table.has({ 0, -1 }, block.get(x, y, z)) then
             return

@@ -212,35 +212,25 @@ do
 end --@
 
 -- @PlayerPos.write
--- VARIABLES xx yy zz y_low y_high
+-- VARIABLES x y z
 -- TO_SAVE val
 do
-    xx, yy, zz = unpack(val)
-    yy = math.clamp(yy, 0, 262)
+    x = math.floor(val[1] % 64 * 1000)
+    y = math.floor(val[2] % 64 * 1000)
+    z = math.floor(val[3] % 64 * 1000)
 
-    xx = (xx - (xx - xx % 32)) * 1000 + 0.5
-    yy = math.floor(yy * 1000 + 0.5)
-    zz = (zz - (zz - zz % 32)) * 1000 + 0.5
-
-    y_low = bit.band(yy, 0x1FF)
-    y_high = bit.rshift(yy, 9)
-
-    buf:put_uint24(bit.bor(bit.lshift(y_low, 15), xx))
-    buf:put_uint24(bit.bor(bit.lshift(zz, 9), y_high))
+    buf:put_uint16(x)
+    buf:put_uint16(y)
+    buf:put_uint16(z)
 end --@
 
 -- @PlayerPos.read
--- VARIABLES i ii xx yy zz y_low y_high
+-- VARIABLES xx yy zz
 -- TO_LOAD result
 do
-    i = buf:get_uint24()
-    ii = buf:get_uint24()
-
-    xx = bit.band(i, 0x7FFF)
-    y_low = bit.rshift(i, 15)
-    y_high = bit.band(ii, 0x1FF)
-    yy = bit.bor(bit.lshift(y_high, 9), y_low)
-    zz = bit.rshift(ii, 9)
+    xx = buf:get_uint16()
+    yy = buf:get_uint16()
+    zz = buf:get_uint16()
 
     result = { x = xx / 1000, y = yy / 1000, z = zz / 1000 }
 end --@
@@ -371,28 +361,28 @@ do
     result = buf:get_int64()
 end --@
 
--- @f32.write
+-- @float32.write
 -- VARIABLES
 -- TO_SAVE val
 do
     buf:put_float32(val)
 end --@
 
--- @f32.read
+-- @float32.read
 -- VARIABLES
 -- TO_LOAD result
 do
     result = buf:get_float32()
 end --@
 
--- @f64.write
+-- @float64.write
 -- VARIABLES
 -- TO_SAVE val
 do
     buf:put_float64(val)
 end --@
 
--- @f64.read
+-- @float64.read
 -- VARIABLES
 -- TO_LOAD result
 do
