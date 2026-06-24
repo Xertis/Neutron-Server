@@ -1,5 +1,5 @@
 local protocol = import "net/protocol/protocol"
-local server_echo = import("lib/flow/server_echo")
+local server_echo = import "lib/flow/server_echo"
 
 local module = {}
 local handlers = {}

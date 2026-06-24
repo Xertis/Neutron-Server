@@ -37,9 +37,9 @@ local PingMessage = Message.new("mypack", "ping", {
 
 ```lua
 local MoveMessage = Message.new("move", {
-    x = "f32",
-    y = "f32",
-    z = "f32"
+    x = "float32",
+    y = "float32",
+    z = "float32"
 })
 ```
 
@@ -49,7 +49,7 @@ local MoveMessage = Message.new("move", {
 ```lua
 local SpawnMessage = Message.new("mypack", "spawn", {
     name = "string",
-    pos = { x = "f32", y = "f32", z = "f32" }
+    pos = { x = "float32", y = "float32", z = "float32" }
 })
 ```
 

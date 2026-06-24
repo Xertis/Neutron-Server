@@ -19,8 +19,8 @@ PingMessage:send({ id = "abc", data = {1, 2, 3} })
 
 ```lua
 -- Регистрирует обработчик входящих сообщений от сервера
--- Message:on(pack: string, handler: function(Client, table))
-PingMessage:on(function(client, data)
+-- Message:on(pack: string, handler: function(bytearray))
+PingMessage:on(function(data)
     -- data уже распаршена согласно схеме сообщения
     print(data.id, #data.data)
 end)
