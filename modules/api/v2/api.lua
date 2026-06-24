@@ -17,7 +17,7 @@ local blockwraps = import "api/v2/blockwraps"
 local inv_dat = import "api/v2/inv_dat"
 local tasks = import "api/v2/tasks"
 local messages = import "api/v2/messages"
-local replication = import "api/v2/replication"
+local replications = import "api/v2/replications"
 
 local api = {
     events = events,
@@ -39,7 +39,7 @@ local api = {
     inventory_data = inv_dat,
     tasks = tasks,
     messages = messages,
-    replication = replication,
+    replications = replications,
     constants = {
         config = CONFIG,
         tps = TPS
