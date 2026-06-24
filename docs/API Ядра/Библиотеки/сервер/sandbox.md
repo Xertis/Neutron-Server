@@ -23,6 +23,9 @@ api.sandbox.players.get_player(account: Account) -> Player
 -- Возвращает объект игрока по pid.
 api.sandbox.players.get_by_pid(pid: number) -> Player
 
+-- Проверяет, загружен ли чанк у игрока
+api.sandbox.players.chunk_is_loaded(player: Player, x: int, z: int) -> boolean
+
 ```
 
 ## Управление инвентарями

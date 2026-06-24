@@ -1,7 +1,6 @@
-local sandbox = import("server:core/sandbox/methods")
-local inventories_managers = import("server:core/sandbox/managers/inventories")
-local account_manager = import("server:core/accounts/methods")
-local protocol = import("server:net/protocol/protocol")
+local sandbox = import "server:core/sandbox/methods"
+local inventories_managers = import "server:core/sandbox/managers/inventories"
+local chunks = import "server:core/sandbox/managers/chunks"
 
 local InventoryController = import "server:core/sandbox/classes/inventory_controller"
 
@@ -73,6 +72,10 @@ function module.players.get_by_pid(pid)
             return _player
         end
     end
+end
+
+function module.players.chunk_is_loaded(player_obj, x, z)
+    return chunks.is_loaded(player_obj, x, z)
 end
 
 function module.inventories.create_controller(source)
