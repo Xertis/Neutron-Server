@@ -826,6 +826,7 @@ matches.client_online_handler:add_case(protocol.ClientMsg.EntityInteract, (
 
         local player_pid = client.player.pid
         local player_eid = client.player.entity_id
+
         if packet.action == 0 then
             for _, component in pairs(entity.components) do
                 (component.on_attacked or function() end)(player_eid, player_pid)

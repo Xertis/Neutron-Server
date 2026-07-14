@@ -802,6 +802,27 @@ do
     Foreign2(pair[2])
 end --@
 
+-- @Triple.write
+-- VARIABLES
+-- TO_SAVE triple
+-- FOREIGN
+do
+    Foreign1(triple[1])
+    Foreign2(triple[2])
+    Foreign3(triple[3])
+end --@
+
+-- @Triple.read
+-- VARIABLES
+-- TO_LOAD triple
+-- FOREIGN
+do
+    triple = {}
+    Foreign1(triple[1])
+    Foreign2(triple[2])
+    Foreign3(triple[3])
+end --@
+
 -- @Vec3.write
 -- VARIABLES
 -- TO_SAVE vec
