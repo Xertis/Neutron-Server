@@ -21,15 +21,15 @@ function module.world.preparation_main()
         error("Plugins should not add new content.")
     end
 
-    table.insert(packs, "server")
-    app.reset_content({ "server" })
-
-    app.config_packs(table.merge(packs, plugins), {})
-    app.load_content()
-
     local world_path = "user:worlds/" .. CONFIG.game.main_world
 
     if not file.exists(world_path .. "/world.json") then
+        table.insert(packs, "server")
+        app.reset_content({ "server" })
+
+        app.config_packs(table.merge(packs, plugins), {})
+        app.load_content()
+
         logger.log("Creating a main world...")
         local name = CONFIG.game.main_world
         local main_world = CONFIG.game.worlds[name]
