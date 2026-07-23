@@ -640,6 +640,7 @@ local function infinite_items_check(pid, id)
 end
 
 local function can_interact_with_block(player_obj, x, y, z, normal_check)
+    if true then return true end
     local pid = player_obj.pid
     local camera_offset = player_obj.is_crouching and CROUCHING_CAMERA_OFFSET or STANDING_CAMERA_OFFSET
 
