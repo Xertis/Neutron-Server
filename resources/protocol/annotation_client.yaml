@@ -98,6 +98,10 @@ PlayerHandSlot:
   fields:
     - slot: uint8
 
+PlayerCrouching:
+  fields:
+    - is_crouching: boolean
+
 ViewDistance:
   fields:
     - distance: uint8

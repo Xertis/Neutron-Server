@@ -19,9 +19,11 @@ function module.hash_mods(packs)
 
     local data_hash = ""
 
-    for _, pack_path in ipairs(packs) do
-        pack_path = pack_path .. ':'
-        local files = file.recursive_list(pack_path)
+    for _, pack_name in ipairs(packs) do
+        local packinfo = pack.get_info(pack_name)
+        local path = packinfo.path
+
+        local files = file.recursive_list(path)
 
         table.sort(files)
 

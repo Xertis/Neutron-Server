@@ -610,41 +610,6 @@ matches.client_online_handler:add_case(protocol.ClientMsg.RequestChunks, chunks_
 
 --------
 
-matches.client_online_handler:add_case(protocol.ClientMsg.BlockInteract, (
-    function(packet, client)
-        if not client.account or not client.account.is_logged then
-            return
-        end
-
-        local x, y, z = packet.pos.x, packet.pos.y, packet.pos.z
-
-        local block_id = block.get(x, y, z)
-        local block_name = block.name(block_id)
-        events.emit(block_name .. ".interact", x, y, z, client.player.pid)
-        events.emit("server:block_interact", block_id, x, y, z, client.player.pid)
-    end
-))
-
-matches.client_online_handler:add_case(protocol.ClientMsg.BlockRegionInteract, (
-    function(packet, client)
-        if not client.account or not client.account.is_logged then
-            return
-        end
-
-        local x, y, z = packet.pos.x, packet.pos.y, packet.pos.z
-
-        x = client.player.region_pos.x * 64 + x
-        z = client.player.region_pos.z * 64 + z
-
-        local block_id = block.get(x, y, z)
-        local block_name = block.name(block_id)
-        events.emit(block_name .. ".interact", x, y, z, client.player.pid)
-        events.emit("server:block_interact", block_id, x, y, z, client.player.pid)
-    end
-))
-
---------
-
 local function infinite_items_check(pid, id)
     local inventory = _G["inventory"]
     if player.is_infinite_items(pid) == false then
@@ -674,13 +639,96 @@ local function infinite_items_check(pid, id)
     return true
 end
 
+local function can_interact_with_block(player_obj, x, y, z, normal_check)
+    local pid = player_obj.pid
+    local camera_offset = player_obj.is_crouching and CROUCHING_CAMERA_OFFSET or STANDING_CAMERA_OFFSET
+
+    local px, py, pz = player.get_pos(pid)
+    local hitbox_height = entities.get(player.get_entity(pid)).rigidbody:get_size()[2]
+    local dir = player.get_dir(pid)
+    local dist = player.get_interaction_distance(pid) + REACH_TOLERANCE
+
+    local hitbox_offset = hitbox_height * (camera_offset / 1.8)
+
+    local raycast = block.raycast({ px, py + hitbox_offset, pz }, dir, dist)
+
+    if not raycast or not raycast.iendpoint then
+        return false
+    end
+
+    local ix, iy, iz = raycast.iendpoint[1], raycast.iendpoint[2], raycast.iendpoint[3]
+    local norm = raycast.normal
+
+    if normal_check then
+        local rx = ix + norm[1]
+        local ry = iy + norm[2]
+        local rz = iz + norm[3]
+        return rx == x and ry == y and rz == z
+    end
+
+    return ix == x and iy == y and iz == z
+end
+
+local function is_replaceable(x, y, z)
+   return table.has({ 0, -1 }, block.get(x, y, z))
+end
+
+matches.client_online_handler:add_case(protocol.ClientMsg.BlockInteract, (
+    function(packet, client)
+        if not client.account or not client.account.is_logged then
+            return
+        end
+
+        local x, y, z = packet.pos.x, packet.pos.y, packet.pos.z
+
+        if not can_interact_with_block(client.player, x, y, z, false) then
+            return
+        end
+
+        local block_id = block.get(x, y, z)
+        local block_name = block.name(block_id)
+        events.emit(block_name .. ".interact", x, y, z, client.player.pid)
+        events.emit("server:block_interact", block_id, x, y, z, client.player.pid)
+    end
+))
+
+matches.client_online_handler:add_case(protocol.ClientMsg.BlockRegionInteract, (
+    function(packet, client)
+        if not client.account or not client.account.is_logged then
+            return
+        end
+
+        local x, y, z = packet.pos.x, packet.pos.y, packet.pos.z
+
+        x = client.player.region_pos.x * 64 + x
+        z = client.player.region_pos.z * 64 + z
+
+        if not can_interact_with_block(client.player, x, y, z, false) then
+            return
+        end
+
+        local block_id = block.get(x, y, z)
+        local block_name = block.name(block_id)
+        events.emit(block_name .. ".interact", x, y, z, client.player.pid)
+        events.emit("server:block_interact", block_id, x, y, z, client.player.pid)
+    end
+))
+
+--------
+
 matches.client_online_handler:add_case(protocol.ClientMsg.BlockUpdate, (
     function(packet, client)
         if not client.account or not client.account.is_logged then
             return
         end
 
-        if not client.account or not client.account.is_logged then
+        local x, y, z = packet.pos.x, packet.pos.y, packet.pos.z
+
+        if not can_interact_with_block(client.player, x, y, z, true) then
+            return
+        end
+
+        if not is_replaceable(x, y, z) then
             return
         end
 
@@ -690,9 +738,9 @@ matches.client_online_handler:add_case(protocol.ClientMsg.BlockUpdate, (
         if not infinite_items_check(pid, packet.id) then return end
 
         sandbox.place_block({
-            x = packet.pos.x,
-            y = packet.pos.y,
-            z = packet.pos.z,
+            x = x,
+            y = y,
+            z = z,
             states = packet.state,
             id = packet.id
         }, pid)
@@ -711,6 +759,14 @@ matches.client_online_handler:add_case(protocol.ClientMsg.BlockRegionUpdate, (
 
         x = client.player.region_pos.x * 64 + x
         z = client.player.region_pos.z * 64 + z
+
+        if not can_interact_with_block(client.player, x, y, z, true) then
+            return
+        end
+
+        if not is_replaceable(x, y, z) then
+            return
+        end
 
         local pid = client.player.pid
 
@@ -736,11 +792,16 @@ matches.client_online_handler:add_case(protocol.ClientMsg.BlockDestroy, (
 
         packet = packet.pos
 
-        if table.has({ 0, -1 }, block.get(packet.x, packet.y, packet.z)) then
+        local x, y, z = packet.x, packet.y, packet.z
+        if not can_interact_with_block(client.player, x, y, z, false) then
             return
         end
 
-        sandbox.destroy_block({ x = packet.x, y = packet.y, z = packet.z }, client.player.pid)
+        if is_replaceable(x, y, z) then
+            return
+        end
+
+        sandbox.destroy_block({ x = x, y = y, z = z }, client.player.pid)
     end
 ))
 
@@ -757,7 +818,11 @@ matches.client_online_handler:add_case(protocol.ClientMsg.BlockRegionDestroy, (
         x = client.player.region_pos.x * 64 + x
         z = client.player.region_pos.z * 64 + z
 
-        if table.has({ 0, -1 }, block.get(x, y, z)) then
+        if not can_interact_with_block(client.player, x, y, z, false) then
+            return
+        end
+
+        if is_replaceable(x, y, z) then
             return
         end
 
@@ -898,5 +963,10 @@ matches.client_online_handler:add_case(protocol.ClientMsg.ViewDistance, (
     end
 ))
 
+matches.client_online_handler:add_case(protocol.ClientMsg.PlayerCrouching, (
+    function(packet, client)
+        client.player.is_crouching = packet.is_crouching
+    end
+))
 
 return matches

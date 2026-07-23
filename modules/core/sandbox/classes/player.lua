@@ -19,6 +19,7 @@ function Player.new(username, identity)
     self.entity_observers = {}
     self.invid = 0
     self.pending_inventories = {}
+    self.is_crouching = false
     self.temp = {}
 
     return self

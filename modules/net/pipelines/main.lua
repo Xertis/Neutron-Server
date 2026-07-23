@@ -71,8 +71,9 @@ ServerPipe:add_middleware(function(client)
 end)
 
 ServerPipe:add_middleware(function(client)
-    events.emit("server:client_pipe_start", client)
+    events.emit("server:client_packets_sending")
     if client.active then
+        events.emit("server:client_pipe_start", client)
         ClientPipe:process(client)
 
         replication.__process()
