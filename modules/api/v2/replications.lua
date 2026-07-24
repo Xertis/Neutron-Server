@@ -8,7 +8,7 @@ local REPLICATORS = {}
 local function has_null(schema)
     for key, typ in pairs(schema) do
         if type(typ) == "string" then
-            if typ:find("NullAble<") then return true end
+            if typ:find("Nilable<") then return true end
         else
             if has_null(typ) then
                 return true
@@ -19,15 +19,15 @@ local function has_null(schema)
 end
 
 local function nullabling(schema)
-    local nullable = {}
+    local Nilable = {}
     for key, typ in pairs(schema) do
         if type(typ) == "string" then
-            nullable[key] = "NullAble<" .. typ .. ">"
+            Nilable[key] = "Nilable<" .. typ .. ">"
         else
-            nullable[key] = nullabling(typ)
+            Nilable[key] = nullabling(typ)
         end
     end
-    return nullable
+    return Nilable
 end
 
 local function sorted_keys(tbl)
@@ -98,7 +98,7 @@ Replicator.__index = Replicator
 
 function Replication.new(pack, event, schema)
     if has_null(schema) then
-        error("Replication схема не может иметь NullAble тип")
+        error("Replication схема не может иметь Nilable тип")
     end
 
     schema = nullabling(schema)

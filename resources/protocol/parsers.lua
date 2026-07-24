@@ -863,7 +863,7 @@ do
     Foreign(vec[2])
 end --@
 
--- @NullAble.write
+-- @Nilable.write
 -- VARIABLES
 -- TO_SAVE val
 -- FOREIGN
@@ -874,7 +874,7 @@ do
     end
 end --@
 
--- @NullAble.read
+-- @Nilable.read
 -- VARIABLES
 -- TO_LOAD val
 -- FOREIGN

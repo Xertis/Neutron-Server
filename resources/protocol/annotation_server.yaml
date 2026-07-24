@@ -148,7 +148,7 @@ EntitySpawn:
     - uid: var
     - def: uint16
     - dirty: Edd
-    - args: NullAble<bson>
+    - args: Nilable<bson>
 
 EntityUpdate:
   fields:
