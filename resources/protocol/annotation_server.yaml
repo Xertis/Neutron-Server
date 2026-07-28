@@ -78,6 +78,10 @@ PlayerHandSlot:
   fields:
     - slot: uint8
 
+PlayerRule:
+  fields:
+    - rule: Rule
+
 OnlinePlayersList:
   fields:
     - list: Array<Pair<string, var>>
