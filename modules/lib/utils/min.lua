@@ -1,4 +1,5 @@
 local hash = import "lib/crypto/hash"
+local sandbox = import "core/sandbox/methods"
 
 local module = {
     server = {},
@@ -103,6 +104,8 @@ function module.world.open_main()
 
         PLAYER_ENTITY_ID = root_entity:def_index()
     end)
+
+    sandbox.init_world(CONFIG.game.main_world)
 
     -- Загружаем команды
     import "init/cmd"

@@ -39,7 +39,7 @@ matches:add_case("/status", function(packet, client)
     end
 
     local packs = pack.get_installed()
-    local plugins = table.freeze_unpack(CONFIG.game.plugins)
+    local plugins = CONFIG.game.plugins
 
     table.filter(packs, function(_, p)
         if p == "server" or table.has(plugins, p) then

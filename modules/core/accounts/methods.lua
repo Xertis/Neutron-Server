@@ -9,12 +9,12 @@ local module = {
 function module.login(identity)
     logger.log(string.format('account [#%s] is logging in...', logger.shorted(identity)))
 
-    local account = Account.new(identity) or container.get_all(identity).account
+    local account = container.accounts.get(identity) or Account.new(identity)
     local status = account:revive()
 
-    if status == CODES.accounts.ReviveSuccess or status == CODES.accounts.WithoutChanges then
+    if status == true then
         -- Ну мы его разбудили правильно, ничего делать не надо, мы молодцы
-    elseif status == CODES.accounts.DataLoss then
+    elseif status == false then
         account:set("role", CONFIG.roles.default_role)
         account:set("active", true)
     end
@@ -95,14 +95,11 @@ function module.by_identity.get_client(identity)
     end
 end
 
-function module.get_rules(account, category)
-    if not category then
-        category = "game_rules"
-    elseif category == true then
-        category = "server_rules"
-    end
+function module.get_permissions(account)
+    local role = module.get_role(account)
+    if not role then return end
 
-    return CONFIG.roles[account.role][category]
+    return role.permissions
 end
 
 return module

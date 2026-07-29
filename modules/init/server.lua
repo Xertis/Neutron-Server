@@ -25,8 +25,6 @@ do
             'W')
     end
 
-    CONFIG = table.freeze(CONFIG)
-
     VIEW_DISTANCE = CONFIG.server.chunks_loading_distance
 end
 

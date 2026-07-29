@@ -1,6 +1,7 @@
 local chat = import "core/sandbox/chat/chat"
 local states = import "core/sandbox/classes/chat_states"
-local account_manager = import "server:core/accounts/methods"
+local account_manager = import "core/accounts/methods"
+local sandbox = import "core/sandbox/methods"
 local module = {}
 
 module.colors = {
@@ -154,7 +155,14 @@ function module.set_command(command, permissions, handler, is_no_logged)
         end
 
         for scope, perms in pairs(permissions) do
-            local rules = account_manager.get_rules(client.account, scope == "server")
+            local rules = {}
+
+            if scope == "server" or scope == "permissions" then
+                rules = account_manager.get_permissions(client.account)
+            elseif scope == "rules" then
+                rules = sandbox.get_all_rules(client.player)
+            end
+
             for _, perm in ipairs(perms) do
                 if not rules[perm] then
                     chat.tell(

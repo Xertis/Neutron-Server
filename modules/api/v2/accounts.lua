@@ -1,6 +1,5 @@
 local account_manager = import "server:core/accounts/methods"
 local protocol = import "server:net/protocol/protocol"
-local entities_manager = import "core/sandbox/managers/entities"
 local tasks = import "api/v2/tasks"
 local lib = import "lib/utils/min"
 local module = {
@@ -47,7 +46,16 @@ function module.roles.get(account)
 end
 
 function module.roles.get_rules(account, category)
-    return account_manager.get_rules(account, category)
+    on_deprecated_call("accounts.roles.get_rules", "accounts.roles.get_permissions")
+    if category then
+        return CONFIG.roles[account.role].permissions
+    else
+        return CONFIG.roles[account.role].rules
+    end
+end
+
+function module.roles.get_permissions(account)
+	return account_manager.get_permissions(account)
 end
 
 function module.roles.is_higher(role1, role2)

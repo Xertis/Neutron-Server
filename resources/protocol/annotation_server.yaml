@@ -70,6 +70,11 @@ TimeUpdate:
   fields:
     - game_time: uint16[math.floor(W * 65535 + 0.5)][R / 65535]
 
+RuleUpdate:
+  fields:
+    - name: string
+    - value: boolean
+
 KeepAlive:
   fields:
     - challenge: uint8
@@ -77,10 +82,6 @@ KeepAlive:
 PlayerHandSlot:
   fields:
     - slot: uint8
-
-PlayerRule:
-  fields:
-    - rule: Rule
 
 OnlinePlayersList:
   fields:

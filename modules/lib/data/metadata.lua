@@ -2,17 +2,18 @@
 
 local module = {
     server = {},
-    players = {}
+    players = {},
 }
 
 local PATHS = {
     players = "world:players_data.bjson",
-    server = IS_HEADLESS and "config:server.bjson" or "world:server.bjson"
+    server = "config:server.bjson",
 }
 
 local PLAYERS_META = {}
 local SERVER_META = {
-    accounts = {}
+    accounts = {},
+    worlds = {}
 }
 
 function module.proxy(meta_type, catalog)

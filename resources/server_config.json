@@ -5,7 +5,10 @@
     "worlds": {
       "overworld": {
         "seed": "86935665463",
-        "generator": "base:demo"
+        "generator": "base:demo",
+        "rules": {
+          "cheat-commands": true
+        }
       }
     },
     "main_world": "overworld"
@@ -34,8 +37,7 @@
     "default_role": "member",
     "member": {
       "priority": 1,
-      "game_rules": {
-        "cheat-commands": true,
+      "rules": {
         "allow-content-access": true,
         "allow-flight": true,
         "allow-noclip": true,
@@ -46,7 +48,7 @@
         "allow-fast-interaction": true
       },
 
-      "server_rules": {
+      "permissions": {
         "role_management": true,
         "time_management": true
       }

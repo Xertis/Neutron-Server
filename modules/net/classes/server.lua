@@ -34,7 +34,7 @@ function server:start_main()
         client_socket:set_nodelay(true)
         local address, _ = client_socket:get_address()
 
-        if (not table.has(table.freeze_unpack(CONFIG.server.whitelist_ip), address) and #table.freeze_unpack(CONFIG.server.whitelist_ip) > 0) then
+        if (not table.has(CONFIG.server.whitelist_ip, address) and #CONFIG.server.whitelist_ip > 0) then
             client_socket:close()
             return
         end
@@ -61,7 +61,7 @@ function server:start_http()
         client_socket:set_nodelay(true)
         local address, _ = client_socket:get_address()
 
-        if (not table.has(table.freeze_unpack(CONFIG.server.whitelist_ip), address) and #table.freeze_unpack(CONFIG.server.whitelist_ip) > 0) then
+        if (not table.has(CONFIG.server.whitelist_ip, address) and #CONFIG.server.whitelist_ip > 0) then
             client_socket:close()
             return
         end

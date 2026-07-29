@@ -40,7 +40,7 @@ matches.actions = {}
 
 local function check_mods(hashes)
     local server_packs = pack.get_installed()
-    local plugins = table.freeze_unpack(CONFIG.game.plugins)
+    local plugins = CONFIG.game.plugins
     table.filter(server_packs, function(_, pack_name)
         return pack_name ~= "server" and not table.has(plugins, pack_name)
     end)
@@ -196,7 +196,7 @@ matches.joining_fsm:add_state("awaiting_join_game", {
 matches.joining_fsm:add_state("sending_packs_list", {
     on_enter = function(client)
         local packs = pack.get_installed()
-        local plugins = table.freeze_unpack(CONFIG.game.plugins)
+        local plugins = CONFIG.game.plugins
 
         table.filter(packs, function(_, p)
             if p == "server" or table.has(plugins, p) then
@@ -233,7 +233,6 @@ matches.joining_fsm:add_state("joining", {
         local packet = matches.joining_fsm:get_data(client, "join_game")
         local hashes = matches.joining_fsm:get_data(client, "packs_hashes")
 
-        local account = account_manager.login(packet.identity)
         local hash_status, hash_reason = check_mods(hashes)
 
         if not hash_status and (not CONFIG.server.dev_mode or CONFIG.server.shallow_dev_mode) then
@@ -264,27 +263,22 @@ Incorrect VoxelCore version:
             matches.actions.Disconnect(client, "Incorrect user name")
             close()
             return
-        elseif not account then
-            logger.log("JoinSuccess has been aborted")
-            matches.actions.Disconnect(client, "Not found or unable to create an account")
-            close()
-            return
         elseif #table.keys(sandbox.get_players()) >= CONFIG.server.max_players then
             logger.log("JoinSuccess has been aborted")
             matches.actions.Disconnect(client, "The server is full")
             close()
             return
-        elseif (not table.has(table.freeze_unpack(CONFIG.server.whitelist), packet.username) and #table.freeze_unpack(CONFIG.server.whitelist) > 0) then
+        elseif (not table.has(CONFIG.server.whitelist, packet.username) and #CONFIG.server.whitelist > 0) then
             logger.log("JoinSuccess has been aborted")
             matches.actions.Disconnect(client, "You are not on the whitelist")
             close()
             return
-        elseif (not table.has(table.freeze_unpack(CONFIG.server.whitelist_ip), client.address) and #table.freeze_unpack(CONFIG.server.whitelist_ip) > 0) then
+        elseif (not table.has(CONFIG.server.whitelist_ip, client.address) and #CONFIG.server.whitelist_ip > 0) then
             logger.log("JoinSuccess has been aborted")
             matches.actions.Disconnect(client, "You are not on the whitelist")
             close()
             return
-        elseif table.has(table.freeze_unpack(CONFIG.server.blacklist), packet.username) then
+        elseif table.has(CONFIG.server.blacklist, packet.username) then
             logger.log("JoinSuccess has been aborted")
             matches.actions.Disconnect(client, "You are on the blacklist")
             close()
@@ -301,15 +295,16 @@ Incorrect VoxelCore version:
             return
         end
 
+        local account = account_manager.login(packet.identity)
         local account_player = sandbox.join_player(packet.username, account)
         client:set_account(account)
         client:set_player(account_player)
 
-        local rules = account_manager.get_rules(account)
+        local rules = sandbox.get_all_rules(account_player)
         local array_rules = {}
 
-        for _, rule_name in pairs(table.freeze_unpack(rules.__keys)) do
-            table.insert(array_rules, { rule_name, rules[rule_name] })
+        for rule_name, rule_value in pairs(rules) do
+            table.insert(array_rules, { rule_name, rule_value })
         end
 
         ---

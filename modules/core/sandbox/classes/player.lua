@@ -21,6 +21,7 @@ function Player.new(username, identity)
     self.pending_inventories = {}
     self.is_crouching = false
     self.temp = {}
+    self.rules = {}
 
     return self
 end
@@ -39,18 +40,12 @@ function Player:save()
 end
 
 function Player:revive()
-    if self.active then
-        return CODES.players.WithoutChanges
-    end
-
     local data = players_proxy[self.identity]
-    if not data then
-        return CODES.players.DataLoss
-    end
+    if not data then return false end
 
     self.active = true
     self:to_load(data)
-    return CODES.players.ReviveSuccess
+    return true
 end
 
 function Player:set(key, val)
@@ -64,7 +59,8 @@ function Player:to_save()
         world = self.world,
         pid = self.pid,
         invid = self.invid,
-        region_pos = self.region_pos
+        region_pos = self.region_pos,
+        rules = self.roles
     }
 end
 
@@ -75,6 +71,7 @@ function Player:to_load(data)
     self.pid = data.pid
     self.invid = data.invid
     self.region_pos = data.region_pos or { x = 0, y = 0, z = 0 }
+    self.rules = data.rules or {}
 end
 
 return Player

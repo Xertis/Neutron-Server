@@ -1,5 +1,4 @@
 local protocol = import "net/protocol/protocol"
-local account_manager = import "core/accounts/methods"
 local sandbox = import "core/sandbox/methods"
 
 local xml = import "lib/xml/xml2lua"
@@ -313,7 +312,7 @@ function module.interact(player, id, slot, action, mode, item_id, client_checksu
     end
 
     if id == 0 then
-        local rules = account_manager.get_rules(client.account)
+        local rules = sandbox.get_all_rules(client.player)
         if not rules["allow-content-access"] then return false end
 
         stack = { id = item_id, count = 1, meta = nil }
