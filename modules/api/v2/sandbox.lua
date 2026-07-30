@@ -1,5 +1,6 @@
 local inventories_managers = import "server:core/sandbox/managers/inventories"
 local chunks = import "server:core/sandbox/managers/chunks"
+local sandbox = import "core/sandbox/methods"
 
 local InventoryController = import "server:core/sandbox/classes/inventory_controller"
 
