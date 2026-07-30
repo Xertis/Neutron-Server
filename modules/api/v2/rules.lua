@@ -6,7 +6,14 @@ local module = {
     worlds = {}
 }
 
+local function ensure_rule(rule)
+    if not rule then
+        error("rule must not be nil — did you forget to call get_rule(name) first?")
+    end
+end
+
 function module.players.get_rule(player, rule)
+    ensure_rule(rule)
     return sandbox.get_player_rule(player, rule)
 end
 
@@ -15,14 +22,17 @@ function module.players.get_all_values(player)
 end
 
 function module.players.set_rule(player, rule, value)
+    ensure_rule(rule)
     sandbox.set_player_rule(player, rule, value)
 end
 
 function module.worlds.get_rule(world, rule)
+    ensure_rule(rule)
     return sandbox.get_world_rule(world, rule)
 end
 
 function module.worlds.set_rule(world, rule, value)
+    ensure_rule(rule)
     sandbox.set_world_rule(world, rule, value)
 end
 

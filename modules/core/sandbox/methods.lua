@@ -381,8 +381,8 @@ function module.set_world_rule(world, rule, value)
     end)
 end
 
-function module.get_world_rule(world, name)
-    return rules.get_value(nil, world, name)
+function module.get_world_rule(world, rule)
+    return rules.get_value(nil, world, rule)
 end
 
 function module.get_all_values(player)
