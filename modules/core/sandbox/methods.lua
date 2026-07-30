@@ -134,7 +134,7 @@ function module.init_world(name)
 
         for rule_name, default in pairs(CONFIG.game.worlds[name].rules or {}) do
             local rule = rules.get_rule(rule_name)
-            debug.print(rule, rule_name)
+
             if rule and rule.level == "world" then
                 rules.set_value(nil, world_obj, rule, world_obj.rules[rule_name] or default)
             end
@@ -351,7 +351,8 @@ function module.by_invid.get(invid)
     end
 end
 
-function module.set_player_rule(player, rule, value)
+function module.set_player_rule(player, name, value)
+    local rule = rules.get_rule(name)
     if rule.level ~= "player" then
         error("The rule has been defined with a different level value")
     end
@@ -368,7 +369,8 @@ function module.get_player_rule(player, name)
     return rules.get_value(player, world, name)
 end
 
-function module.set_world_rule(world, rule, value)
+function module.set_world_rule(world, name, value)
+    local rule = rules.get_rule(name)
     if rule.level ~= "world" then
         error("The rule has been defined with a different level value")
     end

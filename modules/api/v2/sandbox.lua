@@ -86,16 +86,16 @@ function module.players.get_all_rules(player)
     return sandbox.get_all_rules(player)
 end
 
-function module.players.set_rule(player, rule, value)
-    sandbox.set_player_rule(player, rule, value)
+function module.players.set_rule(player, name, value)
+    sandbox.set_player_rule(player, name, value)
 end
 
 function module.worlds.get_rule(world, name)
     return sandbox.get_world_rule(world, name)
 end
 
-function module.worlds.set_rule(world, rule, value)
-    sandbox.set_world_rule(world, rule, value)
+function module.worlds.set_rule(world, name, value)
+    sandbox.set_world_rule(world, name, value)
 end
 
 function module.get_rule(name)
