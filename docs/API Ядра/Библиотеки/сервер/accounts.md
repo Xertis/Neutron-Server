@@ -39,7 +39,7 @@ api.accounts.roles.get(account: Account) -> table
 
 
 -- Возвращает таблицу прав роли по аккаунту
-api.accounts.roles.get_permissiobs(
+api.accounts.roles.get_permissions(
     account: Account,
 ) -> table
 
