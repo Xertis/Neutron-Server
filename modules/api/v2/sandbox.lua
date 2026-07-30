@@ -77,6 +77,10 @@ function module.players.chunk_is_loaded(player_obj, x, z)
     return chunks.is_loaded(player_obj, x, z)
 end
 
+function module.players.get_world(player_obj)
+    return sandbox.get_world(player_obj.world)
+end
+
 function module.inventories.create_controller(source)
     return InventoryController.new(source)
 end

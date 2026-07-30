@@ -26,6 +26,9 @@ api.sandbox.players.get_by_pid(pid: number) -> Player
 -- Проверяет, загружен ли чанк у игрока
 api.sandbox.players.chunk_is_loaded(player: Player, x: int, z: int) -> boolean
 
+-- Возвращает объект мира, в котором находится игрок
+api.sandbox.players.get_world(player: Player) -> World
+
 -- Устанавливает значение игрового правила для игрока
 -- На сервере никаких изменений не происходит, ибо игровые правила выполняются на клиентской стороне
 api.sandbox.players.set_rule(player: Player, name: string, value: boolean)
