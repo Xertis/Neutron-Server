@@ -99,7 +99,6 @@ function Message:decode(buf)
 end
 
 function Message:tell(client, data)
-    print(debug.getinfo(2).source)
     local buf = protocol.create_databuffer()
     self:encode(buf, data)
     events.tell(self.pack, self.event, client, buf.bytes)

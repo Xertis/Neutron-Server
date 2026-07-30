@@ -28,6 +28,7 @@ function World:save()
 end
 
 function World:revive()
+    if self.active then return true end
     local data = world_proxy[self.name]
     if not data then return false end
 

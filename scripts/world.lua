@@ -1,70 +1,79 @@
-local rules = {nextid = 1, rules = {}}
+local api = {}
 
-function rules.get_rule(name)
-    local rule = rules.rules[name]
-    if rule == nil then
-        rule = {listeners={}}
-        rules.rules[name] = rule
+local self = {
+    on_block_update = function() end,
+    on_world_open = function() end,
+    on_world_save = function() end
+}
+
+function self.on_block_update(blockid, x, y, z, playerid)
+    if not IS_HEADLESS then return end
+
+    local data = {
+        block = {
+            pos = { x = x, y = y, z = z },
+            state = block.get_states(x, y, z),
+            id = block.get(x, y, z)
+        },
+        pid = playerid
+    }
+
+    local buffer = api.protocol.create_databuffer()
+    buffer:put_packet(api.protocol.build_packet("server", api.protocol.ServerMsg.BlockChanged, data))
+
+    api.server_echo.put_event(
+        function(client)
+            if client.active ~= true then return end
+
+            if not api.chunks_manager.is_loaded(client.player, math.floor(x / 16), math.floor(z / 16)) then
+                return
+            end
+
+            if not client:interceptor_process(api.protocol.ServerMsg.BlockChanged, data) then
+                return
+            end
+
+            client:queue_response(buffer.bytes)
+        end
+    )
+end
+
+function self.on_world_open()
+    events.emit("server:content_loaded")
+    for i = 0, 10 do
+        events.emit("server:.worldtick")
     end
-    return rule
 end
 
-function rules.get(name)
-    local rule = rules.rules[name]
-    if rule == nil then
-        return nil
+function on_world_open()
+    if not app then
+        self.on_world_open()
     end
-    return rule.value
+
+    api = {
+        server_echo = import "lib/flow/server_echo",
+        protocol = import "net/protocol/protocol",
+        sandbox = import "core/sandbox/methods",
+        chunks_manager = import "core/sandbox/managers/chunks"
+    }
 end
 
-function rules.set(name, value)
-    local rule = rules.get_rule(name)
-    rule.value = value
-    for _, handler in pairs(rule.listeners) do
-        handler(value)
-    end
+function on_world_tick()
+    -- Просто, чтобы ивент зарегало
 end
 
-function rules.reset(name)
-    local rule = rules.get_rule(name)
-    rules.set(name, rule.default)
+function on_world_save()
+    self.on_world_save()
 end
 
-function rules.listen(name, handler)
-    local rule = rules.get_rule(name)
-    local id = rules.nextid
-    rules.nextid = rules.nextid + 1
-    rule.listeners[utf8.encode(id)] = handler
-    return id
+function on_block_placed(...)
+    self.on_block_update(...)
 end
 
-function rules.create(name, value, handler)
-    local rule = rules.get_rule(name)
-    rule.default = value
-
-    local handlerid
-    if handler ~= nil then
-        handlerid = rules.listen(name, handler)
-    end
-    if rules.get(name) == nil then
-        rules.set(name, value)
-    elseif handler then
-        handler(rules.get(name))
-    end
-    return handlerid
+function on_block_broken(...)
+    self.on_block_update(...)
 end
 
-function rules.unlisten(name, id)
-    local rule = rules.rules[name]
-    if rule == nil then
-        return
-    end
-    rule.listeners[utf8.encode(id)] = nil
-end
-
-function rules.clear()
-    rules.rules = {}
-    rules.nextid = 1
-end
-
-return rules
+events.on("server:block_interact", function(...)
+    self.on_block_update(...)
+end)

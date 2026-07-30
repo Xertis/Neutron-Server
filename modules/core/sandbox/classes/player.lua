@@ -40,6 +40,7 @@ function Player:save()
 end
 
 function Player:revive()
+    if self.active then return true end
     local data = players_proxy[self.identity]
     if not data then return false end
 
@@ -60,7 +61,7 @@ function Player:to_save()
         pid = self.pid,
         invid = self.invid,
         region_pos = self.region_pos,
-        rules = self.roles
+        rules = self.rules
     }
 end
 

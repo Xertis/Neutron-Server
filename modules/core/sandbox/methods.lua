@@ -339,7 +339,7 @@ function module.by_invid.get(invid)
 end
 
 function module.set_player_rule(player, rule, value)
-    if not rule.level == "player" then
+    if rule.level ~= "player" then
         error("The rule has been defined with a different level value")
     end
 
@@ -360,7 +360,7 @@ function module.get_player_rule(player, name)
 end
 
 function module.set_world_rule(world, rule, value)
-    if not rule.level == "world" then
+    if rule.level ~= "world" then
         error("The rule has been defined with a different level value")
     end
 
