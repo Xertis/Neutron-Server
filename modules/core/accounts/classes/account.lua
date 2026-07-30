@@ -52,14 +52,9 @@ function account:check_password(password)
 end
 
 function account:revive()
-    if self.active then
-        return CODES.accounts.WithoutChanges
-    end
-
+    if self.active then return true end
     local data = accounts_proxy[self.identity]
-    if not data then
-        return CODES.accounts.DataLoss
-    end
+    if not data then return false end
 
     self.active = true
     self:to_load(data)
@@ -73,7 +68,7 @@ function account:revive()
         self.role = default_role
     end
 
-    return CODES.accounts.ReviveSuccess
+    return true
 end
 
 function account:set(key, val)

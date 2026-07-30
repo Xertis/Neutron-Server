@@ -1,7 +1,5 @@
-local sandbox = import "server:core/sandbox/methods"
 local inventories_managers = import "server:core/sandbox/managers/inventories"
 local chunks = import "server:core/sandbox/managers/chunks"
-local protocol = import "server:net/protocol/protocol"
 
 local InventoryController = import "server:core/sandbox/classes/inventory_controller"
 
@@ -10,7 +8,7 @@ local module = {
         by_username = {},
         by_identity = {}
     },
-    world = {},
+    worlds = {},
     block = {},
     inventories = {}
 }
@@ -77,14 +75,6 @@ end
 
 function module.players.chunk_is_loaded(player_obj, x, z)
     return chunks.is_loaded(player_obj, x, z)
-end
-
-function module.players.set_rule(player, name, value)
-    local client = sandbox.get_client(player)
-
-    client:push_packet(protocol.ServerMsg.PlayerRule, {
-        rule = {name, value}
-    })
 end
 
 function module.inventories.create_controller(source)

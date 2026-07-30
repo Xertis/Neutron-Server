@@ -1,4 +1,7 @@
 local hash = import "lib/crypto/hash"
+local sandbox = import "core/sandbox/methods"
+local rules = import "core/sandbox/managers/rules"
+
 
 local module = {
     server = {},
@@ -104,8 +107,19 @@ function module.world.open_main()
         PLAYER_ENTITY_ID = root_entity:def_index()
     end)
 
-    -- Загружаем команды
-    import "init/cmd"
+    for role_name, role in pairs(CONFIG.roles) do
+        if role_name ~= "default_role" then
+            for name, default in pairs(role.rules) do
+                rules.define_if_absent(name, { default = default, level = "player" })
+            end
+        end
+    end
+
+    for name, default in pairs(CONFIG.game.worlds[CONFIG.game.main_world].rules or {}) do
+        rules.define_if_absent(name, { default = default, level = "world" })
+    end
+
+    sandbox.init_world(CONFIG.game.main_world)
 end
 
 function module.world.close_main()

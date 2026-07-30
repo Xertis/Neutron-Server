@@ -2,11 +2,13 @@ local module = {
     player_online = {},
     clients_all = {},
     accounts = {},
+    worlds = {}
 }
 local DATA = {
     player_online = {},
     clients_all = {},
     accounts = {},
+    worlds = {}
 }
 
 function module.accounts.put(username, account)
@@ -39,6 +41,18 @@ end
 
 function module.clients_all.get()
     return DATA.clients_all
+end
+
+function module.worlds.put(name, world)
+    DATA.worlds[name] = world
+end
+
+function module.worlds.get(name)
+    if name then
+        return DATA.worlds[name]
+    else
+        return DATA.worlds
+    end
 end
 
 return module

@@ -1,6 +1,12 @@
 local container = import "core/container"
 local Player = import "core/sandbox/classes/player"
+local World = import "core/sandbox/classes/world"
 local metadata = import "lib/data/metadata"
+local protocol = import "net/protocol/protocol"
+local server_echo = import "lib/flow/server_echo"
+local rules = import "core/sandbox/managers/rules"
+
+
 local module = {
     by_identity = {},
     by_username = {},
@@ -43,7 +49,7 @@ function module.join_player(username, account)
 
     local status = account_player:revive()
 
-    if status == CODES.players.ReviveSuccess or status == CODES.players.WithoutChanges then
+    if status == true then
         if username ~= account_player.username then
             if not module.is_username_available(account_player.username, identity) then
                 logger.log(
@@ -63,7 +69,7 @@ function module.join_player(username, account)
                 account_player.username, logger.shorted(identity), username))
             account_player.username = username
         end
-    elseif status == CODES.players.DataLoss then
+    elseif status == false then
         if not module.is_username_available(account_player.username, identity) then
             logger.log(
                 string.format(
@@ -82,6 +88,13 @@ function module.join_player(username, account)
 
     if account_player:is_active() then
         container.player_online.put(identity, account_player)
+    end
+
+    for name, default in pairs(CONFIG.roles[account.role].rules) do
+        local rule = rules.get_rule(name)
+        if rule and rule.level == "player" then
+            rules.set_value(account_player, nil, rule, account_player.rules[name] or default)
+        end
     end
 
     logger.log(string.format('Player "%s" [#%s] joined.', account_player.username, logger.shorted(identity)))
@@ -112,6 +125,36 @@ function module.leave_player(account_player)
     logger.log(string.format('Suspend state of player "%s" is true', account_player.username))
 
     return account_player
+end
+
+function module.init_world(name)
+    if CONFIG.game.worlds[name] ~= nil then
+        local world_obj = World.new(name)
+        world_obj:revive()
+
+        for rule_name, default in pairs(CONFIG.game.worlds[name].rules or {}) do
+            local rule = rules.get_rule(rule_name)
+
+            if rule and rule.level == "world" then
+                rules.set_value(nil, world_obj, rule, world_obj.rules[rule_name] or default)
+            end
+        end
+
+        container.worlds.put(name, world_obj)
+        logger.log(string.format("The '%s' world has been initialised", name))
+
+        local log = "\nWorld rules:\n"
+        for rule_name, rule_value in pairs(world_obj.rules) do
+            log = log .. string.format("    %s: %s\n", rule_name, rule_value)
+        end
+        logger.log(log)
+    else
+        error(string.format("world '%s' doesn't exists", name))
+    end
+end
+
+function module.get_world(name)
+    return container.worlds.get(name)
 end
 
 function module.get_client(player)
@@ -306,6 +349,49 @@ function module.by_invid.get(invid)
             return player
         end
     end
+end
+
+function module.set_player_rule(player, rule, value)
+    if rule.level ~= "player" then
+        error("The rule has been defined with a different level value")
+    end
+
+    local world = module.get_world(player.world)
+    rules.set_value(player, world, rule, value)
+
+    local client = module.get_client(player)
+    client:push_packet(protocol.ServerMsg.RuleUpdate, { name = rule.name, value = value })
+end
+
+function module.get_player_rule(player, rule)
+    local world = module.get_world(player.world)
+    return rules.get_value(player, world, rule)
+end
+
+function module.set_world_rule(world, rule, value)
+    if rule.level ~= "world" then
+        error("The rule has been defined with a different level value")
+    end
+
+    rules.set_value(nil, world, rule, value)
+
+    server_echo.put_event(function(client)
+        if client.active ~= true then return end
+        client:push_packet(protocol.ServerMsg.RuleUpdate, { name = rule.name, value = value })
+    end)
+end
+
+function module.get_world_rule(world, rule)
+    return rules.get_value(nil, world, rule)
+end
+
+function module.get_all_values(player)
+    local world = module.get_world(player.world)
+    return rules.get_all(player, world)
+end
+
+function module.get_rule(name)
+    return rules.get_rule(name)
 end
 
 return module

@@ -132,7 +132,7 @@ console.set_command("role: username=[string] -> Returns the role of the user", {
 end)
 
 console.set_command("role_set: username=<string>, role=<string> -> Changes the role of the selected player",
-    { server = { "role_management" } }, function(args, client)
+    { permissions = { "role_management" } }, function(args, client)
         local account = client.account
         local subject_username = args.username
         local role = args.role
@@ -175,7 +175,7 @@ console.set_command("role_set: username=<string>, role=<string> -> Changes the r
         console.tell(string.format('%s Role has been successfully changed', console.colors.yellow), client)
     end)
 
-console.set_command("time_set: time=<any> -> Changes day time", { server = { "time_management" } },
+console.set_command("time_set: time=<any> -> Changes day time", { permissions = { "time_management" } },
     function(args, client)
         local time = args.time
         local username = client.player.username
