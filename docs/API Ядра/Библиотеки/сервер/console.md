@@ -48,7 +48,7 @@ block_set: x=<number>, y=<number>, z=<number>, id=[number] -> Set Block
 Полный lua код создания команды:
 
 ```lua
-api.console.set_command("time_set: time=<any> -> Changes day time", {server={"time_management"}}, function (args, client)
+api.console.set_command("time_set: time=<any> -> Changes day time", {permissions={"time_management"}}, function (args, client)
     local time = args.time
     local account = client.account
 

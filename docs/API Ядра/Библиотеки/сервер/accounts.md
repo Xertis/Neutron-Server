@@ -38,14 +38,9 @@ api.accounts.kick(
 api.accounts.roles.get(account: Account) -> table
 
 
--- Возвращает таблицу правил роли по аккаунту
--- category:
--- false -> game_rules
--- true  -> server_rules
--- или можно строчкой прописать нужную category
-api.accounts.roles.get_rules(
+-- Возвращает таблицу прав роли по аккаунту
+api.accounts.roles.get_permissiobs(
     account: Account,
-    category: boolean | string
 ) -> table
 
 
