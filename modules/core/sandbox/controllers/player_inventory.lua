@@ -4,7 +4,7 @@ local accounts = require "api/v2/accounts"
 function on_share(player, invid, slotid)
     if not IS_HEADLESS then return end
     local blockinv = sandbox.inventories.get_second_inventory(player)
-    local rules = sandbox.players.get_all_rules(player)
+    local rules = sandbox.players.get_all_values(player)
 
     if blockinv ~= nil then
         inventory.move(invid, slotid, blockinv)

@@ -1,4 +1,3 @@
-local sandbox = import "server:core/sandbox/methods"
 local inventories_managers = import "server:core/sandbox/managers/inventories"
 local chunks = import "server:core/sandbox/managers/chunks"
 
@@ -76,30 +75,6 @@ end
 
 function module.players.chunk_is_loaded(player_obj, x, z)
     return chunks.is_loaded(player_obj, x, z)
-end
-
-function module.players.get_rule(player, name)
-    return sandbox.get_player_rule(player, name)
-end
-
-function module.players.get_all_rules(player)
-    return sandbox.get_all_rules(player)
-end
-
-function module.players.set_rule(player, name, value)
-    sandbox.set_player_rule(player, name, value)
-end
-
-function module.worlds.get_rule(world, name)
-    return sandbox.get_world_rule(world, name)
-end
-
-function module.worlds.set_rule(world, name, value)
-    sandbox.set_world_rule(world, name, value)
-end
-
-function module.get_rule(name)
-    return sandbox.get_rule(name)
 end
 
 function module.inventories.create_controller(source)

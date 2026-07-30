@@ -77,18 +77,19 @@ function rules.define_if_absent(name, properties)
     return registered[name] or rules.define(name, properties)
 end
 
+function rules.is_defined(name)
+    return registered[name] ~= nil
+end
+
 function rules.get_rule(name)
     return registered[name]
 end
 
-function rules.get_value(player, world, name)
-    local rule = registered[name]
-    if not rule then return nil end
-
+function rules.get_value(player, world, rule)
     local own, foreign = stores(rule, player, world)
     migrate(rule, own, foreign)
 
-    local value = own[name]
+    local value = own[rule.name]
     if value == nil then value = rule.default end
     return value
 end

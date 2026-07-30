@@ -351,8 +351,7 @@ function module.by_invid.get(invid)
     end
 end
 
-function module.set_player_rule(player, name, value)
-    local rule = rules.get_rule(name)
+function module.set_player_rule(player, rule, value)
     if rule.level ~= "player" then
         error("The rule has been defined with a different level value")
     end
@@ -364,13 +363,12 @@ function module.set_player_rule(player, name, value)
     client:push_packet(protocol.ServerMsg.RuleUpdate, { name = rule.name, value = value })
 end
 
-function module.get_player_rule(player, name)
+function module.get_player_rule(player, rule)
     local world = module.get_world(player.world)
-    return rules.get_value(player, world, name)
+    return rules.get_value(player, world, rule)
 end
 
-function module.set_world_rule(world, name, value)
-    local rule = rules.get_rule(name)
+function module.set_world_rule(world, rule, value)
     if rule.level ~= "world" then
         error("The rule has been defined with a different level value")
     end
@@ -387,7 +385,7 @@ function module.get_world_rule(world, name)
     return rules.get_value(nil, world, name)
 end
 
-function module.get_all_rules(player)
+function module.get_all_values(player)
     local world = module.get_world(player.world)
     return rules.get_all(player, world)
 end

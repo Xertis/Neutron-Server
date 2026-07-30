@@ -300,7 +300,7 @@ Incorrect VoxelCore version:
         client:set_account(account)
         client:set_player(account_player)
 
-        local rules = sandbox.get_all_rules(account_player)
+        local rules = sandbox.get_all_values(account_player)
         local array_rules = {}
 
         for rule_name, rule_value in pairs(rules) do
