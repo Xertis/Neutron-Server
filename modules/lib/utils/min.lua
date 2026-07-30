@@ -106,9 +106,6 @@ function module.world.open_main()
     end)
 
     sandbox.init_world(CONFIG.game.main_world)
-
-    -- Загружаем команды
-    import "init/cmd"
 end
 
 function module.world.close_main()

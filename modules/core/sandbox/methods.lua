@@ -4,6 +4,7 @@ local World = import "core/sandbox/classes/world"
 local metadata = import "lib/data/metadata"
 local protocol = import "net/protocol/protocol"
 local server_echo = import "lib/flow/server_echo"
+local rules = import "core/sandbox/managers/rules"
 
 
 local module = {
@@ -343,21 +344,16 @@ function module.set_player_rule(player, rule, value)
         error("The rule has been defined with a different level value")
     end
 
-    local name = rule.name
-    player.rules[rule.name] = value
-    rule:process(player, value)
+    local world = module.get_world(player.world)
+    rules.set_value(player, world, rule, value)
 
     local client = module.get_client(player)
-
-    client:push_packet(protocol.ServerMsg.RuleUpdate, {
-        name = name,
-        value = value
-    })
+    client:push_packet(protocol.ServerMsg.RuleUpdate, { name = rule.name, value = value })
 end
 
 function module.get_player_rule(player, name)
     local world = module.get_world(player.world)
-	return player.rules[name] or world.rules[name]
+    return rules.get_value(player, world, name)
 end
 
 function module.set_world_rule(world, rule, value)
@@ -365,29 +361,21 @@ function module.set_world_rule(world, rule, value)
         error("The rule has been defined with a different level value")
     end
 
-    local name = rule.name
-    world.rules[name] = value
-    rule:process(world, value)
+    rules.set_value(nil, world, rule, value)
 
-    server_echo.put_event(
-        function(client)
-            if client.active ~= true then return end
-
-            client:push_packet(protocol.ServerMsg.RuleUpdate, {
-                name = name,
-                value = value
-            })
-        end
-    )
+    server_echo.put_event(function(client)
+        if client.active ~= true then return end
+        client:push_packet(protocol.ServerMsg.RuleUpdate, { name = rule.name, value = value })
+    end)
 end
 
 function module.get_world_rule(world, name)
-    return world.rules[name]
+    return rules.get_value(nil, world, name)
 end
 
 function module.get_all_rules(player)
     local world = module.get_world(player.world)
-	return table.merge(table.copy(player.rules), world.rules)
+    return rules.get_all(player, world)
 end
 
 return module

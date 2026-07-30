@@ -3,11 +3,16 @@ local rules = {}
 local Rule = {}
 Rule.__index = Rule
 
-local reserved_names = {}
+local registry = {}
+
+local LEVELS = { player = true, world = true }
 
 function Rule.new(name, default, level)
-    if reserved_names[name] then
+    if registry[name] then
         error(string.format("A rule named '%s' already exists", name))
+    end
+    if not LEVELS[level] then
+        error(string.format("Unknown rule level '%s' for rule '%s'", tostring(level), name))
     end
 
     local self = setmetatable({}, Rule)
@@ -19,7 +24,7 @@ function Rule.new(name, default, level)
     self.next_listener_id = 0
     self.listeners = {}
 
-    reserved_names[name] = true
+    registry[name] = self
 
     return self
 end
@@ -41,9 +46,69 @@ function Rule:process(obj, value)
     end
 end
 
+local function stores(rule, player, world)
+    if rule.level == "player" then
+        return player.rules, world and world.rules or nil
+    else
+        return world.rules, player and player.rules or nil
+    end
+end
+
+local function migrate(rule, own, foreign)
+    if not foreign then return end
+
+    if own[rule.name] == nil and foreign[rule.name] ~= nil then
+        own[rule.name] = foreign[rule.name]
+        foreign[rule.name] = nil
+        logger.log(string.format(
+            "Rule '%s' value has been migrated to '%s'-level storage after a level change",
+            rule.name, rule.level))
+    elseif foreign[rule.name] ~= nil then
+        foreign[rule.name] = nil
+    end
+end
+
 function rules.define(name, properties)
-    local rule = Rule.new(name, properties.default, properties.level)
-    return rule
+    properties = properties or {}
+    return Rule.new(name, properties.default, properties.level)
+end
+
+function rules.define_if_absent(name, properties)
+    return registry[name] or rules.define(name, properties)
+end
+
+function rules.get_rule(name)
+    return registry[name]
+end
+
+function rules.get_value(player, world, name)
+    local rule = registry[name]
+    if not rule then return nil end
+
+    local own, foreign = stores(rule, player, world)
+    migrate(rule, own, foreign)
+
+    local value = own[name]
+    if value == nil then value = rule.default end
+    return value
+end
+
+function rules.set_value(player, world, rule, value)
+    local own, foreign = stores(rule, player, world)
+    migrate(rule, own, foreign)
+
+    own[rule.name] = value
+    rule:process(rule.level == "player" and player or world, value)
+
+    return value
+end
+
+function rules.get_all(player, world)
+    local result = {}
+    for name in pairs(registry) do
+        result[name] = rules.get_value(player, world, name)
+    end
+    return result
 end
 
 return rules
