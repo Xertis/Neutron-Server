@@ -83,11 +83,23 @@ function module.players.get_rule(player, name)
 end
 
 function module.players.get_all_rules(player)
-	return sandbox.get_all_rules(player)
+    return sandbox.get_all_rules(player)
+end
+
+function module.players.set_rule(player, rule, value)
+    sandbox.set_player_rule(player, rule, value)
 end
 
 function module.worlds.get_rule(world, name)
-	return sandbox.get_world_rule(world, name)
+    return sandbox.get_world_rule(world, name)
+end
+
+function module.worlds.set_rule(world, rule, value)
+    sandbox.set_world_rule(world, rule, value)
+end
+
+function module.get_rule(name)
+    return sandbox.get_rule(name)
 end
 
 function module.inventories.create_controller(source)

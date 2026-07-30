@@ -3,13 +3,13 @@ local rules = {}
 local Rule = {}
 Rule.__index = Rule
 
-local registry = {}
+local registered = {}
 
 local LEVELS = { player = true, world = true }
 
 function Rule.new(name, default, level)
-    if registry[name] then
-        error(string.format("A rule named '%s' already exists", name))
+    if registered[name] then
+        error(string.format("A rule named '%s' already exists in %s-rules", name, registered[name].level))
     end
     if not LEVELS[level] then
         error(string.format("Unknown rule level '%s' for rule '%s'", tostring(level), name))
@@ -24,7 +24,7 @@ function Rule.new(name, default, level)
     self.next_listener_id = 0
     self.listeners = {}
 
-    registry[name] = self
+    registered[name] = self
 
     return self
 end
@@ -74,15 +74,15 @@ function rules.define(name, properties)
 end
 
 function rules.define_if_absent(name, properties)
-    return registry[name] or rules.define(name, properties)
+    return registered[name] or rules.define(name, properties)
 end
 
 function rules.get_rule(name)
-    return registry[name]
+    return registered[name]
 end
 
 function rules.get_value(player, world, name)
-    local rule = registry[name]
+    local rule = registered[name]
     if not rule then return nil end
 
     local own, foreign = stores(rule, player, world)
@@ -105,7 +105,7 @@ end
 
 function rules.get_all(player, world)
     local result = {}
-    for name in pairs(registry) do
+    for name in pairs(registered) do
         result[name] = rules.get_value(player, world, name)
     end
     return result

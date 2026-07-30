@@ -90,7 +90,12 @@ function module.join_player(username, account)
         container.player_online.put(identity, account_player)
     end
 
-    table.merge(account_player.rules, CONFIG.roles[account.role].rules)
+    for name, default in pairs(CONFIG.roles[account.role].rules) do
+        local rule = rules.get_rule(name)
+        if rule and rule.level == "player" then
+            rules.set_value(account_player, nil, rule, account_player.rules[name] or default)
+        end
+    end
 
     logger.log(string.format('Player "%s" [#%s] joined.', account_player.username, logger.shorted(identity)))
     account_player:save()
@@ -126,7 +131,14 @@ function module.init_world(name)
     if CONFIG.game.worlds[name] ~= nil then
         local world_obj = World.new(name)
         world_obj:revive()
-        table.merge(world_obj.rules, CONFIG.game.worlds[name].rules or {})
+
+        for rule_name, default in pairs(CONFIG.game.worlds[name].rules or {}) do
+            local rule = rules.get_rule(rule_name)
+            debug.print(rule, rule_name)
+            if rule and rule.level == "world" then
+                rules.set_value(nil, world_obj, rule, world_obj.rules[rule_name] or default)
+            end
+        end
 
         container.worlds.put(name, world_obj)
         logger.log(string.format("The '%s' world has been initialised", name))
@@ -376,6 +388,10 @@ end
 function module.get_all_rules(player)
     local world = module.get_world(player.world)
     return rules.get_all(player, world)
+end
+
+function module.get_rule(name)
+    return rules.get_rule(name)
 end
 
 return module

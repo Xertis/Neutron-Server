@@ -25,7 +25,6 @@ local function main()
 
     import "server:init/engine_patcher"
     import "server:init/server"
-    import "server:core/sandbox/chat/commands"
 
     if IS_FIRST_RUN then
         logger.log("The first startup was detected, server has been stopped.")
