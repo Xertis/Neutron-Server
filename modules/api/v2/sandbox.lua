@@ -9,7 +9,7 @@ local module = {
         by_username = {},
         by_identity = {}
     },
-    world = {},
+    worlds = {},
     block = {},
     inventories = {}
 }
@@ -76,6 +76,18 @@ end
 
 function module.players.chunk_is_loaded(player_obj, x, z)
     return chunks.is_loaded(player_obj, x, z)
+end
+
+function module.players.get_rule(player, name)
+    return sandbox.get_player_rule(player, name)
+end
+
+function module.players.get_all_rules(player)
+	return sandbox.get_all_rules(player)
+end
+
+function module.worlds.get_rule(world, name)
+	return sandbox.get_world_rule(world, name)
 end
 
 function module.inventories.create_controller(source)

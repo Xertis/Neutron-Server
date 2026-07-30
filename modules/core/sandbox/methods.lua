@@ -356,7 +356,8 @@ function module.set_player_rule(player, rule, value)
 end
 
 function module.get_player_rule(player, name)
-	return player.rules[name]
+    local world = module.get_world(player.world)
+	return player.rules[name] or world.rules[name]
 end
 
 function module.set_world_rule(world, rule, value)
