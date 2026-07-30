@@ -12,7 +12,7 @@ local function ensure_rule(rule)
     end
 end
 
-function module.players.get_rule(player, rule)
+function module.players.get_value(player, rule)
     ensure_rule(rule)
     return sandbox.get_player_rule(player, rule)
 end
@@ -21,19 +21,29 @@ function module.players.get_all_values(player)
     return sandbox.get_all_values(player)
 end
 
-function module.players.set_rule(player, rule, value)
+function module.players.set_value(player, rule, value)
     ensure_rule(rule)
     sandbox.set_player_rule(player, rule, value)
 end
 
-function module.worlds.get_rule(world, rule)
+function module.players.reset_value(player, rule)
+    ensure_rule(rule)
+	sandbox.set_player_rule(player, rule, rule.default)
+end
+
+function module.worlds.get_value(world, rule)
     ensure_rule(rule)
     return sandbox.get_world_rule(world, rule)
 end
 
-function module.worlds.set_rule(world, rule, value)
+function module.worlds.set_value(world, rule, value)
     ensure_rule(rule)
     sandbox.set_world_rule(world, rule, value)
+end
+
+function module.worlds.reset_value(world, rule)
+    ensure_rule(rule)
+    sandbox.set_world_rule(world, rule, rule.default)
 end
 
 module.define = rules.define

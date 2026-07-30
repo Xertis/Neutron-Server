@@ -6,7 +6,6 @@ Rule.__index = Rule
 local registered = {}
 
 local LEVELS = { player = true, world = true }
-
 function Rule.new(name, default, level)
     if registered[name] then
         error(string.format("A rule named '%s' already exists in %s-rules", name, registered[name].level))
