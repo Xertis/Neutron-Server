@@ -1,7 +1,7 @@
 local protocol = import "net/protocol/protocol"
 local switcher = import "lib/flow/switcher"
 local sandbox = import "core/sandbox/methods"
-local http = import "server:lib/http/httprequestparser"
+local http = import "lib/http/httprequestparser"
 
 local function send_responce(client, responce)
     client:queue_response(utf8.tobytes(responce))

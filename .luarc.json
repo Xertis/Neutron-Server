@@ -1,5 +1,8 @@
 {
   "runtime.version": "LuaJIT",
   "format.enable": true,
-  "workspace.library": ["modules/types"]
+  "workspace.library": ["modules/types"],
+  "runtime.special": {
+    "import": "require"
+  }
 }

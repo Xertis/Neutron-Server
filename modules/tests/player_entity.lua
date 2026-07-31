@@ -1,4 +1,4 @@
-local compiler = import "server:net/protocol/compiler"
+local compiler = import "net/protocol/compiler"
 local bb = import "lib/io/bit_buffer"
 
 local function deep_approx_equals(a, b, epsilon)

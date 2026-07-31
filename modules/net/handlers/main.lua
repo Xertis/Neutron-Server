@@ -15,7 +15,7 @@ local mfsm = import "lib/flow/multifsm"
 
 local hashed_packs = nil
 
-local InventoryController = import "server:core/sandbox/classes/inventory_controller"
+local InventoryController = import "core/sandbox/classes/inventory_controller"
 
 local player_inventory_controller = InventoryController.new(
     "server:modules/core/sandbox/controllers/player_inventory.lua")

@@ -1,7 +1,7 @@
-local bit_buffer = import "server:lib/io/bit_buffer"
-local kernel = import "server:net/protocol/kernel"
-local receiver = import "server:net/protocol/receiver"
-local http = import "server:lib/http/httprequestparser"
+local bit_buffer = import "lib/io/bit_buffer"
+local kernel = import "net/protocol/kernel"
+local receiver = import "net/protocol/receiver"
+local http = import "lib/http/httprequestparser"
 local protocol = {}
 
 logger.log("Initializing protocol...")

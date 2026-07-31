@@ -3,20 +3,20 @@ require "server:std/boot"
 LAUNCH_ATTEMPTS = 1
 
 local function tests()
-    import "server:tests/bit_buffer"
-    import "server:tests/player_entity"
-    import "server:tests/edd"
-    import "server:tests/external_buffer"
-    import "server:tests/varint"
-    import "server:tests/module"
+    import "tests/bit_buffer"
+    import "tests/player_entity"
+    import "tests/edd"
+    import "tests/external_buffer"
+    import "tests/varint"
+    import "tests/module"
 
     logger.log("All tests passed", "T")
 end
 
 local function main()
-    import "server:globals"
-    import "server:std/min"
-    import "server:std/classes"
+    import "globals"
+    import "std/min"
+    import "std/classes"
 
     if IS_RELEASE then
         logger.log("\n" .. LOGO)

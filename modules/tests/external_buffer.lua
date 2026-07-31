@@ -1,4 +1,4 @@
-local receiver = import "server:net/protocol/receiver"
+local receiver = import "net/protocol/receiver"
 
 local buffer = receiver.create_buffer()
 local function roundtrip()

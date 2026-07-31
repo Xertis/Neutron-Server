@@ -3,8 +3,8 @@ local protocol = import "net/protocol/protocol"
 local matches = import "net/handlers/http"
 local List = import "lib/utils/list"
 local interceptors = import "api/v2/interceptors"
-local http = import "server:lib/http/httprequestparser"
-local receiver = import "server:net/protocol/receiver"
+local http = import "lib/http/httprequestparser"
+local receiver = import "net/protocol/receiver"
 
 local HttpPipe = Pipeline.new()
 

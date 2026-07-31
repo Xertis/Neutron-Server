@@ -1,6 +1,6 @@
-local server_echo = import "server:lib/flow/server_echo"
-local protocol = import "server:net/protocol/protocol"
-local sandbox = import "server:api/v2/sandbox"
+local server_echo = import "lib/flow/server_echo"
+local protocol = import "net/protocol/protocol"
+local sandbox = import "api/v2/sandbox"
 
 local global_player = _G["player"]
 

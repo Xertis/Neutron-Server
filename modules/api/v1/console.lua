@@ -1,6 +1,6 @@
 local chat = import "core/sandbox/chat/chat"
 local states = import "core/sandbox/classes/chat_states"
-local account_manager = import "server:core/accounts/methods"
+local account_manager = import "core/accounts/methods"
 local module = {}
 
 module.colors = {

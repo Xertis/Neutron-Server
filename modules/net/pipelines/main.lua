@@ -4,7 +4,7 @@ local matches = import "net/handlers/main"
 local ClientPipe = import "net/pipelines/client"
 local List = import "lib/utils/list"
 local interceptors = import "api/v2/interceptors"
-local receiver = import "server:net/protocol/receiver"
+local receiver = import "net/protocol/receiver"
 local replication = import "api/v2/replications"
 
 local ServerPipe = Pipeline.new()

@@ -1,7 +1,7 @@
 local hash = import "lib/crypto/hash"
 local sandbox = import "core/sandbox/methods"
 local rules = import "core/sandbox/managers/rules"
-local metadata = import "server:lib/data/metadata"
+local metadata = import "lib/data/metadata"
 
 
 local module = {

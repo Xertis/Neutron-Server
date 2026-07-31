@@ -1,5 +1,5 @@
-local account_manager = import "server:core/accounts/methods"
-local protocol = import "server:net/protocol/protocol"
+local account_manager = import "core/accounts/methods"
+local protocol = import "net/protocol/protocol"
 local tasks = import "api/v2/tasks"
 local lib = import "lib/utils/min"
 local module = {

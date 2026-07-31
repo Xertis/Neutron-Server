@@ -1,5 +1,5 @@
 local bb = import "lib/io/bit_buffer"
-local edd = import "server:lib/data/edd"
+local edd = import "lib/data/edd"
 
 local function roundtrip(tbl)
     local buf = bb:new()

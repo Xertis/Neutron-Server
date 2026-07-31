@@ -1,5 +1,5 @@
-local protocol = import "server:net/protocol/protocol"
-local server_echo = import "server:lib/flow/server_echo"
+local protocol = import "net/protocol/protocol"
+local server_echo = import "lib/flow/server_echo"
 
 local module = {
     ServerMsg = protocol.ServerMsg,
