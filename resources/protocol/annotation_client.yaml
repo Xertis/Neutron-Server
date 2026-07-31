@@ -35,6 +35,7 @@ BlockRegion:
 # -----------------------------------------------------------------
 
 HandShake:
+  packet_id: 0
   fields:
     - protocol_reference: string
     - protocol_version: string
@@ -47,6 +48,7 @@ HandShake:
     - next_state: uint8
 
 StatusRequest:
+  packet_id: 1
   fields:
 
 JoinGame:

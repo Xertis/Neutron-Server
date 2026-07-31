@@ -6,12 +6,11 @@ local Client = {}
 local max_id = 0
 Client.__index = Client
 
-function Client.new(active, socket, address, port, username)
+function Client.new(active, socket, address, port)
     local self = setmetatable({}, Client)
 
     self.active = false or active
     self.socket = socket
-    self.username = username
     self.address = address
     self.port = port
     self.client_id = max_id

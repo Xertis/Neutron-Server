@@ -506,7 +506,6 @@ matches.client_online_handler:add_case(protocol.ClientMsg.Disconnect, (
         end
 
         local pid = client.player.pid
-        local uid = client.player.entity_id
         local username = client.player.username
 
         local message = string.format("[#ffff00] [%s] %s", username, "left the game")
@@ -515,9 +514,6 @@ matches.client_online_handler:add_case(protocol.ClientMsg.Disconnect, (
         chat.echo(message)
 
         local buffer = protocol.create_databuffer()
-        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.EntityDespawn, {
-            uid = uid
-        }))
         buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.OnlinePlayersListRemove, {
             pid = pid,
         }))

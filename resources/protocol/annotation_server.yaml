@@ -35,6 +35,7 @@ BlockRegion:
 # -----------------------------------------------------------------
 
 StatusResponse:
+  packet_id: 0
   fields:
     - protocol_reference: string
     - protocol_version: string
