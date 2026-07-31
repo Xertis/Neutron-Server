@@ -1,6 +1,7 @@
 local hash = import "lib/crypto/hash"
 local sandbox = import "core/sandbox/methods"
 local rules = import "core/sandbox/managers/rules"
+local metadata = import "server:lib/data/metadata"
 
 
 local module = {
@@ -80,6 +81,7 @@ function module.world.open_main()
     logger.log("Discovery of the main world")
     app.reset_content({ "server" })
     app.open_world(CONFIG.game.main_world)
+    metadata.load()
 
     do
         local world_path = "user:worlds/" .. CONFIG.game.main_world
@@ -97,15 +99,20 @@ function module.world.open_main()
     player.set_suspended(ROOT_PID, false)
     player.set_loading_chunks(ROOT_PID, true)
 
-    time.post_runnable(function()
+    do
         player.set_noclip(ROOT_PID, true)
         player.set_flight(ROOT_PID, true)
         player.set_pos(ROOT_PID, 0, 262, 0)
 
+        while player.get_entity(ROOT_PID) == -1 do
+            app.tick()
+        end
+
         local root_entity = entities.get(player.get_entity(ROOT_PID))
 
         PLAYER_ENTITY_ID = root_entity:def_index()
-    end)
+        logger.log("root entity has been received")
+    end
 
     for role_name, role in pairs(CONFIG.roles) do
         if role_name ~= "default_role" then

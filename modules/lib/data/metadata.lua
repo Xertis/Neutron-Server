@@ -78,6 +78,8 @@ function module.save()
 end
 
 function module.server.get(catalog, key)
+    if not SERVER_META[catalog] then SERVER_META[catalog] = {} end
+
     return SERVER_META[catalog][key]
 end
 

@@ -49,8 +49,6 @@ local function main()
     local shutdown_timeout = (CONFIG.server.shutdown_timeout or -1) * 60
     local last_time_save = 0
 
-    metadata.load()
-
     time.post_runnable(function()
         logger.log("run post init")
         import "server:init/post"

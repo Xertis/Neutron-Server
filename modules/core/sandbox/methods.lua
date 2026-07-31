@@ -130,7 +130,6 @@ end
 function module.init_world(name)
     if CONFIG.game.worlds[name] ~= nil then
         local world_obj = World.new(name)
-        world_obj:revive()
 
         for rule_name, default in pairs(CONFIG.game.worlds[name].rules or {}) do
             local rule = rules.get_rule(rule_name)
