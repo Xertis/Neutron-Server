@@ -41,8 +41,6 @@ function module.leave(client)
 
     sandbox.leave_player(player)
     container.accounts.put(account.identity, nil)
-
-    return account
 end
 
 function module.get_role(account)

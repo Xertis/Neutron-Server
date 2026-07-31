@@ -1,14 +1,19 @@
 local metadata = import "lib/data/metadata"
 local Player = {}
 
-local TEMP = {}
+
+local TEMPED_DATA = {
+    temp = {},
+    pending_inventories = {},
+    entity_observers = {}
+}
 
 function Player.__index(self, key)
-    if key == "temp" then
-        local t = TEMP[self]
+    if TEMPED_DATA[key] then
+        local t = TEMPED_DATA[key][self]
         if not t then
             t = {}
-            TEMP[self] = t
+            TEMPED_DATA[key][self] = t
         end
         return t
     end
@@ -31,9 +36,7 @@ function Player.new(username, identity)
             region_pos = { x = 0, y = 0, z = 0 },
             view_distance = VIEW_DISTANCE,
             view_padding = VIEW_PADDING_DEFAULT,
-            entity_observers = {},
             invid = 0,
-            pending_inventories = {},
             is_crouching = false,
             rules = {}
         }
