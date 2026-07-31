@@ -9,21 +9,13 @@ local module = {
 function module.login(identity)
     logger.log(string.format('account [#%s] is logging in...', logger.shorted(identity)))
 
-    local account = container.accounts.get(identity) or Account.new(identity)
-    local status = account:revive()
+    local account = Account.new(identity)
 
-    if status == true then
-        -- Ну мы его разбудили правильно, ничего делать не надо, мы молодцы
-    elseif status == false then
-        account:set("role", CONFIG.roles.default_role)
-        account:set("active", true)
+    if account.role == nil then
+        account.role = CONFIG.roles.default_role
     end
 
-    if account:is_active() and container.accounts.get(account.identity) == nil then
-        container.accounts.put(account.identity, account)
-    end
-
-    account:save()
+    container.accounts.put(account.identity, account)
 
     return account
 end
@@ -37,10 +29,10 @@ function module.leave(client)
     date.yday, date.wday, date.isdst, date.sec = nil, nil, nil, nil;
 
     if account.is_logged then
-        account:set("last_session", {
+        account.last_session = {
             ip = client.address,
             timestamp = date,
-        });
+        }
     end
 
     account:abort()

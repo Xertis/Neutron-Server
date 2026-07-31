@@ -18,10 +18,6 @@ function module.create_player(account_player)
     logger.log(string.format('Player [#%s] has been created with pid: %s', logger.shorted(account_player.identity), pid))
     account_player.pid = pid
 
-    time.post_runnable(function()
-        account_player.entity_id = player.get_entity(pid)
-    end)
-
     local y = 0
     local block_id = block.get(0, y, 0)
     while block_id ~= 0 and block_id ~= -1 do
@@ -32,7 +28,6 @@ function module.create_player(account_player)
     player.set_pos(account_player.pid, 0, y + 1, 0)
     player.set_spawnpoint(account_player.pid, 0, y + 1, 0)
     account_player.world = CONFIG.game.main_world
-    account_player.active = true
 
     local invid, _ = player.get_inventory(account_player.pid)
     account_player.invid = invid
@@ -45,11 +40,9 @@ function module.join_player(username, account)
         return
     end
 
-    local account_player = container.player_online.get(identity) or Player.new(username, identity)
+    local account_player = Player.new(username, identity)
 
-    local status = account_player:revive()
-
-    if status == true then
+    if account_player.pid then
         if username ~= account_player.username then
             if not module.is_username_available(account_player.username, identity) then
                 logger.log(
@@ -69,7 +62,7 @@ function module.join_player(username, account)
                 account_player.username, logger.shorted(identity), username))
             account_player.username = username
         end
-    elseif status == false then
+    else
         if not module.is_username_available(account_player.username, identity) then
             logger.log(
                 string.format(
@@ -98,7 +91,6 @@ function module.join_player(username, account)
     end
 
     logger.log(string.format('Player "%s" [#%s] joined.', account_player.username, logger.shorted(identity)))
-    account_player:save()
 
     local is_suspended = player.is_suspended(account_player.pid)
     logger.log(string.format('Suspend state of player "%s" is %s', account_player.username, tostring(is_suspended)))
@@ -123,8 +115,6 @@ function module.leave_player(account_player)
 
     player.set_suspended(account_player.pid, true)
     logger.log(string.format('Suspend state of player "%s" is true', account_player.username))
-
-    return account_player
 end
 
 function module.init_world(name)

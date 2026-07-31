@@ -98,6 +98,7 @@ function module.world.open_main()
 
     player.set_suspended(ROOT_PID, false)
     player.set_loading_chunks(ROOT_PID, true)
+    local ticks_count = 0
 
     do
         player.set_noclip(ROOT_PID, true)
@@ -105,13 +106,14 @@ function module.world.open_main()
         player.set_pos(ROOT_PID, 0, 262, 0)
 
         while player.get_entity(ROOT_PID) == -1 do
+            ticks_count = ticks_count + 1
             app.tick()
         end
 
         local root_entity = entities.get(player.get_entity(ROOT_PID))
 
         PLAYER_ENTITY_ID = root_entity:def_index()
-        logger.log("root entity has been received")
+        logger.log(string.format("root entity has been received in %s ticks", ticks_count))
     end
 
     for role_name, role in pairs(CONFIG.roles) do
@@ -136,7 +138,7 @@ function module.world.close_main()
 end
 
 function module.roles.is_higher(role1, role2)
-    if role1.priority > role2.priority then
+    if role1.priority < role2.priority then
         return true
     end
 

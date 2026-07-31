@@ -1,37 +1,39 @@
 local metadata = import "lib/data/metadata"
 local lib = import "lib/utils/min"
-local account = {}
-account.__index = account
+local Account = {}
+Account.__index = Account
 
 local accounts_proxy = metadata.proxy("server", "accounts")
 
-function account.new(identity)
-    local self = setmetatable({}, account)
+function Account.new(identity)
+    local self = accounts_proxy[identity]
 
-    self.active = false
-    self.last_session = nil
-    self.is_logged = false
-    self.role = nil
-    self.identity = identity
-    self.password = nil
+    if not self then
+        self = {
+            active = false,
+            last_session = nil,
+            is_logged = false,
+            role = nil,
+            identity = identity,
+            password = nil
+        }
+        accounts_proxy[identity] = self
+    end
 
-    return self
+    self.active = true
+
+    return setmetatable(self, Account)
 end
 
-function account:is_active()
+function Account:is_active()
     return self.active
 end
 
-function account:abort()
+function Account:abort()
     self.active = false
-    self:save()
 end
 
-function account:save()
-    accounts_proxy[self.identity] = self:to_save()
-end
-
-function account:set_password(password)
+function Account:set_password(password)
     if type(password) ~= 'string' then
         return CODES.accounts.PasswordUnvalidated
     elseif #password < 8 then
@@ -39,10 +41,9 @@ function account:set_password(password)
     end
 
     self.password = lib.hash.sha256(password)
-    self:save()
 end
 
-function account:check_password(password)
+function Account:check_password(password)
     if lib.hash.sha256(password) ~= self.password then
         return CODES.accounts.WrongPassword
     end
@@ -51,43 +52,4 @@ function account:check_password(password)
     return CODES.accounts.CorrectPassword
 end
 
-function account:revive()
-    if self.active then return true end
-    local data = accounts_proxy[self.identity]
-    if not data then return false end
-
-    self.active = true
-    self:to_load(data)
-
-    if not CONFIG.roles[self.role] then
-        local default_role = CONFIG.roles.default_role
-        logger.log(string.format(
-                [["%s" account has a non-existent "%s" role, his role has been changed to: "%s"]],
-                self.username, self.role, default_role),
-            "W")
-        self.role = default_role
-    end
-
-    return true
-end
-
-function account:set(key, val)
-    self[key] = val
-end
-
-function account:to_save()
-    return {
-        identity = self.identity,
-        password = self.password,
-        role = self.role,
-        last_session = self.last_session
-    }
-end
-
-function account:to_load(data)
-    for k, v in pairs(data) do
-        self[k] = v
-    end
-end
-
-return account
+return Account

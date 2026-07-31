@@ -1,29 +1,48 @@
 local metadata = import "lib/data/metadata"
 local Player = {}
-Player.__index = Player
+
+local TEMP = {}
+
+function Player.__index(self, key)
+    if key == "temp" then
+        local t = TEMP[self]
+        if not t then
+            t = {}
+            TEMP[self] = t
+        end
+        return t
+    end
+    return Player[key]
+end
 
 local players_proxy = metadata.proxy("players")
 
 function Player.new(username, identity)
-    local self = setmetatable({}, Player)
+    local self = players_proxy[identity]
 
-    self.username = username
-    self.identity = identity
-    self.active = false
-    self.entity_id = nil
-    self.pid = nil
-    self.world = nil
-    self.region_pos = { x = 0, y = 0, z = 0 }
-    self.view_distance = VIEW_DISTANCE
-    self.view_padding = VIEW_PADDING_DEFAULT
-    self.entity_observers = {}
-    self.invid = 0
-    self.pending_inventories = {}
-    self.is_crouching = false
-    self.temp = {}
-    self.rules = {}
+    if not self then
+        self = {
+            username = username,
+            identity = identity,
+            active = false,
+            entity_id = nil,
+            pid = nil,
+            world = nil,
+            region_pos = { x = 0, y = 0, z = 0 },
+            view_distance = VIEW_DISTANCE,
+            view_padding = VIEW_PADDING_DEFAULT,
+            entity_observers = {},
+            invid = 0,
+            pending_inventories = {},
+            is_crouching = false,
+            rules = {}
+        }
+        players_proxy[identity] = self
+    end
 
-    return self
+    self.active = true
+
+    return setmetatable(self, Player)
 end
 
 function Player:is_active()
@@ -32,47 +51,6 @@ end
 
 function Player:abort()
     self.active = false
-    self:save()
-end
-
-function Player:save()
-    players_proxy[self.identity] = self:to_save()
-end
-
-function Player:revive()
-    if self.active then return true end
-    local data = players_proxy[self.identity]
-    if not data then return false end
-
-    self.active = true
-    self:to_load(data)
-    return true
-end
-
-function Player:set(key, val)
-    self[key] = val
-end
-
-function Player:to_save()
-    return {
-        identity = self.identity,
-        username = self.username,
-        world = self.world,
-        pid = self.pid,
-        invid = self.invid,
-        region_pos = self.region_pos,
-        rules = self.rules
-    }
-end
-
-function Player:to_load(data)
-    self.identity = data.identity
-    self.username = data.username
-    self.world = data.world
-    self.pid = data.pid
-    self.invid = data.invid
-    self.region_pos = data.region_pos or { x = 0, y = 0, z = 0 }
-    self.rules = data.rules or {}
 end
 
 return Player
