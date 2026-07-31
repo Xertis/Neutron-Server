@@ -68,7 +68,7 @@ local weather_mt = {
             if self.type ~= "heightmap" then
                 error("set_height_range() available only for heightmap-type weather", 2)
             end
-            local weather = weather_manager_get_by_wid(self.wid)
+            local weather = weather_manager.get_by_wid(self.wid)
             if weather then
                 weather.range = { min, max }
                 self.range = { min, max }
