@@ -1,6 +1,6 @@
-local sandbox = import("server:core/sandbox/methods")
-local account_manager = import("server:core/accounts/methods")
-local protocol = import("server:net/protocol/protocol")
+local sandbox = import("core/sandbox/methods")
+local account_manager = import("core/accounts/methods")
+local protocol = import("net/protocol/protocol")
 
 local module = {
     players = {},

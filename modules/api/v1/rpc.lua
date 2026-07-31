@@ -1,4 +1,4 @@
-local events = import("server:api/v1/events")
+local events = import("api/v1/events")
 local bson = import "lib/data/bson"
 local db = import "lib/io/bit_buffer"
 

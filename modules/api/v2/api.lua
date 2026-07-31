@@ -1,11 +1,11 @@
-local events = import("server:api/v2/events")
+local events = import("api/v2/events")
 local rpc = import "api/v2/rpc"
 local accounts = import "api/v2/accounts"
 local bson = import "lib/data/bson"
 local console = import "api/v2/console"
 local sandbox = import "api/v2/sandbox"
 local db = import "lib/db/api"
-local env = import("server:api/v2/env")
+local env = import("api/v2/env")
 local interceptors = import "api/v2/interceptors"
 local entities = import "api/v2/entities"
 local protocol = import "api/v2/protocol"

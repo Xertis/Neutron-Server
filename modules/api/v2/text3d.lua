@@ -1,4 +1,4 @@
-local text3d_manager = import("server:core/sandbox/managers/text3d")
+local text3d_manager = import("core/sandbox/managers/text3d")
 
 local defaultFunctions = {
     "get_text", "set_text",
