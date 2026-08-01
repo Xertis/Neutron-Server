@@ -18,6 +18,7 @@ local inv_dat = import "api/v2/inv_dat"
 local tasks = import "api/v2/tasks"
 local messages = import "api/v2/messages"
 local replications = import "api/v2/replications"
+local rules = import "api/v2/rules"
 
 local api = {
     events = events,
@@ -40,6 +41,7 @@ local api = {
     tasks = tasks,
     messages = messages,
     replications = replications,
+    rules = rules,
     constants = {
         config = CONFIG,
         tps = TPS
