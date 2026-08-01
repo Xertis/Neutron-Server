@@ -1,14 +1,15 @@
 local sandbox = require "api/v2/sandbox"
+local rules = require "api/v2/rules"
 local accounts = require "api/v2/accounts"
 
 function on_share(player, invid, slotid)
     if not IS_HEADLESS then return end
     local blockinv = sandbox.inventories.get_second_inventory(player)
-    local rules = sandbox.players.get_all_values(player)
+    local _rules = rules.players.get_all_values(player)
 
     if blockinv ~= nil then
         inventory.move(invid, slotid, blockinv)
-    elseif rules["allow-content-access"] then
+    elseif _rules["allow-content-access"] then
         inventory.set(invid, slotid, 0, 0)
     elseif slotid < 10 then
         inventory.move_range(invid, slotid, invid, 10)

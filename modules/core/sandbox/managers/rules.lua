@@ -84,6 +84,10 @@ function rules.get_rule(name)
     return registered[name]
 end
 
+function rules.get_registered()
+    return registered
+end
+
 function rules.get_value(player, world, rule)
     local own, foreign = stores(rule, player, world)
     migrate(rule, own, foreign)
@@ -103,10 +107,10 @@ function rules.set_value(player, world, rule, value)
     return value
 end
 
-function rules.get_all(player, world)
+function rules.get_all_values(player, world)
     local result = {}
-    for name in pairs(registered) do
-        result[name] = rules.get_value(player, world, name)
+    for name, rule in pairs(registered) do
+        result[name] = rules.get_value(player, world, rule)
     end
     return result
 end

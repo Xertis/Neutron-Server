@@ -50,5 +50,6 @@ module.define = rules.define
 module.define_if_absent = rules.define_if_absent
 module.is_defined = rules.is_defined
 module.get_rule = rules.get_rule
+module.get_registered = rules.get_registered
 
 return module

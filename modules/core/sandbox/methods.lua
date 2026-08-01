@@ -376,7 +376,7 @@ end
 
 function module.get_all_values(player)
     local world = module.get_world(player.world)
-    return rules.get_all(player, world)
+    return rules.get_all_values(player, world)
 end
 
 function module.get_rule(name)
