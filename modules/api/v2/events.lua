@@ -26,6 +26,20 @@ function module.echo(pack, event, bytes)
     end
 end
 
+function module.selective_echo(pack, event, bytes, selector)
+    if IS_RUNNING then
+        server_echo.put_event(function(client)
+            if selector(client) then
+                client:push_packet(protocol.ServerMsg.PackEvent, {
+                    pack = pack,
+                    event = event,
+                    bytes = bytes
+                })
+            end
+        end)
+    end
+end
+
 function module.on(pack, event, func)
     if IS_RUNNING then
         local pack_handlers = table.set_default(handlers, pack, {})

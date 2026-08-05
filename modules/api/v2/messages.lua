@@ -110,6 +110,12 @@ function Message:echo(data)
     events.echo(self.pack, self.event, buf.bytes)
 end
 
+function Message:selective_echo(data, selector)
+    local buf = protocol.create_databuffer()
+    self:encode(buf, data)
+    events.selective_echo(self.pack, self.event, buf.bytes, selector)
+end
+
 function Message:on(handler)
     events.on(self.pack, self.event, function(client, bytes)
         local buf = protocol.create_databuffer(bytes)

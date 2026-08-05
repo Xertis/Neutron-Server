@@ -23,6 +23,17 @@ api.events.echo(
     event: string,
     bytes: Bytearray
 )
+
+-- Отправляет событие event с данными
+-- Вызывает `selector`, передавая туда клиент игрока
+-- Если `selector` возвращает true - отправляет клиенту пакет
+-- Иначе пакет не отправляется
+api.events.selective_echo(
+    pack: string,
+    event: string,
+    bytes: Bytearray,
+    selector: function(client)
+)
 ```
 
 ## Обработчики событий
