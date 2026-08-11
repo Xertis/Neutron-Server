@@ -112,7 +112,7 @@ PingMessage:echo({ id = "abc", data = {1, 2, 3} })
 
 -- Отправляет данные только тем клиентам, для которых `selector` вернул true
 -- Message:echo(pack: string, data: table, selector: function(client))
-PingMessage:selective_echo({ id = "abc", data = {1, 2, 3} }, function () return true end)
+PingMessage:selective_echo({ id = "abc", data = {1, 2, 3} }, function (client) return client.active end)
 ```
 
 `data` — таблица в виде, описанном схемой сообщения. Кодирование в байты и

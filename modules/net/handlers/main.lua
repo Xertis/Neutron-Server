@@ -661,8 +661,9 @@ local function can_interact_with_block(player_obj, x, y, z, normal_check)
     return ix == x and iy == y and iz == z
 end
 
-local function is_replaceable(x, y, z)
-   return table.has({ 0, -1 }, block.get(x, y, z))
+local function block_is_void(x, y, z)
+    local id = block.get(x, y, z)
+    return id == 0 or id == -1
 end
 
 matches.client_online_handler:add_case(protocol.ClientMsg.BlockInteract, (
@@ -720,7 +721,7 @@ matches.client_online_handler:add_case(protocol.ClientMsg.BlockUpdate, (
             return
         end
 
-        if not is_replaceable(x, y, z) then
+        if not block.is_replaceable_at(x, y, z) then
             return
         end
 
@@ -756,7 +757,7 @@ matches.client_online_handler:add_case(protocol.ClientMsg.BlockRegionUpdate, (
             return
         end
 
-        if not is_replaceable(x, y, z) then
+        if not block.is_replaceable_at(x, y, z) then
             return
         end
 
@@ -789,7 +790,7 @@ matches.client_online_handler:add_case(protocol.ClientMsg.BlockDestroy, (
             return
         end
 
-        if is_replaceable(x, y, z) then
+        if block_is_void(x, y, z) then
             return
         end
 
@@ -814,7 +815,7 @@ matches.client_online_handler:add_case(protocol.ClientMsg.BlockRegionDestroy, (
             return
         end
 
-        if is_replaceable(x, y, z) then
+        if block_is_void(x, y, z) then
             return
         end
 
