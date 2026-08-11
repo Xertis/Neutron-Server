@@ -18,11 +18,16 @@ function module.register(entity_name, config, spawn_handler)
         config.models = new_models
     end
 
+    if not reg_entities[entity_name] then
+        logger.log(string.format('The entity "%s" is registered', entity_name))
+    else
+        logger.log(string.format('The "%s" entity has been re-registered', entity_name))
+    end
+
     reg_entities[entity_name] = {
         config = config,
         spawn_handler = spawn_handler
     }
-    logger.log(string.format('The entity "%s" is registered.', entity_name))
 end
 
 function module.get_reg_config(entity_name)

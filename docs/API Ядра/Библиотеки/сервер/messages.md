@@ -15,8 +15,6 @@
 Lua-таблицы.
 
 ```lua
-local Message = import "net/protocol/message"
-
 -- Message.new(pack: string, event: string, schema: table) -> Message
 local PingMessage = Message.new("mypack", "ping", {
     id = "string",
