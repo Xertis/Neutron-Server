@@ -297,6 +297,15 @@ Incorrect VoxelCore version:
 
         local account = account_manager.login(packet.identity)
         local account_player = sandbox.join_player(packet.username, account)
+
+        if not account_player then
+            logger.log(string.format(
+                "For an unknown reason, a player could not be created for [#%s]",
+                logger.shorted(packet.identity)
+            ), "E")
+            return
+        end
+
         client:set_account(account)
         client:set_player(account_player)
 
@@ -322,6 +331,10 @@ Incorrect VoxelCore version:
             game_time = time.day_time_to_uint16(world.get_day_time()),
             rules = array_rules,
             chunks_loading_distance = math.clamp(CONFIG.server.chunks_loading_distance, 0, 255),
+            spawn_chunk = world.get_chunk_data(
+                math.floor(state.x / 16),
+                math.floor(state.z / 16)
+            ),
             player = {
                 pos = { x = state.x, y = state.y, z = state.z },
                 rot = { x = state.x_rot, y = state.y_rot, z = state.z_rot },

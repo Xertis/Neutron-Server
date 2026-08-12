@@ -58,6 +58,7 @@ JoinSuccess:
     - rules: Array<Rule>
     - chunks_loading_distance: uint8
     - player: PlayerEntity
+    - spawn_chunk: bytearray
 
 # -----------------------------------------------------------------
 # In-Game
