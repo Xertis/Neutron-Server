@@ -4,7 +4,7 @@ export default defineConfig({
     lang: 'ru-RU',
     title: 'Neutron',
     description: 'Документация серверного ядра Neutron для VoxelCore',
-    base: '/',
+    base: '/Neutron-Server/',
     lastUpdated: true,
 
     head: [
