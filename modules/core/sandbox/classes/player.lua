@@ -5,7 +5,8 @@ local Player = {}
 local TEMPED_DATA = {
     temp = {},
     pending_inventories = {},
-    entity_observers = {}
+    entity_observers = {},
+    predicted_observers = {}
 }
 
 function Player.__index(self, key)

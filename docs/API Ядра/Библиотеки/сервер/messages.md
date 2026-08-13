@@ -18,7 +18,7 @@ Lua-таблицы.
 -- Message.new(pack: string, event: string, schema: table) -> Message
 local PingMessage = Message.new("mypack", "ping", {
     id = "string",
-    data = "array<uint8>"
+    data = "Array<uint8>"
 })
 ```
 
