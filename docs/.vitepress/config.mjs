@@ -14,8 +14,12 @@ export default defineConfig({
   themeConfig: {
         logo: '/docs_icon.png',
 
+        search: {
+            provider: 'local'
+        },
+
         nav: [
-            { text: 'Начало', link: '/core/creating-server' },
+            { text: 'Запуск', link: '/core/creating-server' },
             { text: 'API', link: '/api/' },
             { text: 'Оболочки', link: '/shells/' },
         ],
