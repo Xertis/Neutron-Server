@@ -13,7 +13,7 @@
 ## Сериализация
 
 ```lua
-api.inventory_data.serialize(inv: table) -> table
+api.inventory_data.serialize(inv: table) -> Bytearray
 ```
 
 Возвращает инвентарь в виде массива байт.
@@ -21,7 +21,7 @@ api.inventory_data.serialize(inv: table) -> table
 ## Десериализация
 
 ```lua
-api.inventory_data.deserialize(bytes: table) -> table
+api.inventory_data.deserialize(bytes: Bytearray) -> table
 ```
 
 Читает инвентарь из массива байт.

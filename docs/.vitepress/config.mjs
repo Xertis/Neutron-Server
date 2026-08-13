@@ -48,6 +48,7 @@ export default defineConfig({
                         { text: 'Сериализация данных инвентарей', link: '/api/libraries/inventory-data' },
 
                         { text: 'Репликации', link: '/api/libraries/replications' },
+                        { text: 'Предсказанные события', link: '/api/libraries/predicted-events' },
 
                         { text: 'Аккаунты', link: '/api/libraries/accounts' },
                         { text: 'Песочница', link: '/api/libraries/sandbox' },

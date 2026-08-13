@@ -3,6 +3,8 @@ local chunks = import "core/sandbox/managers/chunks"
 
 local next_event_id = 0
 
+local predicted_events = {}
+
 local PredictedEvent = {}
 PredictedEvent.__index = PredictedEvent
 
@@ -77,7 +79,11 @@ function PredictedEvent.new(pack, event, schema, config)
         end
     end)
 
-    return setmetatable(self, PredictedEvent)
+    self = setmetatable(self, PredictedEvent)
+
+    predicted_events[#predicted_events+1] = self
+
+    return self
 end
 
 function PredictedEvent:tick()
@@ -184,7 +190,19 @@ function Instant:set_progress(progress)
 end
 
 function Instant:get_progress()
-	return self.progress
+    return self.progress
 end
+
+events.on("server:client_pipe_start", function(client)
+    for i=1, #predicted_events do
+        predicted_events[i]:process(client)
+    end
+end)
+
+events.on("server:main_tick", function ()
+    for i=1, #predicted_events do
+        predicted_events[i]:tick()
+    end
+end)
 
 return PredictedEvent

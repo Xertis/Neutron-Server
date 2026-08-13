@@ -12,7 +12,7 @@
 ## Сериализация
 
 ```lua
-api.bson.serialize(tbl: Table<Any>) -> Table<Bytes>
+api.bson.serialize(tbl: Table<Any>) -> Bytearray
 ```
 
 Возвращает таблицу `tbl` в виде массива байт.
@@ -20,7 +20,7 @@ api.bson.serialize(tbl: Table<Any>) -> Table<Bytes>
 ## Десериализация
 
 ```lua
-api.bson.deserialize(bytes: Table<Bytes>) -> Table<Any>
+api.bson.deserialize(bytes: Bytearray) -> Table<Any>
 ```
 
 Читает таблицу из массива байт.

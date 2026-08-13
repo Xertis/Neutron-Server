@@ -26,9 +26,9 @@ particles.get(pid: int) -> ParticleObj | nil
 |-------|----------|
 | `particle:stop()` | Удаление эмитера частиц. |
 | `particle:is_alive() -> boolean` | Состояние эмитера. |
-| `particle:get_origin() -> table | uid` | Получение `origin`. |
-| `particle:set_origin(origin: table | uid)` | Изменение `origin`. |
-| `particle:get_pos() -> table` | Позиция эмитера. |
+| `particle:get_origin() -> vec3 / uid` | Получение `origin`. |
+| `particle:set_origin(origin: vec3 / uid)` | Изменение `origin`. |
+| `particle:get_pos() -> vec3` | Позиция эмитера. |
 
 ## Пример использования
 
