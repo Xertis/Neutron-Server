@@ -8,7 +8,7 @@ export default defineConfig({
     lastUpdated: true,
 
     head: [
-        ['link', { rel: 'icon', type: 'image/png', href: '/docs_icon.png' }],
+        ['link', { rel: 'icon', type: 'image/png', href: '/Neutron-Server/docs_icon.png' }],
     ],
 
   themeConfig: {
