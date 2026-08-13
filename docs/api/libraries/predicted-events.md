@@ -3,7 +3,7 @@
 **Содержание**
 - [Создание](#создание)
 - [Конфиг](#конфиг)
-- [Старт события (клиент)](#predictedeventstart-клиент)
+- [Старт события (клиент)](#predictedevent-start-клиент)
 - [Объект Instant](#объект-instant)
 
 `PredictedEvent` — обёртка над `Message` для длительных действий с клиентским предсказанием: игрок стартует действие локально, не дожидаясь ответа сервера, сервер валидирует и подтверждает (или отклоняет) запрос, а прогресс синхронизируется с наблюдателями — другими игроками, у которых загружен чанк с позицией действия.
@@ -11,7 +11,12 @@
 ## Создание
 
 ```lua
-PredictedEvent.new(pack: string, event: string, schema: table, config: table) -> PredictedEvent
+PredictedEvent.new(
+    pack: string, 
+    event: string, 
+    schema: table, 
+    config: table
+) -> PredictedEvent
 ```
 
 ```lua
