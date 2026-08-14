@@ -26,7 +26,7 @@
 ### Определение правила
 
 ```lua
-api.rules.define(name: string, properties: { default: any, level: "player"|"world" }) -> Rule
+api.rules.define(name: string, properties: { default: boolean, level: "player"|"world" }) -> Rule
 ```
 
 ```lua
@@ -64,12 +64,12 @@ api.rules.get_rule(name: string) -> Rule | nil
 
 ```lua
 -- Для игроков
-api.rules.players.get_value(player: Player, rule: Rule) -> any
-api.rules.players.set_value(player: Player, rule: Rule, value: any)
+api.rules.players.get_value(player: Player, rule: Rule) -> boolean
+api.rules.players.set_value(player: Player, rule: Rule, value: boolean)
 
 -- Для миров
-api.rules.worlds.get_value(world: World, rule: Rule) -> any
-api.rules.worlds.set_value(world: World, rule: Rule, value: any)
+api.rules.worlds.get_value(world: World, rule: Rule) -> boolean
+api.rules.worlds.set_value(world: World, rule: Rule, value: boolean)
 ```
 
 `set_value` вызывает всех подписчиков, зарегистрированных через `Rule:listen`, и рассылает клиентам обновлённое значение.
@@ -86,7 +86,7 @@ api.rules.players.get_all_values(player: Player) -> { [name: string] = value }
 
 ```lua
 -- Подписка на изменения
-Rule:listen(handler: function(obj: Player|World, value: any)) -> id: string
+Rule:listen(handler: function(obj: Player|World, value: boolean)) -> id: string
 
 -- Отписка
 Rule:unlisten(id: string)
@@ -99,7 +99,7 @@ Rule:unlisten(id: string)
 ### Определение правила
 
 ```lua
-api.rules.define(name: string, properties: { default: any}) -> Rule
+api.rules.define(name: string, properties: { default: boolean}) -> Rule
 ```
 
 На клиенте у `Rule` игнорируется параметр `level` — правило всегда одно, локальное для текущего игрока.
@@ -120,13 +120,13 @@ api.rules.is_defined(name: string) -> boolean
 
 ```lua
 api.rules.get_rule(name: string) -> Rule | nil
-api.rules.get_value(rule: Rule) -> any
+api.rules.get_value(rule: Rule) -> boolean
 ```
 
 ### Объект Rule
 
 ```lua
-Rule:listen(handler: function(value: any)) -> id: string
+Rule:listen(handler: function(value: boolean)) -> id: string
 Rule:unlisten(id: string)
 ```
 
