@@ -88,7 +88,7 @@ PredictedEvent:start(data: table) -> Instant
 local instant = MiningEvent:start({ pos = player.pos, block = "stone" })
 ```
 
-Немедленно создаёт локальный `Instant` (`active = false`) и отправляет `c_start` на сервер. `Instant` становится активным только после `on_ack_start`; если сервер отклонит запрос, `Instant` так и останется неактивным и будет вызван `on_reject`.
+Немедленно создаёт локальный `Instant` (`active = false`) и отправляет старт на сервер. `Instant` становится активным только после `on_ack_start`; если сервер отклонит запрос, `Instant` так и останется неактивным и будет вызван `on_reject`.
 
 ## Объект Instant
 
