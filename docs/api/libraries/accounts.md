@@ -21,7 +21,7 @@ api.accounts.get_client(account: Account) -> Client
 ## Управление аккаунтами
 
 ```lua
--- Кикает аккаунт с сервера по причине reason
+-- Кикает аккаунт с сервера
 -- Если soft == true, кик произойдёт после обработки пакетов
 api.accounts.kick(account: Account, reason: string, soft: boolean)
 ```

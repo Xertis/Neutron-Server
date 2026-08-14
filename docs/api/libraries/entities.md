@@ -11,9 +11,6 @@
   - [Указание обработчика](#указание-обработчика)
   - [Десинхронные сущности](#десинхронные-сущности)
 
-> [!WARNING]
-> Перед чтением клиентской части рекомендуется ознакомиться с серверной документацией `api.entities`.
-
 ---
 
 ## Сервер
@@ -108,8 +105,119 @@ entities.register(entity_name, config, spawn_handler)
 | `provider` | Функция, которая вызывается для получения значения поля. |
 | `evaluate_deviation` | Функция, вычисляющая отклонение на основе расстояния до игрока, действительного значения и значения на клиенте. |
 
-> [!NOTE]
-> В связи с тем, что `entity.skeleton` по умолчанию не доступен в headless-режиме, поля из **textures**, **models**, **matrix** имеют альтернативный способ получения значений из **provider**.
+### Типы полей
+
+#### `standard_fields`
+
+Поля, привязанные к встроенным свойствам сущности (`entity.transform`, `entity.rigidbody` и т.п.), которые ядро умеет читать напрямую без явного `provider`. Пример — `tsf_pos`, получаемое через `entity.transform:get_pos()`.
+
+```lua
+standard_fields = {
+    tsf_pos = {
+        maximum_deviation = 0.5,
+        evaluate_deviation = entities.eval.VectorNotEquals
+        -- значение берётся из entity.transform:get_pos()
+    }
+}
+```
+
+#### `custom_fields`
+
+Произвольные поля, не имеющие соответствия во встроенных свойствах сущности (HP, состояние, кастомные флаги и т.п.).
+
+- `provider` **обязателен** и должен возвращать значение произвольного типа.
+- Сигнатура: `function(uid, field_name)` — должна вернуть текущее значение поля для сущности `uid`.
+
+```lua
+custom_fields = {
+    hp = {
+        maximum_deviation = 1,
+        evaluate_deviation = entities.eval.NotEquals,
+        provider = function(uid, field_name)
+            return health.get(uid)
+        end
+    }
+}
+```
+
+#### `textures`
+
+Управляют текстурами модели сущности. Ключ секции — **произвольное имя текстуры**, а не числовой индекс.
+
+- По умолчанию значение читается из `entity.skeleton` (текстура, назначенная на соответствующий слот скелета), но это сработает только если в коде самостоятельно устанавливается значение для `entity.skeleton`.
+- Так как `entity.skeleton` недоступен в headless-режиме и реализован через патч движка, можно указать `provider`, который должен возвращать `string` — имя текстуры.
+
+```lua
+textures = {
+    skin = {
+        maximum_deviation = 0,
+        evaluate_deviation = entities.eval.NotEquals,
+        provider = function(uid, field_name)
+            return entity_skins[uid]
+        end
+    }
+}
+```
+
+#### `models`
+
+Отвечают за модели костей. Ключ секции — **числовой индекс** кости в скелете.
+
+- По умолчанию значение (какая модель назначена на индекс) читается из `entity.skeleton`.
+- Есть опциональный `provider`, аналогично `textures`, который должен возвращать `string` — имя модели.
+
+```lua
+models = {
+    [1] = {
+        maximum_deviation = 0,
+        evaluate_deviation = entities.eval.NotEquals,
+        provider = function(uid, field_name)
+            return models[uid][1]
+        end
+    }
+}
+```
+
+#### `matrix`
+
+Синхронизирует матрицы трансформации отдельных костей скелета. Ключ — **числовой индекс** кости в скелете.
+
+- По умолчанию читается из `entity.skeleton` (матрица соответствующего узла).
+- Есть опциональный `provider`, аналогично `textures` и `models`,
+должен возвращать матрицу трансформации.
+- Для сравнения матриц как векторных наборов чисел удобно использовать `entities.eval.VectorNotEquals`, а не `NotEquals` (устойчивость к погрешностям float).
+
+```lua
+matrix = {
+    [0] = {
+        maximum_deviation = 0.001,
+        evaluate_deviation = entities.eval.VectorNotEquals,
+        provider = function(uid, field_name)
+            return bone_matrices[uid][0]
+        end
+    }
+}
+```
+
+#### `components`
+
+Включают/выключают компоненты сущности у клиента.
+
+- `provider` **обязателен** и должен возвращать `bool`.
+- `true` → компонент включается на клиенте, `false` → выключается.
+- Так как значение бинарное, `evaluate_deviation` обычно задают как `entities.eval.NotEquals`.
+
+```lua
+components = {
+    logic = {
+        maximum_deviation = 0,
+        evaluate_deviation = entities.eval.NotEquals,
+        provider = function(uid, field_name)
+            return false
+        end
+    }
+}
+```
 
 ### Вспомогательные функции
 

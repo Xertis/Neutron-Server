@@ -17,7 +17,7 @@
   - [Объект Rule](#объект-rule-1)
 
 > [!WARNING]
-> `api.rules.define` должен вызываться в **shared**-коде — том, что выполняется одинаково и на клиенте, и на сервере (например, в `content.lua` пака).
+> `api.rules.define` должен вызываться в **shared**-коде — том, что выполняется одинаково и на клиенте, и на сервере.
 
 ---
 
@@ -99,17 +99,10 @@ Rule:unlisten(id: string)
 ### Определение правила
 
 ```lua
-api.rules.define(name: string, properties: { default: any, [handler]: function }) -> Rule
+api.rules.define(name: string, properties: { default: any}) -> Rule
 ```
 
-```lua
-local FlightRule = api.rules.define("allow-flight", { default = true })
-```
-
-На клиенте у `Rule` нет `level` — правило всегда одно, локальное для текущего игрока/мира.
-
-> [!WARNING]
-> Повторный `api.rules.define` с уже занятым именем кидает ошибку. Используйте `api.rules.define_if_absent`.
+На клиенте у `Rule` игнорируется параметр `level` — правило всегда одно, локальное для текущего игрока.
 
 ### Условное определение
 
