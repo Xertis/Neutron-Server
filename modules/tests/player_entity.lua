@@ -27,15 +27,19 @@ local function deep_approx_equals(a, b, epsilon)
     end
 end
 
-local encoder = compiler.load(compiler.compile_encoder({ "PlayerEntity" }))
-local decoder = compiler.load(compiler.compile_decoder({ "PlayerEntity" }))
+local fields = {
+    entity = "PlayerEntity"
+}
+
+local encoder = compiler.load(compiler.compile_encoder(fields))
+local decoder = compiler.load(compiler.compile_decoder(fields))
 
 local function roundtrip(tbl)
     local buf = bb:new()
-    encoder(buf, tbl)
+    encoder(buf, { entity = tbl })
     buf:flush()
     buf:reset()
-    return decoder(buf)[1]
+    return decoder(buf).entity
 end
 
 local total, passed = 0, 0
@@ -50,8 +54,10 @@ local function run_test(name, fn)
     end
 end
 
+math.randomseed(os.time())
+
 for i = 1, 25 do
-    run_test("PlayerEntity random test", function()
+    run_test("PlayerEntity random test #" .. i, function()
         local player = {}
         if math.random() > 0.5 then
             player.pos = {
@@ -77,8 +83,6 @@ for i = 1, 25 do
         local decoded = roundtrip(player)
         assert(deep_approx_equals(decoded, player, 0.01), "Decoded data does not match original")
     end)
-
-    math.randomseed(os.clock() + i)
 end
 
 print(string.format("Passed %d/%d tests", passed, total))
