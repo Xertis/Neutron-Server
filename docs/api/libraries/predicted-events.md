@@ -112,6 +112,7 @@ Instant:get_elapsed() -> number  -- Возвращает прошедшее вр
 ### Клиент
 
 ```lua
+Instant.instant_id: number       -- Существует только на клиенте, нужен для унификации идентификации инстантов
 Instant.event_id: number | nil
 Instant.data: table
 Instant.start_time: number
