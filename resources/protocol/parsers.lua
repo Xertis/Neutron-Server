@@ -1148,7 +1148,7 @@ do
     buf:put_bit(is_empty)
 
     if is_empty then
-        return
+        goto invu_end
     end
 
     needed_bits_id = math.bit_length(max_id - min_id)
@@ -1179,6 +1179,8 @@ do
             buf:put_bit(false)
         end
     end
+
+    ::invu_end::
 end --@
 
 -- @InventoryUnlimited.read

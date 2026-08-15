@@ -4,7 +4,7 @@
 - [Создание](#создание)
 - [Конфиг](#конфиг)
 - [Старт события (клиент)](#predictedevent-start-клиент)
-- [Объект Instant](#объект-instant)
+- [Объект Instance](#объект-instance)
 
 `PredictedEvent` — обёртка над `Message` для длительных действий с клиентским предсказанием: игрок стартует действие локально, не дожидаясь ответа сервера, сервер валидирует и подтверждает (или отклоняет) запрос, а прогресс синхронизируется с наблюдателями — другими игроками, у которых загружен чанк с позицией действия.
 
@@ -42,16 +42,16 @@ local MiningEvent = PredictedEvent.new("mypack", "mining", {
 | Поле | Сигнатура | Когда вызывается |
 |------|-----------|-------------------|
 | `on_start` | `function(client, data) -> boolean` | Клиент начал событие. Возвращаемое значение решает, принять ли действие; также требуется, чтобы чанк `pos` был загружен у клиента. |
-| `on_interrupt` | `function(client, instant)` | Клиент прервал событие |
-| `on_tick` | `function(client, instant) -> number` | Каждый серверный тик для каждого активного `Instant`. Возвращаемое число — новый прогресс (`0..1`). |
-| `on_finish` | `function(client, instant)` | `on_tick` вернул прогресс `>= 1`. |
+| `on_interrupt` | `function(client, instance)` | Клиент прервал событие |
+| `on_tick` | `function(client, instance) -> number` | Каждый серверный тик для каждого активного `Instance`. Возвращаемое число — новый прогресс (`0..1`). |
+| `on_finish` | `function(client, instance)` | `on_tick` вернул прогресс `>= 1`. |
 
 ```lua
 local MiningEvent = PredictedEvent.new("mypack", "mining", schema, {
     on_start = function(client, data) return true end,
-    on_interrupt = function(client, instant) end,
-    on_tick = function(client, instant) return instant:get_progress() + 0.05 end,
-    on_finish = function(client, instant) end,
+    on_interrupt = function(client, instance) end,
+    on_tick = function(client, instance) return instance:get_progress() + 0.05 end,
+    on_finish = function(client, instance) end,
 })
 ```
 
@@ -59,19 +59,19 @@ local MiningEvent = PredictedEvent.new("mypack", "mining", schema, {
 
 | Поле | Сигнатура | Когда вызывается |
 |------|-----------|-------------------|
-| `on_ack_start` | `function(instant)` | Сервер подтвердил действие, либо пришёл пакет о чужом действии. |
-| `on_reject` | `function(instant)` | Сервер отклонил запущенное локально действие. |
-| `on_progress` | `function(instant)` | Пришёл прогресс для своего или наблюдаемого действия. |
-| `on_finish` | `function(instant)` | Действие завершено успешно. |
-| `on_interrupt` | `function(instant)` | Действие прервано сервером или игроком-владельцем действия (в случае, если действие наблюдаемое). |
+| `on_ack_start` | `function(instance)` | Сервер подтвердил действие, либо пришёл пакет о чужом действии. |
+| `on_reject` | `function(instance)` | Сервер отклонил запущенное локально действие. |
+| `on_progress` | `function(instance)` | Пришёл прогресс для своего или наблюдаемого действия. |
+| `on_finish` | `function(instance)` | Действие завершено успешно. |
+| `on_interrupt` | `function(instance)` | Действие прервано сервером или игроком-владельцем действия (в случае, если действие наблюдаемое). |
 
 ```lua
 local MiningEvent = PredictedEvent.new("mypack", "mining", schema, {
-    on_ack_start = function(instant) end,
-    on_reject = function(instant) end,
-    on_progress = function(instant) end,
-    on_finish = function(instant) end,
-    on_interrupt = function(instant) end,
+    on_ack_start = function(instance) end,
+    on_reject = function(instance) end,
+    on_progress = function(instance) end,
+    on_finish = function(instance) end,
+    on_interrupt = function(instance) end,
 })
 ```
 
@@ -81,48 +81,48 @@ local MiningEvent = PredictedEvent.new("mypack", "mining", schema, {
 ## PredictedEvent:start (клиент)
 
 ```lua
-PredictedEvent:start(data: table) -> Instant
+PredictedEvent:start(data: table) -> Instance
 ```
 
 ```lua
-local instant = MiningEvent:start({ pos = player.pos, block = "stone" })
+local instance = MiningEvent:start({ pos = player.pos, block = "stone" })
 ```
 
-Немедленно создаёт локальный `Instant` (`active = false`) и отправляет старт на сервер. `Instant` становится активным только после `on_ack_start`; если сервер отклонит запрос, `Instant` так и останется неактивным и будет вызван `on_reject`.
+Немедленно создаёт локальный `Instance` (`active = false`) и отправляет старт на сервер. `Instance` становится активным только после `on_ack_start`; если сервер отклонит запрос, `Instance` так и останется неактивным и будет вызван `on_reject`.
 
-## Объект Instant
+## Объект Instance
 
-Поля и методы `Instant` различаются на сервере и клиенте — на сервере он привязан к конкретному `client`-инициатору и рассылает синхронизацию наблюдателям, на клиенте это либо своё предсказанное действие, либо снимок чужого.
+Поля и методы `Instance` различаются на сервере и клиенте — на сервере он привязан к конкретному `client`-инициатору и рассылает синхронизацию наблюдателям, на клиенте это либо своё предсказанное действие, либо снимок чужого.
 
 ### Сервер
 
 ```lua
-Instant.event_id: number
-Instant.client: Client
-Instant.data: table
-Instant.start_time: number
-Instant.progress: number
-Instant.active: boolean
+Instance.event_id: number
+Instance.client: Client
+Instance.data: table
+Instance.start_time: number
+Instance.progress: number
+Instance.active: boolean
 
-Instant:interrupt()              -- Прерывает действие
-Instant:get_progress() -> number -- Возвращает прогресс
-Instant:get_elapsed() -> number  -- Возвращает прошедшее время с начала выполнения действия 
+Instance:interrupt()              -- Прерывает действие
+Instance:get_progress() -> number -- Возвращает прогресс
+Instance:get_elapsed() -> number  -- Возвращает прошедшее время с начала выполнения действия 
 ```
 
 ### Клиент
 
 ```lua
-Instant.instant_id: number       -- Существует только на клиенте, нужен для унификации идентификации инстантов
-Instant.event_id: number | nil
-Instant.data: table
-Instant.start_time: number
-Instant.progress: number
-Instant.active: boolean
+Instance.instance_id: number       -- Существует только на клиенте, нужен для унификации идентификации инстантов
+Instance.event_id: number | nil
+Instance.data: table
+Instance.start_time: number
+Instance.progress: number
+Instance.active: boolean
 
-Instant:interrupt()              -- Прерывает действие
-Instant:get_progress() -> number -- Возвращает прогресс
-Instant:get_elapsed() -> number  -- Возвращает прошедшее время с начала выполнения действия 
+Instance:interrupt()              -- Прерывает действие
+Instance:get_progress() -> number -- Возвращает прогресс
+Instance:get_elapsed() -> number  -- Возвращает прошедшее время с начала выполнения действия 
 ```
 
 > [!WARNING]
-> `Instant:interrupt()` отправляет "прерывание" только если `instant.active == true`. Для собственного действия это значит — не раньше, чем придёт `on_ack_start`; для наблюдаемого чужого действия `active` не выставляется вовсе.
+> `Instance:interrupt()` отправляет "прерывание" только если `instance.active == true`. Для собственного действия это значит — не раньше, чем придёт `on_ack_start`; для наблюдаемого чужого действия `active` не выставляется вовсе.

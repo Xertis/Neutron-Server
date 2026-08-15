@@ -3,7 +3,6 @@ local entities_manager = import "core/sandbox/managers/entities"
 local HUGE = math.huge
 
 local module = {
-    players = {},
     eval = {},
     types = {
         Custom = "custom_fields",
