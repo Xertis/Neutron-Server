@@ -1,8 +1,9 @@
 local compiler = import "net/protocol/compiler"
 local bb = import "lib/io/bit_buffer"
 
-local encoder = compiler.load(compiler.compile_encoder({ "varint", "varint" }))
-local decoder = compiler.load(compiler.compile_decoder({ "varint", "varint" }))
+local fields = { a = "varint", b = "varint" }
+local encoder = compiler.load(compiler.compile_encoder(fields))
+local decoder = compiler.load(compiler.compile_decoder(fields))
 
 local total, passed = 0, 0
 
@@ -19,10 +20,10 @@ end
 
 local function test(num)
     local buf = bb:new()
-    encoder(buf, num, 255)
+    encoder(buf, { a = num, b = 255 })
     buf:reset()
-    local res = decoder(buf)[1]
-    assert(res == num, string.format("Ожидали: %s; Получили: %s", num, res))
+    local res = decoder(buf)
+    assert(res.a == num, string.format("Ожидали: %s; Получили: %s", num, res.a))
 end
 
 run_test("2^31 encode-decode", function()
