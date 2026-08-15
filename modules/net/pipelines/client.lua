@@ -374,7 +374,7 @@ ClientPipe:add_middleware(function(client)
     end
 
     for _, e in ipairs(changed_entity) do
-        client:push_packet(protocol.ServerMsg.Text3DEntity, { var = e.id, entity = e.uid })
+        client:push_packet(protocol.ServerMsg.Text3DEntity, { id = e.id, entity = e.uid })
     end
 
     for _, ax in ipairs(changed_axis) do

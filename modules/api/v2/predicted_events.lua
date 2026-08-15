@@ -8,8 +8,8 @@ local predicted_events = {}
 local PredictedEvent = {}
 PredictedEvent.__index = PredictedEvent
 
-local Instant = {}
-Instant.__index = Instant
+local Instance = {}
+Instance.__index = Instance
 
 function PredictedEvent.new(pack, event, schema, config)
     if not schema.pos then
@@ -68,7 +68,7 @@ function PredictedEvent.new(pack, event, schema, config)
             event_id = next_event_id
             next_event_id = next_event_id + 1
 
-            self.instances[event_id] = Instant.new(self, event_id, client, packet.data, 0)
+            self.instances[event_id] = Instance.new(self, event_id, client, packet.data, 0)
         end
         self.messages.s_ack:tell(client, {
             request_id = packet.request_id,
@@ -78,10 +78,10 @@ function PredictedEvent.new(pack, event, schema, config)
     end)
 
     self.messages.c_interrupt:on(function(client, packet)
-        local instant = self.instances[packet.event_id]
-        if instant and client == instant.client then
-            self.config.on_interrupt(client, instant)
-            instant:interrupt()
+        local instance = self.instances[packet.event_id]
+        if instance and client == instance.client then
+            self.config.on_interrupt(client, instance)
+            instance:interrupt()
         end
     end)
 
@@ -93,15 +93,15 @@ function PredictedEvent.new(pack, event, schema, config)
 end
 
 function PredictedEvent:tick()
-    for event_id, instant in pairs(self.instances) do
-        if instant.active then
-            local progress = self.config.on_tick(instant.client, instant)
-            instant:set_progress(progress)
-            instant:sync()
+    for event_id, instance in pairs(self.instances) do
+        if instance.active then
+            local progress = self.config.on_tick(instance.client, instance)
+            instance:set_progress(progress)
+            instance:sync()
 
             if progress >= 1 then
-                self.config.on_finish(instant.client, instant)
-                instant:finish()
+                self.config.on_finish(instance.client, instance)
+                instance:finish()
                 self.instances[event_id] = nil
             end
         else
@@ -113,9 +113,9 @@ end
 function PredictedEvent:process(client)
     local player_obj = client.player
 
-    for event_id, instant in pairs(self.instances) do
-        if instant.active and instant.client ~= client then
-            local x, z = math.floor(instant.data.pos[1] / 16), math.floor(instant.data.pos[3] / 16)
+    for event_id, instance in pairs(self.instances) do
+        if instance.active and instance.client ~= client then
+            local x, z = math.floor(instance.data.pos[1] / 16), math.floor(instance.data.pos[3] / 16)
             local is_loaded = chunks.is_loaded(player_obj, x, z)
             local observing = player_obj.predicted_observers[event_id]
 
@@ -123,8 +123,8 @@ function PredictedEvent:process(client)
                 player_obj.predicted_observers[event_id] = true
                 self.messages.s_observe_start:tell(client, {
                     event_id = event_id,
-                    progress = instant.progress,
-                    data = instant.data
+                    progress = instance.progress,
+                    data = instance.data
                 })
             elseif not is_loaded and observing then
                 player_obj.predicted_observers[event_id] = nil
@@ -133,7 +133,7 @@ function PredictedEvent:process(client)
     end
 end
 
-function Instant.new(predicted, event_id, client, data, progress)
+function Instance.new(predicted, event_id, client, data, progress)
     return setmetatable({
         event_id = event_id,
         client = client,
@@ -142,10 +142,10 @@ function Instant.new(predicted, event_id, client, data, progress)
         progress = progress,
         predicted = predicted,
         active = true
-    }, Instant)
+    }, Instance)
 end
 
-function Instant:interrupt()
+function Instance:interrupt()
     if not self.active then return end
     self.active = false
 
@@ -162,7 +162,7 @@ function Instant:interrupt()
     end)
 end
 
-function Instant:finish()
+function Instance:finish()
     if not self.active then return end
     self.active = false
 
@@ -179,7 +179,7 @@ function Instant:finish()
     end)
 end
 
-function Instant:sync()
+function Instance:sync()
     if not self.active then return end
 
     self.predicted.messages.s_progress:selective_echo({
@@ -191,16 +191,16 @@ function Instant:sync()
     end)
 end
 
-function Instant:set_progress(progress)
+function Instance:set_progress(progress)
     if not self.active then return end
     self.progress = progress
 end
 
-function Instant:get_progress()
+function Instance:get_progress()
     return self.progress
 end
 
-function Instant:get_elapsed()
+function Instance:get_elapsed()
     local now = time.uptime()
     return now - self.start_time
 end
