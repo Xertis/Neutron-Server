@@ -48,6 +48,13 @@ function PredictedEvent.new(pack, event, schema, config)
         })
     }
 
+    config = {
+        on_start = config.on_start or function(_, __) end,
+        on_interrupt = config.on_interrupt or function(_, __) end,
+        on_tick = config.on_tick or function(_, __) end,
+        on_finish = config.on_finish or function(_, __) end,
+    }
+
     self.instances = {}
     self.config = config
 

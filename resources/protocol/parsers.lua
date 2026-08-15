@@ -197,6 +197,20 @@ do
     result = buf:get_norm8()
 end --@
 
+-- @norm16.write
+-- VARIABLES
+-- TO_SAVE val
+do
+    buf:put_norm16(val)
+end --@
+
+-- @norm16.read
+-- VARIABLES
+-- TO_LOAD result
+do
+    result = buf:get_norm16()
+end --@
+
 -- @uint12.write
 -- VARIABLES
 -- TO_SAVE val
