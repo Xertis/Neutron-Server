@@ -132,6 +132,7 @@ function Instant.new(predicted, event_id, client, data, progress)
         event_id = event_id,
         client = client,
         data = data,
+        start_time = time.uptime(),
         progress = progress,
         predicted = predicted,
         active = true
@@ -191,6 +192,11 @@ end
 
 function Instant:get_progress()
     return self.progress
+end
+
+function Instant:get_elapsed()
+    local now = time.uptime()
+    return now - self.start_time
 end
 
 events.on("server:client_pipe_start", function(client)

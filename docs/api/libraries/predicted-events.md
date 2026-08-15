@@ -100,26 +100,27 @@ local instant = MiningEvent:start({ pos = player.pos, block = "stone" })
 Instant.event_id: number
 Instant.client: Client
 Instant.data: table
+Instant.start_time: number
 Instant.progress: number
 Instant.active: boolean
 
-Instant:interrupt()
-Instant:finish()
-Instant:get_progress() -> number
+Instant:interrupt()              -- Прерывает действие
+Instant:get_progress() -> number -- Возвращает прогресс
+Instant:get_elapsed() -> number  -- Возвращает прошедшее время с начала выполнения действия 
 ```
-
-- `interrupt()` / `finish()` — переводят `active` в `false` и рассылают пакеты всем текущим наблюдателям (кроме клиента-инициатора, которому это не нужно).
 
 ### Клиент
 
 ```lua
 Instant.event_id: number | nil
 Instant.data: table
+Instant.start_time: number
 Instant.progress: number
 Instant.active: boolean
 
-Instant:get_progress() -> number
-Instant:interrupt()
+Instant:interrupt()              -- Прерывает действие
+Instant:get_progress() -> number -- Возвращает прогресс
+Instant:get_elapsed() -> number  -- Возвращает прошедшее время с начала выполнения действия 
 ```
 
 > [!WARNING]
