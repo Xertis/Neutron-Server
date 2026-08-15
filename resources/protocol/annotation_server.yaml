@@ -208,6 +208,7 @@ Text3DEntity:
 Text3DState:
   fields:
     - state: Text3D
+
 Text3DAxis:
   fields:
     - id: var

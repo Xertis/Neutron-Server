@@ -207,7 +207,7 @@ matches.joining_fsm:add_state("sending_packs_list", {
 
         local DATA = packs
 
-        client:push_packet(protocol.ServerMsg.PacksList, { DATA })
+        client:push_packet(protocol.ServerMsg.PacksList, { packs = DATA })
         return "awaiting_packs_hashes"
     end
 })
@@ -359,7 +359,7 @@ Incorrect VoxelCore version:
         inventories_manager.init(account_player, player_inventory_controller, content_menu_controller)
         inventories_manager.sync(account_player, 1)
 
-        client:push_packet(protocol.ServerMsg.PlayerHandSlot, { slot })
+        client:push_packet(protocol.ServerMsg.PlayerHandSlot, { slot = slot })
         time.post_runnable(function()
             events.emit("server:on_player_ready", client)
         end)
@@ -372,7 +372,7 @@ Incorrect VoxelCore version:
         client:push_packet(protocol.ServerMsg.OnlinePlayersList, { list = online_players })
         echo.put_event(function(_client)
             _client:push_packet(protocol.ServerMsg.OnlinePlayersListAdd, {
-                { account_player.username, account_player.pid }
+                data = { account_player.username, account_player.pid }
             })
         end, client)
         ---
@@ -605,7 +605,7 @@ local function chunks_responce_optimizate(packet, client)
         end
     end
 
-    client:push_packet(protocol.ServerMsg.ChunksData, { chunks_list })
+    client:push_packet(protocol.ServerMsg.ChunksData, { list = chunks_list })
 
     return true
 end

@@ -70,7 +70,6 @@ function PredictedEvent.new(pack, event, schema, config)
 
             self.instances[event_id] = Instant.new(self, event_id, client, packet.data, 0)
         end
-
         self.messages.s_ack:tell(client, {
             request_id = packet.request_id,
             event_id = event_id,

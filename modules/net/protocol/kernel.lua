@@ -74,33 +74,28 @@ local function get_one(tbl)
     end
 end
 
-local function get_fields(annotation, letter, name)
-    local types_compiler_types = {}
-    local key2index = {}
-    local index2key = {}
+local function get_fields(annotation, letter, name, prefix)
+    local fields = {}
 
-    for indx, type_entry in ipairs(letter.fields or {}) do
+    for _, type_entry in ipairs(letter.fields or {}) do
         local key, val = get_one(type_entry)
-
+        local full_key = prefix and (prefix .. "." .. key) or key
         local base_type = get_base_type(val)
 
         if annotation[base_type] then
             if base_type == name then
                 error("Stack overflow detected inside the " .. name)
             end
-            local _, _, inner_types = get_fields(annotation, annotation[base_type], base_type)
-            for _, t in ipairs(inner_types) do
-                table.insert(types_compiler_types, t)
+            local nested = get_fields(annotation, annotation[base_type], base_type, full_key)
+            for k, t in pairs(nested) do
+                fields[k] = t
             end
         else
-            table.insert(types_compiler_types, val)
+            fields[full_key] = val
         end
-
-        index2key[indx] = key
-        key2index[key] = indx
     end
 
-    return key2index, index2key, types_compiler_types
+    return fields
 end
 
 function module.__compilation(side, path)
@@ -108,62 +103,21 @@ function module.__compilation(side, path)
     local annotation = yaml.parse(file.read(path))
 
     for name, letter in pairs(annotation) do
-        local _, _, types_compiler_types = get_fields(annotation, letter, name)
+        local fields = get_fields(annotation, letter, name, nil)
 
-        local encoder = compiler.load(compiler.compile_encoder(types_compiler_types))
-        local decoder = compiler.load(compiler.compile_decoder(types_compiler_types))
+        local encoder = compiler.load(compiler.compile_encoder(fields))
+        local decoder = compiler.load(compiler.compile_decoder(fields))
 
         letters[name] = name
 
         compiled[side][name] = {
             packet_id = letter.packet_id,
             encode = function(buf, data)
-                local flat_data = {}
-                if data and data[1] then flat_data = data end
-
-                local function flatten(fields, d)
-                    for _, f in ipairs(fields) do
-                        local k, t = get_one(f)
-                        local v = d and d[k]
-                        local base_t = get_base_type(t)
-
-                        if annotation[base_t] then
-                            flatten(annotation[base_t].fields, v or {})
-                        else
-                            table.insert(flat_data, v)
-                        end
-                    end
-                end
-
-                if #flat_data == 0 then
-                    flatten(letter.fields or {}, data or {})
-                end
-
-                encoder(buf, unpack(flat_data))
+                encoder(buf, data or {})
                 buf:flush()
             end,
-
             decode = function(buf)
-                local flat_data = decoder(buf)
-                local idx = 1
-
-                local function unflatten(fields)
-                    local d = {}
-                    for _, f in ipairs(fields) do
-                        local k, t = get_one(f)
-                        local base_t = get_base_type(t)
-
-                        if annotation[base_t] then
-                            d[k] = unflatten(annotation[base_t].fields)
-                        else
-                            d[k] = flat_data[idx]
-                            idx = idx + 1
-                        end
-                    end
-                    return d
-                end
-
-                return unflatten(letter.fields or {})
+                return decoder(buf)
             end
         }
     end

@@ -45,12 +45,12 @@ function module.despawn_for_player(client, uid)
     if observer then observer:despawn() end
 
     player_obj.entity_observers[uid] = nil
-    client:push_packet(protocol.ServerMsg.EntityDespawn, { uid })
+    client:push_packet(protocol.ServerMsg.EntityDespawn, { uid = uid })
 end
 
 function module.despawn(uid)
     local buffer = protocol.create_databuffer()
-    buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.EntityDespawn, { uid }))
+    buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.EntityDespawn, { uid = uid }))
 
     server_echo.put_event(
         function(client)

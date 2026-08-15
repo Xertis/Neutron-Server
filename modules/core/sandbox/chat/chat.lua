@@ -11,7 +11,7 @@ function module.echo(message)
     logger.log(message)
 
     local buffer = protocol.create_databuffer()
-    buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.ChatMessage, { message }))
+    buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.ChatMessage, { message = message }))
 
     server_echo.put_event(function(client)
         client:queue_response(buffer.bytes)
@@ -38,7 +38,7 @@ function module.echo_with_mentions(message)
     end
 
     local buffer = protocol.create_databuffer()
-    buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.ChatMessage, { mention_message }))
+    buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.ChatMessage, { message = mention_message }))
 
     server_echo.put_event(function(client)
         client:queue_response(buffer.bytes)
@@ -79,7 +79,7 @@ function module.mention_prepare(message)
 end
 
 function module.tell(message, client)
-    client:push_packet(protocol.ServerMsg.ChatMessage, { message })
+    client:push_packet(protocol.ServerMsg.ChatMessage, { message = message })
 end
 
 function module.command(message, client)

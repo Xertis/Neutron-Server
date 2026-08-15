@@ -358,23 +358,23 @@ ClientPipe:add_middleware(function(client)
 
     -- Отправка пакетов
     for _, id in ipairs(stopped_text3ds) do
-        client:push_packet(protocol.ServerMsg.Text3DHide, { id })
+        client:push_packet(protocol.ServerMsg.Text3DHide, { id = id })
     end
 
     for _, spawned in ipairs(spawned_text3ds) do
-        client:push_packet(protocol.ServerMsg.Text3DShow, { spawned })
+        client:push_packet(protocol.ServerMsg.Text3DShow, { data = spawned })
     end
 
     for _, state in ipairs(changed_state) do
-        client:push_packet(protocol.ServerMsg.Text3DState, { state })
+        client:push_packet(protocol.ServerMsg.Text3DState, { state = state })
     end
 
     for _, p in ipairs(changed_pos) do
-        client:push_packet(protocol.ServerMsg.Text3DPos, { p.id, p.pos })
+        client:push_packet(protocol.ServerMsg.Text3DPos, { id = p.id, pos = p.pos })
     end
 
     for _, e in ipairs(changed_entity) do
-        client:push_packet(protocol.ServerMsg.Text3DEntity, { e.id, e.uid })
+        client:push_packet(protocol.ServerMsg.Text3DEntity, { var = e.id, entity = e.uid })
     end
 
     for _, ax in ipairs(changed_axis) do
@@ -490,7 +490,7 @@ ClientPipe:add_middleware(function(client)
     end
 
     for _, wrap in ipairs(to_hide) do
-        client:push_packet(protocol.ServerMsg.WrapHide, { wrap.id })
+        client:push_packet(protocol.ServerMsg.WrapHide, { id = wrap.id })
     end
 
     for _, wrap in ipairs(to_change_pos) do

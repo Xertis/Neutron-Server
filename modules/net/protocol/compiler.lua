@@ -11,15 +11,17 @@ local module = {}
 local PARSED_INFO = types_parser.get_info()
 
 local FUNCTION_PATTERN_ENCODER = [[
-return function (buf, %s)
+return function (buf, data)
 %s
 end
 ]]
 
 local FUNCTION_PATTERN_DECODER = [[
 return function (buf)
+    local result = {}
 %s
-    return {%s}
+%s
+    return result
 end
 ]]
 
@@ -61,6 +63,34 @@ local function split_top_level(str)
         table.insert(parts, current:match("^%s*(.-)%s*$"))
     end
     return parts
+end
+
+local function is_valid_ident(s)
+    return type(s) == "string" and s:match("^[%a_][%w_]*$") ~= nil
+end
+
+local function accessor(base, name)
+    if is_valid_ident(name) then
+        return base .. "." .. name
+    end
+    return base .. "[" .. string.format("%q", name) .. "]"
+end
+
+local function split_path(name)
+    local parts = {}
+    for part in name:gmatch("[^%.]+") do
+        table.insert(parts, part)
+    end
+    return parts
+end
+
+local function sorted_keys(tbl)
+    local keys = {}
+    for k in pairs(tbl) do
+        table.insert(keys, k)
+    end
+    table.sort(keys)
+    return keys
 end
 
 local function find_foreign_call(code)
@@ -234,46 +264,69 @@ local function compile_decode_type(type_node, cur_index, override_load_token)
     return code, load_token, cur_index
 end
 
-function module.compile_encoder(types)
-    local concated_code = ""
-    local cur_index = 0
-    local sum_tokens = {}
+function module.compile_encoder(fields)
+    local keys = sorted_keys(fields)
 
-    if #types == 0 then
-        return "return function () end"
+    if #keys == 0 then
+        return "return function (buf, data) end"
     end
 
-    for _, typestr in ipairs(types) do
-        local type_node = parse_type(typestr)
+    local concated_code = ""
+    local cur_index = 0
+
+    for _, name in ipairs(keys) do
+        local type_node = parse_type(fields[name])
         local code, to_save, cur_indx = compile_encode_type(type_node, cur_index, nil)
         cur_index = cur_indx
-        table.insert(sum_tokens, to_save)
-        concated_code = string.format("%s%s ", concated_code, code)
+
+        local parts = split_path(name)
+        local access = "data"
+        for i, part in ipairs(parts) do
+            access = accessor(access, part)
+            if i < #parts then
+                access = "(" .. access .. " or {})"
+            end
+        end
+
+        concated_code = string.format("%s    local %s = %s\n%s ", concated_code, to_save, access, code)
     end
 
-    local args = table.concat(sum_tokens, ', ')
-    return string.format(FUNCTION_PATTERN_ENCODER, args, concated_code)
+    return string.format(FUNCTION_PATTERN_ENCODER, concated_code)
 end
 
-function module.compile_decoder(types)
-    local concated_code = ""
-    local cur_index = 0
-    local sum_tokens = {}
+function module.compile_decoder(fields)
+    local keys = sorted_keys(fields)
 
-    if #types == 0 then
-        return "return function () end"
+    if #keys == 0 then
+        return "return function (buf) return {} end"
     end
 
-    for _, typestr in ipairs(types) do
-        local type_node = parse_type(typestr)
+    local read_code = ""
+    local assign_code = ""
+    local cur_index = 0
+    local ensured = {}
+
+    for _, name in ipairs(keys) do
+        local type_node = parse_type(fields[name])
         local code, to_load, cur_indx = compile_decode_type(type_node, cur_index, nil)
         cur_index = cur_indx
-        table.insert(sum_tokens, to_load)
-        concated_code = string.format("%s%s ", concated_code, code)
+
+        read_code = string.format("%s%s ", read_code, code)
+
+        local parts = split_path(name)
+        local access = "result"
+        for i = 1, #parts - 1 do
+            access = accessor(access, parts[i])
+            if not ensured[access] then
+                ensured[access] = true
+                assign_code = string.format("%s    %s = %s or {}\n", assign_code, access, access)
+            end
+        end
+        access = accessor(access, parts[#parts])
+        assign_code = string.format("%s    %s = %s\n", assign_code, access, to_load)
     end
 
-    local returns = table.concat(sum_tokens, ', ')
-    return string.format(FUNCTION_PATTERN_DECODER, concated_code, returns)
+    return string.format(FUNCTION_PATTERN_DECODER, read_code, assign_code)
 end
 
 function module.load(code)
