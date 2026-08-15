@@ -63,7 +63,7 @@ local MiningEvent = PredictedEvent.new("mypack", "mining", schema, {
 | `on_reject` | `function(instant)` | Сервер отклонил запущенное локально действие. |
 | `on_progress` | `function(instant)` | Пришёл прогресс для своего или наблюдаемого действия. |
 | `on_finish` | `function(instant)` | Действие завершено успешно. |
-| `on_interrupt` | `function(instant)` | Действие прервано сервером или другим игроком-наблюдателем. |
+| `on_interrupt` | `function(instant)` | Действие прервано сервером или игроком-владельцем действия (в случае, если действие наблюдаемое). |
 
 ```lua
 local MiningEvent = PredictedEvent.new("mypack", "mining", schema, {
