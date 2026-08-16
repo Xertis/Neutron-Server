@@ -150,7 +150,7 @@ function Replicator:remove_replica(id)
     end
 end
 
-function Replication.__process()
+events.on("server:main_tick", function()
     for _, replicator in ipairs(REPLICATORS) do
         local schema = replicator._compiled_schema
         local message = replicator._message
@@ -178,6 +178,17 @@ function Replication.__process()
             end
         end
     end
-end
+end)
+
+events.on("server:client_disconnected", function(client)
+    for _, replicator in ipairs(REPLICATORS) do
+        for id, source in pairs(replicator._sources) do
+            if source._client == client then
+                replicator._sources[id] = nil
+            end
+        end
+    end
+end)
+
 
 return Replication

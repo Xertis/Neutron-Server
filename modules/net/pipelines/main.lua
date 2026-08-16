@@ -5,7 +5,6 @@ local ClientPipe = import "net/pipelines/client"
 local List = import "lib/utils/list"
 local interceptors = import "api/v2/interceptors"
 local receiver = import "net/protocol/receiver"
-local replication = import "api/v2/replications"
 
 local ServerPipe = Pipeline.new()
 
@@ -75,8 +74,6 @@ ServerPipe:add_middleware(function(client)
     if client.active then
         events.emit("server:client_pipe_start", client)
         ClientPipe:process(client)
-
-        replication.__process()
     end
 
     local socket = client.socket
