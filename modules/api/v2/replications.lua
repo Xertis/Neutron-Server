@@ -140,6 +140,10 @@ function Replicator:create_private_replica(id, initial_value, client)
     return self._sources[id]
 end
 
+function Replicator:get_replica(id)
+    return self._sources[id]
+end
+
 function Replicator:remove_replica(id)
     if self._sources[id] then
         self._sources[id] = nil

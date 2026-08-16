@@ -89,6 +89,14 @@ local inventory = InventoryReplication:create_private_replica(1, { slots = {} },
 
 Приватная реплика всегда отправляется только одному, заранее заданному `client`.
 
+### Получение реплики
+
+```lua
+Replicator:get_replica(id: int)
+```
+
+Возвращает реплику с указанным `id`.
+
 ### Удаление реплики
 
 ```lua
