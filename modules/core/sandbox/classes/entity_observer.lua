@@ -3,7 +3,7 @@ local protocol = import "net/protocol/protocol"
 local Observer = {}
 Observer.__index = Observer
 
-local function get_states(entity, player_pos, prev_state, config)
+local function get_states(entity, player_pos, prev_state, config, is_own_entity)
     local uid = entity:get_uid()
     local tsf = entity.transform
     local body = entity.rigidbody
@@ -12,8 +12,9 @@ local function get_states(entity, player_pos, prev_state, config)
     local dist = vec3.distance(tsf:get_pos(), player_pos)
 
     local current_data = {}
+    local is_not_owned = not is_own_entity
 
-    if config.standard_fields then
+    if config.standard_fields and is_not_owned then
         current_data.standard_fields = {
             tsf_rot = tsf:get_rot(),
             tsf_pos = tsf:get_pos(),
@@ -25,7 +26,7 @@ local function get_states(entity, player_pos, prev_state, config)
         }
     end
 
-    if config.textures then
+    if config.textures and is_not_owned then
         current_data.textures = {}
         for key, field in pairs(config.textures) do
             if field.provider then
@@ -36,7 +37,7 @@ local function get_states(entity, player_pos, prev_state, config)
         end
     end
 
-    if config.models then
+    if config.models and is_not_owned then
         current_data.models = {}
         for key, field in pairs(config.models) do
             if field.provider then
@@ -47,7 +48,7 @@ local function get_states(entity, player_pos, prev_state, config)
         end
     end
 
-    if config.matrix then
+    if config.matrix and is_not_owned then
         current_data.matrix = {}
         for key, field in pairs(config.matrix) do
             if field.provider then
@@ -58,7 +59,7 @@ local function get_states(entity, player_pos, prev_state, config)
         end
     end
 
-    if config.components then
+    if config.components and is_not_owned then
         current_data.components = {}
         for component, val in pairs(config.components) do
             local is_on = val.provider(uid, component)
@@ -135,17 +136,23 @@ local function send_dirty(observer, dirty)
     if observer.is_spawned then
         observer.client:push_packet(protocol.ServerMsg.EntityUpdate, { uid = observer.uid, dirty = dirty })
     else
-        observer.client:push_packet(protocol.ServerMsg.EntitySpawn,
-            { uid = observer.uid, def = observer.id, dirty = dirty, args = observer.args })
+        observer.client:push_packet(protocol.ServerMsg.EntitySpawn, {
+            uid = observer.uid,
+            def = observer.id,
+            dirty = dirty,
+            args = observer.args,
+            is_own = observer.is_own_entity,
+        })
     end
 end
 
-function Observer.new(client, uid, config)
+function Observer.new(client, uid, config, is_own_entity)
     local self = setmetatable({}, Observer)
 
     self.client = client
     self.uid = uid
     self.config = config
+    self.is_own_entity = is_own_entity
     self.sended_state = {}
 
     self.player = client.player
@@ -167,7 +174,7 @@ end
 
 function Observer:process()
     local player_pos = { player.get_pos(self.player.pid) }
-    local current_state, dirty = get_states(self.entity, player_pos, self.sended_state, self.config)
+    local current_state, dirty = get_states(self.entity, player_pos, self.sended_state, self.config, self.is_own_entity)
 
     self.sended_state = current_state
 

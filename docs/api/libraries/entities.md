@@ -20,7 +20,7 @@
 ### Регистрация сущности
 
 ```lua
-entities.register(entity_name, config, spawn_handler)
+entities.register(entity_name, config, [spawn_handler])
 ```
 
 **Параметры:**
@@ -35,18 +35,18 @@ entities.register(entity_name, config, spawn_handler)
 
 ```lua
 {
-    on_client_spawn = function(player, uid)
+    [optional] on_client_spawn = function(player, uid)
         -- Вызывается при первом появлении сущности на клиенте
         -- Принимает объект игрока и uid сущности
         -- Возвращает таблицу аргументов, которая будет отправлена на клиент
         return { ... }
     end,
 
-    on_client_despawn = function(player, uid)
+    [optional] on_client_despawn = function(player, uid)
         -- Вызывается при удалении сущности на клиенте
     end,
 
-    standard_fields = {
+    [optional] standard_fields = {
         tsf_pos = {
             maximum_deviation = number,
             evaluate_deviation = function(dist, cur_val, client_val)
@@ -55,7 +55,7 @@ entities.register(entity_name, config, spawn_handler)
         -- Другие поля...
     },
 
-    custom_fields = {
+    [optional] custom_fields = {
         hp = {
             maximum_deviation = number,
             evaluate_deviation = function(dist, cur_val, client_val),
@@ -64,7 +64,7 @@ entities.register(entity_name, config, spawn_handler)
         }
     },
 
-    textures = {
+    [optional] textures = {
         key1 = {
             maximum_deviation = number,
             evaluate_deviation = function(dist, cur_val, client_val),
@@ -72,7 +72,7 @@ entities.register(entity_name, config, spawn_handler)
         }
     },
 
-    models = {
+    [optional] models = {
         [index] = {
             maximum_deviation = number,
             evaluate_deviation = function(dist, cur_val, client_val),
@@ -80,7 +80,7 @@ entities.register(entity_name, config, spawn_handler)
         }
     },
 
-    matrix = {
+    [optional] matrix = {
         [index] = {
             maximum_deviation = number,
             evaluate_deviation = function(dist, cur_val, client_val),
@@ -88,7 +88,7 @@ entities.register(entity_name, config, spawn_handler)
         }
     },
 
-    components = {
+    [optional] components = {
         component = {
             maximum_deviation = number,
             evaluate_deviation = function(dist, cur_val, client_val),
@@ -259,6 +259,7 @@ entities.types = {
 
 1. Данные моба не будут отправляться клиентам, если моб находится вне зоны прогрузки чанков.
 2. Если данные сущности переданы на клиент, но сущность на клиенте не создана, она автоматически будет создана на нулевых координатах.
+3. Для сущности типа игрока, принадлежащей самому клиенту, которому она отправляется (т.е. это его собственный игровой персонаж), синхронизируются **только `custom_fields`**.
 
 ---
 

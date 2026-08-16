@@ -82,11 +82,14 @@ function module.binding(client)
         if not chunks_manager.is_loaded(player_obj, math.floor(entity_pos[1] / 16), math.floor(entity_pos[3] / 16)) then
             goto continue
         end
-
+        local is_own_entity = false
         if PLAYER_ENTITY_ID == id then
             local entity_pid = entity:get_player()
-            if entity_pid == ROOT_PID or entity_pid == pid or player.is_suspended(entity_pid) then
+            if entity_pid == ROOT_PID or player.is_suspended(entity_pid) then
                 goto continue
+            end
+            if entity_pid == pid then
+                is_own_entity = true
             end
         end
 
@@ -100,9 +103,7 @@ function module.binding(client)
             end
             goto continue
         end
-
-        player_obj.entity_observers[uid] = EntityObserver.new(client, uid, config)
-
+        player_obj.entity_observers[uid] = EntityObserver.new(client, uid, config, is_own_entity)
         ::continue::
     end
 end

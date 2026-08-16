@@ -156,6 +156,7 @@ EntitySpawn:
     - def: uint16
     - dirty: Edd
     - args: Nilable<bson>
+    - is_own: boolean
 
 EntityUpdate:
   fields:
