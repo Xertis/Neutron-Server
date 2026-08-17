@@ -78,15 +78,15 @@ end
 
 -- id = айди на сервере
 -- invid = айди для клиента
-local function open_inventory(player, invid, id, controller)
+local function open_inventory(player, invid, id, controller, ident)
     local p_id2Invid = table.set_default(id2Invid, player.identity, {})
     local p_invid2Id = table.set_default(invid2Id, player.identity, {})
 
     if p_id2Invid[id] then p_invid2Id[p_id2Invid[id].invid] = nil end
     if p_invid2Id[invid] then p_id2Invid[p_invid2Id[invid].id] = nil end
 
-    p_id2Invid[id] = { invid = invid, controller = controller }
-    p_invid2Id[invid] = { id = id, controller = controller }
+    p_id2Invid[id] = { invid = invid, controller = controller, ident = ident }
+    p_invid2Id[invid] = { id = id, controller = controller, ident = ident }
 end
 
 local function get_slots_counts(inventory)
@@ -138,6 +138,44 @@ local function create_virtual_inventory(path)
     return inventory.create(size)
 end
 
+local function swap_controller(identity, invid, id, old_controller, new_controller)
+    local player = sandbox.by_identity.get_player(identity)
+    if old_controller then
+        old_controller:__on_detach(player, invid)
+    end
+
+    local id2_data = id2Invid[identity] and id2Invid[identity][id]
+    local invid2_data = invid2Id[identity] and invid2Id[identity][invid]
+    if id2_data then id2_data.controller = new_controller end
+    if invid2_data then invid2_data.controller = new_controller end
+
+    if new_controller then
+        new_controller:__on_attach(player, invid)
+    end
+end
+
+local function reassign_by_invid(invid, new_controller)
+    for identity, inventories in pairs(invid2Id) do
+        local data = inventories[invid]
+        if data and data.controller ~= new_controller then
+            swap_controller(identity, invid, data.id, data.controller, new_controller)
+        end
+    end
+end
+
+local function reassign_by_ident(ident, new_controller)
+    for identity, inventories in pairs(invid2Id) do
+        for invid, data in pairs(inventories) do
+            if data.ident == ident and data.controller ~= new_controller then
+                local target_player = sandbox.by_identity.get_player(identity)
+                if target_player then
+                    swap_controller(target_player, invid, data.id, data.controller, new_controller)
+                end
+            end
+        end
+    end
+end
+
 function module.get_second_inventory(player)
     local p_id2Invid = id2Invid[player.identity]
 
@@ -168,7 +206,7 @@ function module.open_block(player, pos)
     end
 
     module.close_inventory(player)
-    open_inventory(player, invid, new_id, controller)
+    open_inventory(player, invid, new_id, controller, block_id)
 
     local client = sandbox.get_client(player)
     client:push_packet(protocol.ServerMsg.OpenBlockInventory, {
@@ -186,7 +224,8 @@ function module.open_virtual(player, layout_path, disable_player_inventory, root
         invid = create_virtual_inventory(layout_path)
     end
 
-    local controller = virtual_controllers[abs_layout_path(layout_path)]
+    local abs_path = abs_layout_path(layout_path)
+    local controller = virtual_controllers[abs_path]
     local p_data = id2Invid[player.identity] or {}
     local new_id = table.max_index(p_data) + 1
 
@@ -196,7 +235,7 @@ function module.open_virtual(player, layout_path, disable_player_inventory, root
         controller:__on_open(player, invid)
     end
 
-    open_inventory(player, invid, new_id, controller)
+    open_inventory(player, invid, new_id, controller, abs_path)
 
     virtual_inventories[#virtual_inventories + 1] = invid
 
@@ -234,8 +273,15 @@ function module.echo_close_inventory(invid)
 end
 
 function module.init(_player, pinv_controller, minv_controller)
-    open_inventory(_player, player.get_inventory(_player.pid), 1, pinv_controller)
-    open_inventory(_player, -1, 0, minv_controller)
+    open_inventory(_player, player.get_inventory(_player.pid), 1, nil)
+    open_inventory(_player, -1, 0, nil)
+
+    if pinv_controller then
+        module.set_inventory_controller(player.get_inventory(_player.pid), pinv_controller)
+    end
+    if minv_controller then
+        module.set_inventory_controller(-1, minv_controller)
+    end
 end
 
 function module.sync(player, ...)
@@ -292,10 +338,17 @@ end
 
 function module.set_block_inventory_controller(id, controller)
     block_controllers[id] = controller
+    reassign_by_ident(id, controller)
 end
 
 function module.set_virtual_inventory_controller(layout_path, controller)
-    virtual_controllers[abs_layout_path(layout_path)] = controller
+    local abs_path = abs_layout_path(layout_path)
+    virtual_controllers[abs_path] = controller
+    reassign_by_ident(abs_path, controller)
+end
+
+function module.set_inventory_controller(invid, controller)
+    reassign_by_invid(invid, controller)
 end
 
 function module.interact(player, id, slot, action, mode, item_id, client_checksum)

@@ -94,6 +94,10 @@ function module.inventories.set_controller(ident, controller)
     end
 end
 
+function module.inventories.set_invid_controller(invid, controller)
+    inventories_managers.set_inventory_controller(invid, controller)
+end
+
 function module.inventories.open_block(player, pos)
     return inventories_managers.open_block(player, pos)
 end

@@ -51,4 +51,18 @@ function InventoryController:__on_share(player, invid, slot, item_id)
     on_share(player, invid, slot, item_id)
 end
 
+function InventoryController:__on_attach(player, invid)
+    local on_attach = self.env.on_attach
+    if not on_attach then return end
+
+    on_attach(player, invid)
+end
+
+function InventoryController:__on_detach(player, invid)
+    local on_detach = self.env.on_detach
+    if not on_detach then return end
+
+    on_detach(player, invid)
+end
+
 return InventoryController

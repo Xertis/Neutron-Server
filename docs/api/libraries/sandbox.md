@@ -46,6 +46,13 @@ api.sandbox.inventories.create_controller(source: string | table) -> InventoryCo
 ### Ивенты контроллера
 
 ```lua
+
+-- Вызывается после прикрепления контроллера на invid
+function on_attach(player: Player, invid: int) end
+
+-- Вызывается после открепления контроллера от invid
+function on_detach(player: Player, invid: int) end
+
 -- Вызывается при открытии инвентаря игроком
 -- x, y, z не передаются, если был открыт виртуальный инвентарь
 function on_open(player: Player, invid: int, x: int, y: int, z: int) end
@@ -62,12 +69,20 @@ function on_update(player: Player, invid: int, slot: int, action: int, mode: int
 function on_share(player: Player, invid: int, slot: int, item_id: int) end
 ```
 
+> [!NOTE]
+> `invid = -1` отвечает за меню доступа к контенту
+>
+> значение системное, использовать в `libinventory` не стоит
+
 ### Методы для работы с инвентарями
 
 ```lua
 -- Устанавливает контроллер для определённого типа контента
 -- ident: число (айди блока) или строка (макет, например "pack:craft_table")
 api.sandbox.inventories.set_controller(ident: int | string, controller: InventoryController)
+
+-- Устанавливает контроллер для определённого инвентаря
+api.sandbox.inventories.set_invid_controller(invid: int, controller: InventoryController)
 
 -- Открывает инвентарь блока переданному игроку
 api.sandbox.inventories.open_block(player: Player, pos: vec3)

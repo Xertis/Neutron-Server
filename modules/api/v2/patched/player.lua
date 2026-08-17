@@ -44,6 +44,33 @@ function global_player.set_pos(pid, x, y, z)
     })
 end
 
+
+function global_player.set_flight(pid, value)
+    player.set_flight(pid, value)
+
+    local client = get_client_by_pid(pid)
+    if not client then return end
+
+    client:push_packet(protocol.ServerMsg.SynchronizePlayer, {
+        data = {
+            cheats = { flight = value }
+        }
+    })
+end
+
+function global_player.set_noclip(pid, value)
+    player.set_noclip(pid,value)
+
+    local client = get_client_by_pid(pid)
+    if not client then return end
+
+    client:push_packet(protocol.ServerMsg.SynchronizePlayer, {
+        data = {
+            cheats = { noclip = value }
+        }
+    })
+end
+
 function global_player.set_rot(pid, x, y, z)
     player.set_rot(pid, x, y, z)
 
