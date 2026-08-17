@@ -971,7 +971,12 @@ matches.client_online_handler:add_case(protocol.ClientMsg.ViewDistance, (
 
 matches.client_online_handler:add_case(protocol.ClientMsg.PlayerCrouching, (
     function(packet, client)
-        client.player.is_crouching = packet.is_crouching
+        local player = client.player
+        player.is_crouching = packet.is_crouching
+        if player.entity_id then
+            local entity = entities.get(player.entity_id)
+            entity.rigidbody:set_crouching(packet.is_crouching)
+        end
     end
 ))
 

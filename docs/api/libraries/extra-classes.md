@@ -32,6 +32,7 @@
     self.identity = string  -- Идентити игрока (идентично идентити аккаунта)
     self.active = boolean   -- Статус активности игрока (false — вне сети)
     self.pid = number       -- PlayerID игрока
+    self.invid = number     -- invid инвентаря 
     self.region_pos = {     -- Позиция региона 64×64×64 чанка, в котором находится игрок
         x = x,
         y = y,
