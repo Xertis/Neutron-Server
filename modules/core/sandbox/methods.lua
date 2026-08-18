@@ -5,6 +5,7 @@ local metadata = import "lib/data/metadata"
 local protocol = import "net/protocol/protocol"
 local server_echo = import "lib/flow/server_echo"
 local rules = import "core/sandbox/managers/rules"
+local perform_task = import "lib/flow/perform_task"
 
 
 local module = {
@@ -40,11 +41,11 @@ function module.join_player(username, account)
         return
     end
 
-    local account_player = Player.new(username, identity)
+    local player_obj = Player.new(username, identity)
 
-    if account_player.pid then
-        if username ~= account_player.username then
-            if not module.is_username_available(account_player.username, identity) then
+    if player_obj.pid then
+        if username ~= player_obj.username then
+            if not module.is_username_available(player_obj.username, identity) then
                 logger.log(
                     string.format(
                         'The username "%s" is already taken by another user and is not available for [#%s]',
@@ -57,13 +58,13 @@ function module.join_player(username, account)
                 return
             end
 
-            player.set_name(account_player.pid, username)
+            player.set_name(player_obj.pid, username)
             logger.log(string.format('The username of player "%s" [#%s] has been changed to "%s"',
-                account_player.username, logger.shorted(identity), username))
-            account_player.username = username
+                player_obj.username, logger.shorted(identity), username))
+            player_obj.username = username
         end
     else
-        if not module.is_username_available(account_player.username, identity) then
+        if not module.is_username_available(player_obj.username, identity) then
             logger.log(
                 string.format(
                     'The username "%s" is already taken by another user and is not available for [#%s]',
@@ -76,34 +77,34 @@ function module.join_player(username, account)
             return
         end
 
-        module.create_player(account_player)
+        module.create_player(player_obj)
     end
 
-    if account_player:is_active() then
-        container.player_online.put(identity, account_player)
+    if player_obj:is_active() then
+        container.player_online.put(identity, player_obj)
     end
 
     for name, default in pairs(CONFIG.roles[account.role].rules) do
         local rule = rules.get_rule(name)
         if rule and rule.level == "player" then
-            rules.set_value(account_player, nil, rule, account_player.rules[name] or default)
+            rules.set_value(player_obj, nil, rule, player_obj.rules[name] or default)
         end
     end
 
-    logger.log(string.format('Player "%s" [#%s] joined.', account_player.username, logger.shorted(identity)))
+    logger.log(string.format('Player "%s" [#%s] joined.', player_obj.username, logger.shorted(identity)))
 
-    local is_suspended = player.is_suspended(account_player.pid)
-    logger.log(string.format('Suspend state of player "%s" is %s', account_player.username, tostring(is_suspended)))
+    local is_suspended = player.is_suspended(player_obj.pid)
+    logger.log(string.format('Suspend state of player "%s" is %s', player_obj.username, tostring(is_suspended)))
     if is_suspended then
-        player.set_suspended(account_player.pid, false)
-        logger.log(string.format('Suspend state of player "%s" changed to false', account_player.username))
+        player.set_suspended(player_obj.pid, false)
+        logger.log(string.format('Suspend state of player "%s" changed to false', player_obj.username))
     end
 
-    time.post_runnable(function()
-        account_player.entity_id = player.get_entity(account_player.pid)
+    perform_task.perform(function()
+        player_obj.entity_id = player.get_entity(player_obj.pid)
     end)
 
-    return account_player
+    return player_obj
 end
 
 function module.leave_player(account_player)

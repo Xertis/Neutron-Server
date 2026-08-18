@@ -12,6 +12,7 @@ local entities_manager = import "core/sandbox/managers/entities"
 local chunks_manager = import "core/sandbox/managers/chunks"
 local lib = import "lib/utils/min"
 local mfsm = import "lib/flow/multifsm"
+local perform_task = import "lib/flow/perform_task"
 
 local hashed_packs = nil
 
@@ -360,7 +361,7 @@ Incorrect VoxelCore version:
         inventories_manager.sync(account_player, 1)
 
         client:push_packet(protocol.ServerMsg.PlayerHandSlot, { slot = slot })
-        time.post_runnable(function()
+        perform_task.perform(function()
             events.emit("server:on_player_ready", client)
         end)
 

@@ -1,13 +1,14 @@
 local chat = import "core/sandbox/chat/chat"
 local accounts = import "api/v2/accounts"
 local sandbox = import "api/v2/sandbox"
+local perform_task = import "lib/flow/perform_task"
 
 console.add_command(
     "chat message:str",
     "Send message",
     function(args)
         local message = string.format("[#ffff00] [root] %s", args[1])
-        time.post_runnable(function() chat.echo(message) end)
+        perform_task.perform(function() chat.echo(message) end)
         return "message has been sent"
     end
 )
@@ -24,7 +25,7 @@ console.add_command(
                 accounts.kick(account, reason)
             end
         end
-        time.post_runnable(function() IS_RUNNING = false end)
+        perform_task.perform(function() IS_RUNNING = false end)
         return "done"
     end
 )

@@ -35,6 +35,7 @@ local function main()
 
     local timeout_executor = import "lib/flow/timeout_executor"
     local server = import "net/classes/server"
+    local perform_task = import "lib/flow/perform_task"
 
     local metadata = import "lib/data/metadata"
     local world = lib.world
@@ -81,6 +82,7 @@ local function main()
         LAST_SERVER_UPDATE = os.time()
 
         app.tick()
+        perform_task.process()
         timeout_executor.process()
         server:tick()
 

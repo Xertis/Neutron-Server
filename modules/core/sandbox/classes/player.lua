@@ -6,7 +6,8 @@ local TEMPED_DATA = {
     temp = {},
     pending_inventories = {},
     entity_observers = {},
-    predicted_observers = {}
+    predicted_observers = {},
+    entity_id = -1
 }
 
 function Player.__index(self, key)
@@ -31,7 +32,6 @@ function Player.new(username, identity)
             username = username,
             identity = identity,
             active = false,
-            entity_id = nil,
             pid = nil,
             world = nil,
             region_pos = { x = 0, y = 0, z = 0 },
