@@ -29,7 +29,7 @@ entities.register(entity_name, config, [spawn_handler])
 |----------|-----|----------|
 | `entity_name` | `string` | Имя типа сущности (например, `"example:zombie"`). |
 | `config` | `table` | Конфигурация полей сущности. |
-| `spawn_handler` | `function(name, args, client)` | Вызывается, когда клиент пытается заспавнить зарегистрированную сущность. |
+| `spawn_handler` | `function(name, args, client)` | Вызывается, когда клиент пытается заспавнить синхронную сущность. |
 
 ### Структура config
 

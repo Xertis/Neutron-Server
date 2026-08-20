@@ -10,7 +10,10 @@ function module.process()
     local funcs_ptr = funcs
     funcs = {}
     for i = 1, #funcs_ptr do
-        funcs_ptr[i]()
+        local ok, err = pcall(funcs_ptr[i])
+        if not ok then
+            logger.log("Error in deferred task func: " .. err, "E")
+        end
     end
 end
 
