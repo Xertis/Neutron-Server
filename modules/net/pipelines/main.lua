@@ -46,26 +46,40 @@ ServerPipe:add_middleware(function(client)
 end)
 
 ServerPipe:add_middleware(function(client)
-    if List.is_empty(client.received_packets) then
-        return client
+    local meta = client.meta
+    local co = meta.process_co
+    if not co then
+        co = coroutine.create(function()
+            while true do
+                if List.is_empty(client.received_packets) then
+                    coroutine.yield()
+                else
+                    local packet = List.popleft(client.received_packets)
+                    local success, err = pcall(function()
+                        if client.active == false then
+                            local status = interceptors.receive.__process(packet, client)
+                            if status then matches.fsm.general_fsm:handle_event(client, packet) end
+                        elseif client.active == true then
+                            local status = interceptors.receive.__process(packet, client)
+                            if status then matches.handlers[packet.packet_type](packet, client) end
+                        end
+                    end)
+                    if not success then
+                        client:kick()
+                        logger.log("Error while reading packet: " .. err .. '\n' .. "Client disconnected", 'E')
+                    end
+
+                    coroutine.yield()
+                end
+            end
+        end)
+        meta.process_co = co
     end
-
-    local packet = List.popleft(client.received_packets)
-
-    local success, err = pcall(function()
-        if client.active == false then
-            local status = interceptors.receive.__process(packet, client)
-            if status then matches.general_fsm:handle_event(client, packet) end
-        elseif client.active == true then
-            matches.client_online_handler:switch(packet.packet_type, packet, client)
-        end
-    end)
-
+    local success, err = coroutine.resume(co)
     if not success then
-        client:kick()
-        logger.log("Error while reading packet: " .. err .. '\n' .. "Client disconnected", 'E')
+        logger.log(err, 'P')
+        error(err)
     end
-
     return client, not List.is_empty(client.received_packets)
 end)
 

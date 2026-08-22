@@ -41,7 +41,7 @@ ClientPipe:add_middleware(function(client)
         return client
     end
 
-    matches.client_online_handler:switch(protocol.ClientMsg.RequestChunks, client.meta.chunks_queue, client)
+    matches.handlers[protocol.ClientMsg.RequestChunks](client.meta.chunks_queue, client)
     client.meta.chunks_queue = nil
 
     return client

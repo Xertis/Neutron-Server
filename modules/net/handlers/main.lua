@@ -27,17 +27,14 @@ local content_menu_controller = InventoryController.new(
 player_inventory_controller:add_global_variable("IS_HEADLESS", IS_HEADLESS)
 content_menu_controller:add_global_variable("IS_HEADLESS", IS_HEADLESS)
 
-local matches = {
+local handlers = {}
+local fsm = {
     general_fsm = mfsm.new(),
     status_fsm = mfsm.new(),
     joining_fsm = mfsm.new(),
-    client_online_handler = switcher.new(function(...)
-        local values = { ... }
-        print(json.tostring(values[1]))
-    end)
 }
 
-matches.actions = {}
+local actions = {}
 
 local function check_mods(hashes)
     local server_packs = pack.get_installed()
@@ -91,7 +88,7 @@ local function check_mods(hashes)
 end
 
 
-function matches.actions.Disconnect(client, reason)
+function actions.Disconnect(client, reason)
     reason = reason or "No reason"
 
     logger.log("Aborted message: " .. reason, 'W')
@@ -102,38 +99,38 @@ end
 
 --- FSM
 
-matches.general_fsm:add_state("idle", {
+fsm.general_fsm:add_state("idle", {
     on_event = function(client, event)
         if event.packet_type == protocol.ClientMsg.HandShake then
-            matches.joining_fsm:set_data(client, "handshake", event)
+            fsm.joining_fsm:set_data(client, "handshake", event)
 
             if event.next_state == protocol.States.Status then
-                matches.status_fsm:set_data(client, "friends_list", event.friends_list)
-                matches.status_fsm:transition_to(client, "awaiting_status_request")
+                fsm.status_fsm:set_data(client, "friends_list", event.friends_list)
+                fsm.status_fsm:transition_to(client, "awaiting_status_request")
                 return "status"
             end
 
             if event.next_state == protocol.States.Login then
-                matches.joining_fsm:transition_to(client, "awaiting_join_game")
+                fsm.joining_fsm:transition_to(client, "awaiting_join_game")
                 return "joining"
             end
         end
     end
 })
 
-matches.general_fsm:add_state("status", {
+fsm.general_fsm:add_state("status", {
     on_event = function(client, event)
-        matches.status_fsm:handle_event(client, event)
+        fsm.status_fsm:handle_event(client, event)
     end
 })
 
-matches.general_fsm:add_state("joining", {
+fsm.general_fsm:add_state("joining", {
     on_event = function(client, event)
-        matches.joining_fsm:handle_event(client, event)
+        fsm.joining_fsm:handle_event(client, event)
     end
 })
 
-matches.status_fsm:add_state("awaiting_status_request", {
+fsm.status_fsm:add_state("awaiting_status_request", {
     on_event = function(client, event)
         if event.packet_type == protocol.ClientMsg.StatusRequest then
             return "sending_status"
@@ -141,7 +138,7 @@ matches.status_fsm:add_state("awaiting_status_request", {
     end
 })
 
-matches.status_fsm:add_state("sending_status", {
+fsm.status_fsm:add_state("sending_status", {
     on_enter = function(client)
         logger.log("The expected packet has been received, sending the status...")
         local icon = nil
@@ -152,7 +149,7 @@ matches.status_fsm:add_state("sending_status", {
             icon = file.read_bytes(DEFAULT_ICON_PATH)
         end
 
-        local friends_list = matches.status_fsm:get_data(client, "friends_list") or {}
+        local friends_list = fsm.status_fsm:get_data(client, "friends_list") or {}
         local players = table.keys(sandbox.get_players())
         local friends_states = {}
 
@@ -180,21 +177,21 @@ matches.status_fsm:add_state("sending_status", {
         logger.log("Status has been sent")
 
         client:kick()
-        matches.status_fsm:clear(client)
-        matches.general_fsm:transition_to(client, "idle")
+        fsm.status_fsm:clear(client)
+        fsm.general_fsm:transition_to(client, "idle")
     end
 })
 
-matches.joining_fsm:add_state("awaiting_join_game", {
+fsm.joining_fsm:add_state("awaiting_join_game", {
     on_event = function(client, event)
         if event.packet_type == protocol.ClientMsg.JoinGame then
-            matches.joining_fsm:set_data(client, "join_game", event)
+            fsm.joining_fsm:set_data(client, "join_game", event)
             return "sending_packs_list"
         end
     end
 })
 
-matches.joining_fsm:add_state("sending_packs_list", {
+fsm.joining_fsm:add_state("sending_packs_list", {
     on_enter = function(client)
         local packs = pack.get_installed()
         local plugins = CONFIG.game.plugins
@@ -213,37 +210,37 @@ matches.joining_fsm:add_state("sending_packs_list", {
     end
 })
 
-matches.joining_fsm:add_state("awaiting_packs_hashes", {
+fsm.joining_fsm:add_state("awaiting_packs_hashes", {
     on_event = function(client, event)
         if event.packet_type == protocol.ClientMsg.PackHashes then
-            matches.joining_fsm:set_data(client, "packs_hashes", event.hashes)
+            fsm.joining_fsm:set_data(client, "packs_hashes", event.hashes)
             return "joining"
         end
     end
 })
 
-matches.joining_fsm:add_state("joining", {
+fsm.joining_fsm:add_state("joining", {
     on_enter = function(client)
         local function close(call_event)
-            matches.joining_fsm:clear(client)
-            matches.general_fsm:transition_to(client, "idle")
+            fsm.joining_fsm:clear(client)
+            fsm.general_fsm:transition_to(client, "idle")
             if call_event then events.emit("server:client_connected", client) end
         end
 
-        local handshake = matches.joining_fsm:get_data(client, "handshake")
-        local packet = matches.joining_fsm:get_data(client, "join_game")
-        local hashes = matches.joining_fsm:get_data(client, "packs_hashes")
+        local handshake = fsm.joining_fsm:get_data(client, "handshake")
+        local packet = fsm.joining_fsm:get_data(client, "join_game")
+        local hashes = fsm.joining_fsm:get_data(client, "packs_hashes")
 
         local hash_status, hash_reason = check_mods(hashes)
 
         if not hash_status and (not CONFIG.server.dev_mode or CONFIG.server.shallow_dev_mode) then
             logger.log("JoinSuccess has been aborted")
-            matches.actions.Disconnect(client, "Inconsistencies in mods:" .. hash_reason)
+            actions.Disconnect(client, "Inconsistencies in mods:" .. hash_reason)
             close()
             return
         elseif handshake.protocol_version ~= protocol.Version or handshake.protocol_reference ~= "Neutron" then
             logger.log("JoinSuccess has been aborted")
-            matches.actions.Disconnect(client, string.format([[
+            actions.Disconnect(client, string.format([[
 Incorrect protocol version:
     Your version: %s (#%s)
     Server version: %s (#%s)
@@ -252,7 +249,7 @@ Incorrect protocol version:
             return
         elseif handshake.engine_version ~= CONFIG.server.version then
             logger.log("JoinSuccess has been aborted")
-            matches.actions.Disconnect(client, string.format([[
+            actions.Disconnect(client, string.format([[
 Incorrect VoxelCore version:
     Your version: %s
     Server version: %s
@@ -261,37 +258,37 @@ Incorrect VoxelCore version:
             return
         elseif not lib.validate.username(packet.username) then
             logger.log("JoinSuccess has been aborted")
-            matches.actions.Disconnect(client, "Incorrect user name")
+            actions.Disconnect(client, "Incorrect user name")
             close()
             return
         elseif #table.keys(sandbox.get_players()) >= CONFIG.server.max_players then
             logger.log("JoinSuccess has been aborted")
-            matches.actions.Disconnect(client, "The server is full")
+            actions.Disconnect(client, "The server is full")
             close()
             return
         elseif (not table.has(CONFIG.server.whitelist, packet.username) and #CONFIG.server.whitelist > 0) then
             logger.log("JoinSuccess has been aborted")
-            matches.actions.Disconnect(client, "You are not on the whitelist")
+            actions.Disconnect(client, "You are not on the whitelist")
             close()
             return
         elseif (not table.has(CONFIG.server.whitelist_ip, client.address) and #CONFIG.server.whitelist_ip > 0) then
             logger.log("JoinSuccess has been aborted")
-            matches.actions.Disconnect(client, "You are not on the whitelist")
+            actions.Disconnect(client, "You are not on the whitelist")
             close()
             return
         elseif table.has(CONFIG.server.blacklist, packet.username) then
             logger.log("JoinSuccess has been aborted")
-            matches.actions.Disconnect(client, "You are on the blacklist")
+            actions.Disconnect(client, "You are on the blacklist")
             close()
             return
         elseif sandbox.get_players(true)[packet.username] ~= nil then
             logger.log("JoinSuccess has been aborted")
-            matches.actions.Disconnect(client, "A player with that name is already online")
+            actions.Disconnect(client, "A player with that name is already online")
             close()
             return
         elseif sandbox.by_identity.is_online(packet.identity) then
             logger.log("JoinSuccess has been aborted")
-            matches.actions.Disconnect(client, "A player with that identity is already online")
+            actions.Disconnect(client, "A player with that identity is already online")
             close()
             return
         end
@@ -411,139 +408,135 @@ Incorrect VoxelCore version:
     end
 })
 
-matches.general_fsm:set_default_state("idle")
+fsm.general_fsm:set_default_state("idle")
 
 --- CASES
-matches.client_online_handler:add_case(protocol.ClientMsg.PlayerCheats, (
-    function(packet, client)
-        if not client.account or not client.account.is_logged then
-            return
-        end
-
-        sandbox.set_player_state(client.player, {
-            noclip = packet.noclip,
-            flight = packet.flight
-        })
+handlers[protocol.ClientMsg.PlayerCheats] =
+function(packet, client)
+    if not client.account or not client.account.is_logged then
+        return
     end
-))
 
-matches.client_online_handler:add_case(protocol.ClientMsg.PlayerRotation, (
-    function(packet, client)
-        if not client.account or not client.account.is_logged then
-            return
-        end
+    sandbox.set_player_state(client.player, {
+        noclip = packet.noclip,
+        flight = packet.flight
+    })
+end
 
-        sandbox.set_player_state(client.player, {
-            x_rot = packet.x,
-            y_rot = packet.y,
-            z_rot = packet.z
-        })
+handlers[protocol.ClientMsg.PlayerRotation] =
+function(packet, client)
+    if not client.account or not client.account.is_logged then
+        return
     end
-))
 
-matches.client_online_handler:add_case(protocol.ClientMsg.PlayerPosition, (
-    function(packet, client)
-        if not client.account or not client.account.is_logged then
-            return
-        end
+    sandbox.set_player_state(client.player, {
+        x_rot = packet.x,
+        y_rot = packet.y,
+        z_rot = packet.z
+    })
+end
 
-        local x, y, z = packet.pos.x, packet.pos.y, packet.pos.z
 
-        x = x + client.player.region_pos.x * 64
-        y = y + client.player.region_pos.y * 64
-        z = z + client.player.region_pos.z * 64
-
-        sandbox.set_player_state(client.player, {
-            x = x,
-            y = y,
-            z = z
-        })
+handlers[protocol.ClientMsg.PlayerPosition] =
+function(packet, client)
+    if not client.account or not client.account.is_logged then
+        return
     end
-))
 
-matches.client_online_handler:add_case(protocol.ClientMsg.PlayerRegion, (
-    function(packet, client)
-        if not client.account or not client.account.is_logged then
-            return
-        end
+    local x, y, z = packet.pos.x, packet.pos.y, packet.pos.z
 
-        client.player.region_pos = packet
+    x = x + client.player.region_pos.x * 64
+    y = y + client.player.region_pos.y * 64
+    z = z + client.player.region_pos.z * 64
+
+    sandbox.set_player_state(client.player, {
+        x = x,
+        y = y,
+        z = z
+    })
+end
+
+
+handlers[protocol.ClientMsg.PlayerRegion] =
+function(packet, client)
+    if not client.account or not client.account.is_logged then
+        return
     end
-))
+
+    client.player.region_pos = packet
+end
 
 ---------
 
-matches.client_online_handler:add_case(protocol.ClientMsg.ChatMessage, (
-    function(packet, client)
-        if not client.player then
-            return
-        end
+handlers[protocol.ClientMsg.ChatMessage] =
+function(packet, client)
+    if not client.player then
+        return
+    end
 
-        local player = sandbox.get_player(client.player)
+    local player = sandbox.get_player(client.player)
 
-        local name_in_message = player.username
-        if EVENT then
-            local colors = EVENT.colors
-            local result = ""
-            local color_index = 1
+    local name_in_message = player.username
+    if EVENT then
+        local colors = EVENT.colors
+        local result = ""
+        local color_index = 1
 
-            for i = 1, #name_in_message do
-                local char = name_in_message:sub(i, i)
-                if char ~= " " then
-                    result = result .. colors[color_index] .. char
-                    color_index = math.in_range(color_index + 1, { 1, #EVENT.colors })
-                else
-                    result = result .. char
-                end
+        for i = 1, #name_in_message do
+            local char = name_in_message:sub(i, i)
+            if char ~= " " then
+                result = result .. colors[color_index] .. char
+                color_index = math.in_range(color_index + 1, { 1, #EVENT.colors })
+            else
+                result = result .. char
             end
-
-            name_in_message = result .. "[#FFFFFF]"
         end
 
-        local message = string.format("[%s] %s", name_in_message, packet.message)
-        local state = chat.command(packet.message, client)
-        if state == false then
-            if not client.account.is_logged then return end
-
-            chat.echo_with_mentions(message)
-        end
+        name_in_message = result .. "[#FFFFFF]"
     end
-))
+
+    local message = string.format("[%s] %s", name_in_message, packet.message)
+    local state = chat.command(packet.message, client)
+    if state == false then
+        if not client.account.is_logged then return end
+
+        chat.echo_with_mentions(message)
+    end
+end
 
 ---------
 
-matches.client_online_handler:add_case(protocol.ClientMsg.Disconnect, (
-    function(packet, client)
-        client:kick()
-        if not client.account then
-            return
-        end
-
-        local pid = client.player.pid
-        local username = client.player.username
-
-        local message = string.format("[#ffff00] [%s] %s", username, "left the game")
-        account_manager.leave(client)
-
-        chat.echo(message)
-
-        local buffer = protocol.create_databuffer()
-        buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.OnlinePlayersListRemove, {
-            pid = pid,
-        }))
-
-        echo.put_event(
-            function(c)
-                c.socket:send(buffer.bytes)
-            end, client
-        )
-
-        chunks_manager.unload_player(client.player)
-        inventories_manager.close_inventory(client.player, true)
-
-        events.emit("server:client_disconnected", client)
+handlers[protocol.ClientMsg.Disconnect] =
+function(packet, client)
+    client:kick()
+    if not client.account then
+        return
     end
-))
+
+    local pid = client.player.pid
+    local username = client.player.username
+
+    local message = string.format("[#ffff00] [%s] %s", username, "left the game")
+    account_manager.leave(client)
+
+    chat.echo(message)
+
+    local buffer = protocol.create_databuffer()
+    buffer:put_packet(protocol.build_packet("server", protocol.ServerMsg.OnlinePlayersListRemove, {
+        pid = pid,
+    }))
+
+    echo.put_event(
+        function(c)
+            c.socket:send(buffer.bytes)
+        end, client
+    )
+
+    chunks_manager.unload_player(client.player)
+    inventories_manager.close_inventory(client.player, true)
+
+    events.emit("server:client_disconnected", client)
+end
 
 --------
 
@@ -577,7 +570,7 @@ local function chunk_responce(packet, client, is_timeout)
 end
 
 
-matches.client_online_handler:add_case(protocol.ClientMsg.RequestChunk, chunk_responce)
+handlers[protocol.ClientMsg.RequestChunk] = chunk_responce
 
 local function chunks_responce_optimizate(packet, client)
     local chunks_packet = packet.chunks
@@ -611,7 +604,7 @@ local function chunks_responce_optimizate(packet, client)
     return true
 end
 
-matches.client_online_handler:add_case(protocol.ClientMsg.RequestChunks, chunks_responce_optimizate)
+handlers[protocol.ClientMsg.RequestChunks] = chunks_responce_optimizate
 
 --------
 
@@ -680,317 +673,302 @@ local function block_is_void(x, y, z)
     return id == 0 or id == -1
 end
 
-matches.client_online_handler:add_case(protocol.ClientMsg.BlockInteract, (
-    function(packet, client)
-        if not client.account or not client.account.is_logged then
-            return
-        end
-
-        local x, y, z = packet.pos.x, packet.pos.y, packet.pos.z
-
-        if not can_interact_with_block(client.player, x, y, z, false) then
-            return
-        end
-
-        local block_id = block.get(x, y, z)
-        local block_name = block.name(block_id)
-        events.emit(block_name .. ".interact", x, y, z, client.player.pid)
-        events.emit("server:block_interact", block_id, x, y, z, client.player.pid)
+handlers[protocol.ClientMsg.BlockInteract] =
+function(packet, client)
+    if not client.account or not client.account.is_logged then
+        return
     end
-))
 
-matches.client_online_handler:add_case(protocol.ClientMsg.BlockRegionInteract, (
-    function(packet, client)
-        if not client.account or not client.account.is_logged then
-            return
-        end
+    local x, y, z = packet.pos.x, packet.pos.y, packet.pos.z
 
-        local x, y, z = packet.pos.x, packet.pos.y, packet.pos.z
-
-        x = client.player.region_pos.x * 64 + x
-        z = client.player.region_pos.z * 64 + z
-
-        if not can_interact_with_block(client.player, x, y, z, false) then
-            return
-        end
-
-        local block_id = block.get(x, y, z)
-        local block_name = block.name(block_id)
-        events.emit(block_name .. ".interact", x, y, z, client.player.pid)
-        events.emit("server:block_interact", block_id, x, y, z, client.player.pid)
+    if not can_interact_with_block(client.player, x, y, z, false) then
+        return
     end
-))
+
+    local block_id = block.get(x, y, z)
+    local block_name = block.name(block_id)
+    events.emit(block_name .. ".interact", x, y, z, client.player.pid)
+    events.emit("server:block_interact", block_id, x, y, z, client.player.pid)
+end
+
+handlers[protocol.ClientMsg.BlockRegionInteract] =
+function(packet, client)
+    if not client.account or not client.account.is_logged then
+        return
+    end
+
+    local x, y, z = packet.pos.x, packet.pos.y, packet.pos.z
+
+    x = client.player.region_pos.x * 64 + x
+    z = client.player.region_pos.z * 64 + z
+
+    if not can_interact_with_block(client.player, x, y, z, false) then
+        return
+    end
+
+    local block_id = block.get(x, y, z)
+    local block_name = block.name(block_id)
+    events.emit(block_name .. ".interact", x, y, z, client.player.pid)
+    events.emit("server:block_interact", block_id, x, y, z, client.player.pid)
+end
 
 --------
 
-matches.client_online_handler:add_case(protocol.ClientMsg.BlockUpdate, (
-    function(packet, client)
-        if not client.account or not client.account.is_logged then
-            return
-        end
-
-        local x, y, z = packet.pos.x, packet.pos.y, packet.pos.z
-
-        if not can_interact_with_block(client.player, x, y, z, true) then
-            return
-        end
-
-        if not block.is_replaceable_at(x, y, z) then
-            return
-        end
-
-        packet = packet.block
-        local pid = client.player.pid
-
-        if not infinite_items_check(pid, packet.id) then return end
-
-        sandbox.place_block({
-            x = x,
-            y = y,
-            z = z,
-            states = packet.state,
-            id = packet.id
-        }, pid)
+handlers[protocol.ClientMsg.BlockUpdate] =
+function(packet, client)
+    if not client.account or not client.account.is_logged then
+        return
     end
-))
 
-matches.client_online_handler:add_case(protocol.ClientMsg.BlockRegionUpdate, (
-    function(packet, client)
-        if not client.account or not client.account.is_logged then
-            return
-        end
+    local x, y, z = packet.pos.x, packet.pos.y, packet.pos.z
 
-        packet = packet.block
-
-        local x, y, z = packet.pos.x, packet.pos.y, packet.pos.z
-
-        x = client.player.region_pos.x * 64 + x
-        z = client.player.region_pos.z * 64 + z
-
-        if not can_interact_with_block(client.player, x, y, z, true) then
-            return
-        end
-
-        if not block.is_replaceable_at(x, y, z) then
-            return
-        end
-
-        local pid = client.player.pid
-
-        if not infinite_items_check(pid, packet.id) then return end
-
-        sandbox.place_block({
-            x = x,
-            y = y,
-            z = z,
-            states = packet.state,
-            id = packet.id
-        }, pid)
+    if not can_interact_with_block(client.player, x, y, z, true) then
+        return
     end
-))
+
+    if not block.is_replaceable_at(x, y, z) then
+        return
+    end
+
+    packet = packet.block
+    local pid = client.player.pid
+
+    if not infinite_items_check(pid, packet.id) then return end
+
+    sandbox.place_block({
+        x = x,
+        y = y,
+        z = z,
+        states = packet.state,
+        id = packet.id
+    }, pid)
+end
+
+handlers[protocol.ClientMsg.BlockRegionUpdate] =
+function(packet, client)
+    if not client.account or not client.account.is_logged then
+        return
+    end
+
+    packet = packet.block
+
+    local x, y, z = packet.pos.x, packet.pos.y, packet.pos.z
+
+    x = client.player.region_pos.x * 64 + x
+    z = client.player.region_pos.z * 64 + z
+
+    if not can_interact_with_block(client.player, x, y, z, true) then
+        return
+    end
+
+    if not block.is_replaceable_at(x, y, z) then
+        return
+    end
+
+    local pid = client.player.pid
+
+    if not infinite_items_check(pid, packet.id) then return end
+
+    sandbox.place_block({
+        x = x,
+        y = y,
+        z = z,
+        states = packet.state,
+        id = packet.id
+    }, pid)
+end
 
 --------
 
-matches.client_online_handler:add_case(protocol.ClientMsg.BlockDestroy, (
-    function(packet, client)
-        if not client.account or not client.account.is_logged then
-            return
-        end
-
-        packet = packet.pos
-
-        local x, y, z = packet.x, packet.y, packet.z
-        if not can_interact_with_block(client.player, x, y, z, false) then
-            return
-        end
-
-        if block_is_void(x, y, z) then
-            return
-        end
-
-        local block_id = block.get(x, y, z)
-        local block_name = block.name(block_id)
-        local pack = parse_path(block_name)
-
-        events.emit(block_name .. ".breaking", x, y, z, client.player.pid)
-        events.emit(pack .. ":.blockbreaking", block_id, x, y, z, client.player.pid)
-        sandbox.destroy_block({ x = x, y = y, z = z }, client.player.pid)
+handlers[protocol.ClientMsg.BlockDestroy] =
+function(packet, client)
+    if not client.account or not client.account.is_logged then
+        return
     end
-))
 
-matches.client_online_handler:add_case(protocol.ClientMsg.BlockRegionDestroy, (
-    function(packet, client)
-        if not client.account or not client.account.is_logged then
-            return
-        end
+    packet = packet.pos
 
-        packet = packet.pos
-
-        local x, y, z = packet.x, packet.y, packet.z
-
-        x = client.player.region_pos.x * 64 + x
-        z = client.player.region_pos.z * 64 + z
-
-        if not can_interact_with_block(client.player, x, y, z, false) then
-            return
-        end
-
-        if block_is_void(x, y, z) then
-            return
-        end
-
-        local block_id = block.get(x, y, z)
-        local block_name = block.name(block_id)
-        local pack = parse_path(block_name)
-
-        events.emit(block_name .. ".breaking", x, y, z, client.player.pid)
-        events.emit(pack .. ":.blockbreaking", block_id, x, y, z, client.player.pid)
-        sandbox.destroy_block({ x = x, y = y, z = z }, client.player.pid)
+    local x, y, z = packet.x, packet.y, packet.z
+    if not can_interact_with_block(client.player, x, y, z, false) then
+        return
     end
-))
+
+    if block_is_void(x, y, z) then
+        return
+    end
+
+    local block_id = block.get(x, y, z)
+    local block_name = block.name(block_id)
+    local pack = parse_path(block_name)
+
+    events.emit(block_name .. ".breaking", x, y, z, client.player.pid)
+    events.emit(pack .. ":.blockbreaking", block_id, x, y, z, client.player.pid)
+    sandbox.destroy_block({ x = x, y = y, z = z }, client.player.pid)
+end
+
+handlers[protocol.ClientMsg.BlockRegionDestroy] =
+function(packet, client)
+    if not client.account or not client.account.is_logged then
+        return
+    end
+
+    packet = packet.pos
+
+    local x, y, z = packet.x, packet.y, packet.z
+
+    x = client.player.region_pos.x * 64 + x
+    z = client.player.region_pos.z * 64 + z
+
+    if not can_interact_with_block(client.player, x, y, z, false) then
+        return
+    end
+
+    if block_is_void(x, y, z) then
+        return
+    end
+
+    local block_id = block.get(x, y, z)
+    local block_name = block.name(block_id)
+    local pack = parse_path(block_name)
+
+    events.emit(block_name .. ".breaking", x, y, z, client.player.pid)
+    events.emit(pack .. ":.blockbreaking", block_id, x, y, z, client.player.pid)
+    sandbox.destroy_block({ x = x, y = y, z = z }, client.player.pid)
+end
 
 --------
 
-matches.client_online_handler:add_case(protocol.ClientMsg.PackEvent, (
-    function(packet, client)
-        api_events.__emit__(packet.pack, packet.event, packet.bytes, client)
+handlers[protocol.ClientMsg.PackEvent] =
+function(packet, client)
+    api_events.__emit__(packet.pack, packet.event, packet.bytes, client)
+end
+
+handlers[protocol.ClientMsg.PackEnv] =
+function(packet, client)
+    api_env.__env_update__(packet.pack, packet.env, packet.key, packet.value)
+end
+
+handlers[protocol.ClientMsg.KeepAlive] =
+function(packet, client)
+    local challenge = packet.challenge
+
+    local wait_time = time.uptime() - client.ping.last_upd
+    client.ping.ping = wait_time * 1000
+
+    client.ping.waiting = false
+end
+
+handlers[protocol.ClientMsg.PlayerHandSlot] =
+function(packet, client)
+    if not client.account or not client.account.is_logged then
+        return
     end
-))
 
-matches.client_online_handler:add_case(protocol.ClientMsg.PackEnv, (
-    function(packet, client)
-        api_env.__env_update__(packet.pack, packet.env, packet.key, packet.value)
+    sandbox.set_selected_slot(client.player, packet.slot)
+end
+
+handlers[protocol.ClientMsg.EntitySpawnAttempt] =
+function(packet, client)
+    if not client.account or not client.account.is_logged then
+        return
     end
-))
 
-matches.client_online_handler:add_case(protocol.ClientMsg.KeepAlive, (
-    function(packet, client)
-        local challenge = packet.challenge
+    local name = entities.def_name(packet.def)
+    local conf = entities_manager.get_reg_config(name) or {}
 
-        local wait_time = time.uptime() - client.ping.last_upd
-        client.ping.ping = wait_time * 1000
-
-        client.ping.waiting = false
+    if conf.spawn_handler then
+        conf.spawn_handler(name, packet.args, client)
     end
-))
+end
 
-matches.client_online_handler:add_case(protocol.ClientMsg.PlayerHandSlot, (
-    function(packet, client)
-        if not client.account or not client.account.is_logged then
-            return
+handlers[protocol.ClientMsg.EntityInteract] =
+function(packet, client)
+    if not client.account or not client.account.is_logged then
+        return
+    end
+
+    local entity = entities.get(packet.uid)
+    if not entity or entity == -1 then return end
+
+    local player_pid = client.player.pid
+    local player_eid = client.player.entity_id
+
+    if packet.action == 0 then
+        for _, component in pairs(entity.components) do
+            (component.on_attacked or function() end)(player_eid, player_pid)
         end
-
-        sandbox.set_selected_slot(client.player, packet.slot)
-    end
-))
-
-matches.client_online_handler:add_case(protocol.ClientMsg.EntitySpawnAttempt, (
-    function(packet, client)
-        if not client.account or not client.account.is_logged then
-            return
+    elseif packet.action == 1 then
+        for _, component in pairs(entity.components) do
+            (component.on_used or function() end)(player_pid)
         end
-
-        local name = entities.def_name(packet.def)
-        local conf = entities_manager.get_reg_config(name) or {}
-
-        if conf.spawn_handler then
-            conf.spawn_handler(name, packet.args, client)
-        end
+    else
+        logger.log(string.format(
+            'The player "%s" [#%s] attempted to call a non-existent event type on an entity with uid = %s',
+            client.player.username, logger.shorted(client.account.identity, packet.uid)), "W")
     end
-))
+end
 
-matches.client_online_handler:add_case(protocol.ClientMsg.EntityInteract, (
-    function(packet, client)
-        if not client.account or not client.account.is_logged then
-            return
-        end
+handlers[protocol.ClientMsg.EntityDespawn] =
+function(packet, client)
+    entities_manager.unload_entity(client.player, packet.uid)
+end
 
-        local entity = entities.get(packet.uid)
-        if not entity or entity == -1 then return end
+handlers[protocol.ClientMsg.KeepAlive] =
+function(packet, client)
+    local challenge = packet.challenge
 
-        local player_pid = client.player.pid
-        local player_eid = client.player.entity_id
+    local wait_time = time.uptime() - client.ping.last_upd
+    client.ping.ping = wait_time * 1000
 
-        if packet.action == 0 then
-            for _, component in pairs(entity.components) do
-                (component.on_attacked or function() end)(player_eid, player_pid)
-            end
-        elseif packet.action == 1 then
-            for _, component in pairs(entity.components) do
-                (component.on_used or function() end)(player_pid)
-            end
-        else
-            logger.log(string.format(
-                'The player "%s" [#%s] attempted to call a non-existent event type on an entity with uid = %s',
-                client.player.username, logger.shorted(client.account.identity, packet.uid)), "W")
-        end
+    client.ping.waiting = false
+end
+
+handlers[protocol.ClientMsg.InventoryClose] =
+function(packet, client)
+    if not client.account or not client.account.is_logged then
+        return
     end
-))
 
-matches.client_online_handler:add_case(protocol.ClientMsg.EntityDespawn, (
-    function(packet, client)
-        entities_manager.unload_entity(client.player, packet.uid)
+    inventories_manager.close_inventory(client.player, true)
+end
+
+handlers[protocol.ClientMsg.InventoryInteract] =
+function(packet, client)
+    if not client.account or not client.account.is_logged then
+        return
     end
-))
 
-matches.client_online_handler:add_case(protocol.ClientMsg.KeepAlive, (
-    function(packet, client)
-        local challenge = packet.challenge
+    local status = inventories_manager.interact(
+        client.player,
+        packet.inventory_id,
+        packet.slot,
+        packet.action,
+        packet.mode,
+        packet.item_id,
+        packet.checksum
+    )
 
-        local wait_time = time.uptime() - client.ping.last_upd
-        client.ping.ping = wait_time * 1000
-
-        client.ping.waiting = false
+    if not status then
+        inventories_manager.sync(client.player, packet.inventory_id)
     end
-))
+end
 
-matches.client_online_handler:add_case(protocol.ClientMsg.InventoryClose, (
-    function(packet, client)
-        if not client.account or not client.account.is_logged then
-            return
-        end
+handlers[protocol.ClientMsg.ViewDistance] =
+function(packet, client)
+    client.player.view_distance = packet.distance
+end
 
-        inventories_manager.close_inventory(client.player, true)
+handlers[protocol.ClientMsg.PlayerCrouching] =
+function(packet, client)
+    local player = client.player
+    player.is_crouching = packet.is_crouching
+    if player.entity_id then
+        local entity = entities.get(player.entity_id)
+        entity.rigidbody:set_crouching(packet.is_crouching)
     end
-))
+end
 
-matches.client_online_handler:add_case(protocol.ClientMsg.InventoryInteract, (
-    function(packet, client)
-        if not client.account or not client.account.is_logged then
-            return
-        end
-
-        local status = inventories_manager.interact(
-            client.player,
-            packet.inventory_id,
-            packet.slot,
-            packet.action,
-            packet.mode,
-            packet.item_id,
-            packet.checksum
-        )
-
-        if not status then
-            inventories_manager.sync(client.player, packet.inventory_id)
-        end
-    end
-))
-
-matches.client_online_handler:add_case(protocol.ClientMsg.ViewDistance, (
-    function(packet, client)
-        client.player.view_distance = packet.distance
-    end
-))
-
-matches.client_online_handler:add_case(protocol.ClientMsg.PlayerCrouching, (
-    function(packet, client)
-        local player = client.player
-        player.is_crouching = packet.is_crouching
-        if player.entity_id then
-            local entity = entities.get(player.entity_id)
-            entity.rigidbody:set_crouching(packet.is_crouching)
-        end
-    end
-))
-
-return matches
+return {
+    handlers = handlers,
+    fsm = fsm
+}

@@ -1,7 +1,6 @@
 local protocol = import "net/protocol/protocol"
 
 local server_matches = import("net/handlers/main")
-local switcher = server_matches.client_online_handler
 
 local receive_interceptors = {}
 local generic_receive_interceptors = {}
@@ -94,7 +93,5 @@ function module.receive.__process(packet, client)
 
     return true
 end
-
-switcher:add_middleware(module.receive.__process)
 
 return module

@@ -153,8 +153,7 @@ function server:tick()
                 table.remove(clients, index)
 
                 if id == 1 then
-                    server_matches.client_online_handler:switch(
-                        protocol.ClientMsg.Disconnect,
+                    server_matches.handlers[protocol.ClientMsg.Disconnect](
                         { packet_type = protocol.ClientMsg.Disconnect },
                         client
                     )
