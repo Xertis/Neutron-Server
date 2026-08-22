@@ -37,7 +37,7 @@ end
 
 function module.eval.VectorLength(dist, cur_val, client_val)
     if client_val == nil then
-        return 0
+        return HUGE
     end
 
     return vec3.length(vec3.sub(cur_val, client_val))
