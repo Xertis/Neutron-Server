@@ -808,6 +808,12 @@ matches.client_online_handler:add_case(protocol.ClientMsg.BlockDestroy, (
             return
         end
 
+        local block_id = block.get(x, y, z)
+        local block_name = block.name(block_id)
+        local pack = parse_path(block_name)
+
+        events.emit(block_name .. ".breaking", x, y, z, client.player.pid)
+        events.emit(pack .. ":.blockbreaking", block_id, x, y, z, client.player.pid)
         sandbox.destroy_block({ x = x, y = y, z = z }, client.player.pid)
     end
 ))
@@ -833,6 +839,12 @@ matches.client_online_handler:add_case(protocol.ClientMsg.BlockRegionDestroy, (
             return
         end
 
+        local block_id = block.get(x, y, z)
+        local block_name = block.name(block_id)
+        local pack = parse_path(block_name)
+
+        events.emit(block_name .. ".breaking", x, y, z, client.player.pid)
+        events.emit(pack .. ":.blockbreaking", block_id, x, y, z, client.player.pid)
         sandbox.destroy_block({ x = x, y = y, z = z }, client.player.pid)
     end
 ))

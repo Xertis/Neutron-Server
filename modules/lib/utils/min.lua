@@ -2,6 +2,7 @@ local hash = import "lib/crypto/hash"
 local sandbox = import "core/sandbox/methods"
 local rules = import "core/sandbox/managers/rules"
 local metadata = import "lib/data/metadata"
+local perform_task = import "lib/flow/perform_task"
 
 
 local module = {
@@ -73,6 +74,7 @@ function module.world.preparation_main()
 
         logger.log(string.format("Chunks loaded successfully. %s chunks loaded", count_chunks))
 
+        app.save_world()
         app.close_world(true)
     end
 end
@@ -81,6 +83,7 @@ function module.world.open_main()
     logger.log("Discovery of the main world")
     app.reset_content({ "server" })
     app.open_world(CONFIG.game.main_world)
+    app.tick()
     metadata.load()
 
     do
@@ -98,23 +101,14 @@ function module.world.open_main()
 
     player.set_suspended(ROOT_PID, false)
     player.set_loading_chunks(ROOT_PID, true)
-    local ticks_count = 0
 
-    do
-        player.set_noclip(ROOT_PID, true)
-        player.set_flight(ROOT_PID, true)
-        player.set_pos(ROOT_PID, 0, 262, 0)
+    player.set_noclip(ROOT_PID, true)
+    player.set_flight(ROOT_PID, true)
+    player.set_pos(ROOT_PID, 0, 245, 0)
 
-        while player.get_entity(ROOT_PID) == -1 do
-            ticks_count = ticks_count + 1
-            app.tick()
-        end
+    local defaults = file.read_combined_object("config/defaults.toml")
 
-        local root_entity = entities.get(player.get_entity(ROOT_PID))
-
-        PLAYER_ENTITY_ID = root_entity:def_index()
-        logger.log(string.format("root entity has been received in %s ticks", ticks_count))
-    end
+    PLAYER_ENTITY_ID = entities.def_index(defaults["player-entity"])
 
     for role_name, role in pairs(CONFIG.roles) do
         if role_name ~= "default_role" then
