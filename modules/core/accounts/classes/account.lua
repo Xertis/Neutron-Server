@@ -1,7 +1,24 @@
 local metadata = import "lib/data/metadata"
 local lib = import "lib/utils/min"
 local Account = {}
-Account.__index = Account
+
+local TEMPED_DATA = {
+    last_session = nil,
+    is_logged = false,
+}
+
+function Account.__index(self, key)
+    if TEMPED_DATA[key] then
+        local t = TEMPED_DATA[key][self]
+        if not t then
+            t = {}
+            TEMPED_DATA[key][self] = t
+        end
+        return t
+    end
+    return Account[key]
+end
+
 
 local accounts_proxy = metadata.proxy("server", "accounts")
 
@@ -11,8 +28,6 @@ function Account.new(identity)
     if not self then
         self = {
             active = false,
-            last_session = nil,
-            is_logged = false,
             role = nil,
             identity = identity,
             password = nil

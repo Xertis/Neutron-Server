@@ -143,6 +143,7 @@ local function send_dirty(observer, dirty)
             args = observer.args,
             is_own = observer.is_own_entity,
         })
+        observer.is_spawned = true
     end
 end
 
@@ -179,7 +180,6 @@ function Observer:process()
     self.sended_state = current_state
 
     send_dirty(self, dirty)
-    if not self.is_spawned then self.is_spawned = true end
 end
 
 return Observer
