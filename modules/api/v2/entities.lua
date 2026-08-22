@@ -35,6 +35,14 @@ function module.eval.VectorNotEquals(dist, cur_val, client_val)
     return 0
 end
 
+function module.eval.VectorLength(dist, cur_val, client_val)
+    if client_val == nil then
+        return 0
+    end
+
+    return vec3.length(vec3.sub(cur_val, client_val))
+end
+
 function module.eval.Always()
     return HUGE
 end

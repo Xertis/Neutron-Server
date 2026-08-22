@@ -230,6 +230,10 @@ entities.eval.NotEquals
 -- Возвращает math.huge, если хотя бы одна компонента отличается больше чем на 0.001.
 entities.eval.VectorNotEquals
 
+-- Предназначен для vec3 полей
+-- Возвращает длину разности векторов
+entities.eval.VectorLength
+
 -- Всегда возвращает math.huge
 entities.eval.Always
 
