@@ -18,6 +18,10 @@ function module.register(entity_name, config, spawn_handler)
     entities_manager.register(entity_name, config, spawn_handler)
 end
 
+function module.extend(entity_name, config, spawn_handler)
+    entities_manager.extend(entity_name, config, spawn_handler)
+end
+
 function module.eval.NotEquals(dist, cur_val, client_val)
     if type(cur_val) == "table" then
         return not table.deep_equals(cur_val, client_val) and HUGE or 0

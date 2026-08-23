@@ -68,7 +68,6 @@ ServerPipe:add_middleware(function(client)
                         client:kick()
                         logger.log("Error while reading packet: " .. err .. '\n' .. "Client disconnected", 'E')
                     end
-
                     coroutine.yield()
                 end
             end

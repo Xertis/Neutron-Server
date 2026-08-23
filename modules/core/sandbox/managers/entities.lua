@@ -7,8 +7,7 @@ local module = {}
 local reg_entities = {}
 local notificated_entities = {}
 
-
-function module.register(entity_name, config, spawn_handler)
+local function ensure_models(config)
     if config.models then
         local new_models = {}
         for index, value in pairs(config.models) do
@@ -17,11 +16,16 @@ function module.register(entity_name, config, spawn_handler)
         end
         config.models = new_models
     end
+end
+
+function module.register(entity_name, config, spawn_handler)
+    ensure_models(config)
 
     if not reg_entities[entity_name] then
         logger.log(string.format('The entity "%s" is registered', entity_name))
     else
-        logger.log(string.format('The "%s" entity has been re-registered', entity_name))
+        logger.log(string.format('The "%s" entity has been re-registered by %s', entity_name,
+            parse_path(debug.getinfo(3, "S").source)))
     end
 
     reg_entities[entity_name] = {
@@ -30,8 +34,29 @@ function module.register(entity_name, config, spawn_handler)
     }
 end
 
+function module.extend(entity_name, config, spawn_handler)
+    ensure_models(config)
+
+    if not reg_entities[entity_name] then
+        module.register(entity_name, config, spawn_handler)
+        return
+    end
+
+    if spawn_handler then
+        reg_entities[entity_name].spawn_handler = spawn_handler
+    end
+
+    table.apply(config, reg_entities[entity_name].config)
+    reg_entities[entity_name].config = config
+end
+
 function module.get_reg_config(entity_name)
     return reg_entities[entity_name]
+end
+
+function module.reset()
+    reg_entities = {}
+    notificated_entities = {}
 end
 
 function module.unload_entity(player, uid)
