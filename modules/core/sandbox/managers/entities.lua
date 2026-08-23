@@ -48,6 +48,9 @@ function module.extend(entity_name, config, spawn_handler)
 
     table.apply(config, reg_entities[entity_name].config)
     reg_entities[entity_name].config = config
+
+    logger.log(string.format('The "%s" entity has been expanded by %s', entity_name,
+        parse_path(debug.getinfo(3, "S").source)))
 end
 
 function module.get_reg_config(entity_name)
