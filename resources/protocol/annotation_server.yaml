@@ -4,27 +4,27 @@
 
 BlockPosition:
   fields:
-    - x: int32
-    - y: uint8
-    - z: int32
+    x: int32
+    y: uint8
+    z: int32
 
 Block:
   fields:
-    - id: uint16
-    - state: uint16
-    - pos: BlockPosition
+    id: uint16
+    state: uint16
+    pos: BlockPosition
 
 BlockRegionPosition:
   fields:
-    - x: int8
-    - y: uint8
-    - z: int8
+    x: int8
+    y: uint8
+    z: int8
 
 BlockRegion:
   fields:
-    - id: uint16
-    - state: uint16
-    - pos: BlockRegionPosition
+    id: uint16
+    state: uint16
+    pos: BlockRegionPosition
 
 # -----------------------------------------------------------------
 # Server
@@ -37,28 +37,28 @@ BlockRegion:
 StatusResponse:
   packet_id: 0
   fields:
-    - protocol_reference: string
-    - protocol_version: string
+    protocol_reference: string
+    protocol_version: string
 
-    - engine_version: string
-    - api_version: string
-    - neutron_version: string
+    engine_version: string
+    api_version: string
+    neutron_version: string
 
-    - short_desc: string
-    - description: string
-    - favicon: bytearray
-    - friends_states: Array<boolean>
-    - max: uint16
-    - online: uint16
+    short_desc: string
+    description: string
+    favicon: bytearray
+    friends_states: Array<boolean>
+    max: uint16
+    online: uint16
 
 JoinSuccess:
   fields:
-    - pid: var
-    - game_time: uint16
-    - rules: Array<Rule>
-    - chunks_loading_distance: uint8
-    - player: PlayerEntity
-    - spawn_chunk: bytearray
+    pid: var
+    game_time: uint16
+    rules: Array<Rule>
+    chunks_loading_distance: uint8
+    player: PlayerEntity
+    spawn_chunk: bytearray
 
 # -----------------------------------------------------------------
 # In-Game
@@ -66,198 +66,198 @@ JoinSuccess:
 
 SynchronizePlayer:
   fields:
-    - data: PlayerEntity
+    data: PlayerEntity
 
 TimeUpdate:
   fields:
-    - game_time: uint16[math.floor(W * 65535 + 0.5)][R / 65535]
+    game_time: uint16[math.floor(W * 65535 + 0.5)][R / 65535]
 
 RuleUpdate:
   fields:
-    - name: string
-    - value: boolean
+    name: string
+    value: boolean
 
 KeepAlive:
   fields:
-    - challenge: uint8
+    challenge: uint8
 
 PlayerHandSlot:
   fields:
-    - slot: uint8
+    slot: uint8
 
 OnlinePlayersList:
   fields:
-    - list: Array<Pair<string, var>>
+    list: Array<Pair<string, var>>
 
 OnlinePlayersListAdd:
   fields:
-    - data: Pair<string, var>
+    data: Pair<string, var>
 
 OnlinePlayersListRemove:
   fields:
-    - pid: var
+    pid: var
 
 OpenVirtualInventory:
   fields:
-    - layout: string
-    - inventory_id: var[W+2][R-2]
-    - disable_player_inventory: boolean[W or false]
+    layout: string
+    inventory_id: var[W+2][R-2]
+    disable_player_inventory: boolean[W or false]
 
 OpenBlockInventory:
   fields:
-    - inventory_id: var[W+2][R-2]
-    - pos: BlockPosition
+    inventory_id: var[W+2][R-2]
+    pos: BlockPosition
 
 InventoryClose:
   fields:
 
 InventorySync:
   fields:
-    - inventory_id: var[W+2][R-2]
-    - inventory: InventoryUnlimited
+    inventory_id: var[W+2][R-2]
+    inventory: InventoryUnlimited
 
 ChunkData:
   fields:
-    - chunk: Chunk
+    chunk: Chunk
 
 ChunksData:
   fields:
-    - list: Array<Chunk>
+    list: Array<Chunk>
 
 ChatMessage:
   fields:
-    - message: string
+    message: string
 
 BlockChanged:
   fields:
-    - pid: var[W+1][R-1]
-    - block: Block
+    pid: var[W+1][R-1]
+    block: Block
 
 PacksList:
   fields:
-    - packs: Array<string>
+    packs: Array<string>
 
 PackEvent:
   fields:
-    - pack: string
-    - event: string
-    - bytes: bytearray
+    pack: string
+    event: string
+    bytes: bytearray
 
 PackEnv:
   fields:
-    - pack: string
-    - env: string
-    - key: string
-    - value: any
+    pack: string
+    env: string
+    key: string
+    value: any
 
 EntitySpawn:
   fields:
-    - uid: var
-    - def: uint16
-    - dirty: Edd
-    - args: Nilable<bson>
-    - is_own: boolean
+    uid: var
+    def: uint16
+    dirty: Edd
+    args: Nilable<bson>
+    is_own: boolean
 
 EntityUpdate:
   fields:
-    - uid: var
-    - dirty: Edd
+    uid: var
+    dirty: Edd
 
 EntityDespawn:
   fields:
-    - uid: var
+    uid: var
 
 ParticleEmit:
   fields:
-    - particle: Particle
+    particle: Particle
 
 ParticleOrigin:
   fields:
-    - pid: var
-    - origin: origin
+    pid: var
+    origin: origin
 
 ParticleStop:
   fields:
-    - pid: var
+    pid: var
 
 AudioEmit:
   fields:
-    - audio: Audio
+    audio: Audio
 
 AudioState:
   fields:
-    - state: bson
+    state: bson
 
 AudioStop:
   fields:
-    - id: var
+    id: var
 
 Text3DShow:
   fields:
-    - data: Text3D
+    data: Text3D
 
 Text3DPos:
   fields:
-    - id: var
-    - pos: Vec3<float32>
+    id: var
+    pos: Vec3<float32>
 
 Text3DEntity:
   fields:
-    - id: var
-    - entity: var[W and W+1 or 0][R-1]
+    id: var
+    entity: var[W and W+1 or 0][R-1]
 
 Text3DState:
   fields:
-    - state: Text3D
+    state: Text3D
 
 Text3DAxis:
   fields:
-    - id: var
-    - axis: Vec3<float32>
-    - is_x: boolean
+    id: var
+    axis: Vec3<float32>
+    is_x: boolean
 
 Text3DHide:
   fields:
-    - id: var
+    id: var
 
 WrapShow:
   fields:
-    - id: var
-    - pos: BlockPosition
-    - texture: string
-    - emission: norm8
+    id: var
+    pos: BlockPosition
+    texture: string
+    emission: norm8
 
 WrapSetPos:
   fields:
-    - id: var
-    - pos: BlockPosition
+    id: var
+    pos: BlockPosition
 
 WrapSetTexture:
   fields:
-    - id: var
-    - texture: string
+    id: var
+    texture: string
 
 # (-X, +X, -Y, +Y, -Z, +Z)
 WrapSetFaces:
   fields:
-    - id: var
-    - faces: Vec6<string>
+    id: var
+    faces: Vec6<string>
 
 WrapSetTints:
   fields:
-    - id: var
-    - faces: Vec6<Vec3<norm8>>
+    id: var
+    faces: Vec6<Vec3<norm8>>
 
 WrapHide:
   fields:
-    - id: var
+    id: var
 
 WeatherChanged:
   fields:
-    - weather: bson
-    - time: uint16
-    - name: string
+    weather: bson
+    time: uint16
+    name: string
 
 Disconnect:
   fields:
-    - reason: string
+    reason: string

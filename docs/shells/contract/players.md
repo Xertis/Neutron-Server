@@ -12,7 +12,6 @@
 api.extensions.players.get_main_identity() -> string
 
 -- Устанавливает идентификатор основного игрока
--- Вызывается оболочкой на этапе инициализации/авторизации
 api.extensions.players.set_main_identity(id: string)
 
 -- Возвращает имя основного игрока

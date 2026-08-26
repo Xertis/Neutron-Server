@@ -4,27 +4,27 @@
 
 BlockPosition:
   fields:
-    - x: int32
-    - y: uint8
-    - z: int32
+    x: int32
+    y: uint8
+    z: int32
 
 Block:
   fields:
-    - id: uint16
-    - state: uint16
-    - pos: BlockPosition
+    id: uint16
+    state: uint16
+    pos: BlockPosition
 
 BlockRegionPosition:
   fields:
-    - x: int8
-    - y: uint8
-    - z: int8
+    x: int8
+    y: uint8
+    z: int8
 
 BlockRegion:
   fields:
-    - id: uint16
-    - state: uint16
-    - pos: BlockRegionPosition
+    id: uint16
+    state: uint16
+    pos: BlockRegionPosition
 
 # -----------------------------------------------------------------
 # Client
@@ -37,15 +37,15 @@ BlockRegion:
 HandShake:
   packet_id: 0
   fields:
-    - protocol_reference: string
-    - protocol_version: string
+    protocol_reference: string
+    protocol_version: string
 
-    - engine_version: string
-    - api_version: string
+    engine_version: string
+    api_version: string
 
-    - friends_list: Array<string>
+    friends_list: Array<string>
 
-    - next_state: uint8
+    next_state: uint8
 
 StatusRequest:
   packet_id: 1
@@ -53,12 +53,12 @@ StatusRequest:
 
 JoinGame:
   fields:
-    - username: string
-    - identity: string
+    username: string
+    identity: string
 
 PackHashes:
   fields:
-    - hashes: Array<PackHash>
+    hashes: Array<PackHash>
 
 # -----------------------------------------------------------------
 # In-Game
@@ -69,123 +69,123 @@ Disconnect:
 
 PingRequest:
   fields:
-    - payload: uint32
+    payload: uint32
 
 KeepAlive:
   fields:
-    - challenge: uint8
+    challenge: uint8
 
 PlayerPosition:
   fields:
-    - pos: PlayerPos
+    pos: PlayerPos
 
 PlayerRegion:
   fields:
-    - x: int16
-    - y: int16
-    - z: int16
+    x: int16
+    y: int16
+    z: int16
 
 PlayerRotation:
   fields:
-    - x: degree
-    - y: degree
-    - z: degree
+    x: degree
+    y: degree
+    z: degree
 
 PlayerCheats:
   fields:
-    - noclip: boolean
-    - flight: boolean
+    noclip: boolean
+    flight: boolean
 
 PlayerHandSlot:
   fields:
-    - slot: uint8
+    slot: uint8
 
 PlayerCrouching:
   fields:
-    - is_crouching: boolean
+    is_crouching: boolean
 
 ViewDistance:
   fields:
-    - distance: uint8
+    distance: uint8
 
 ViewPadding:
   fields:
-    - padding: uint8
+    padding: uint8
 
 InventoryInteract:
   fields:
-    - inventory_id: var[W+2][R-2]
-    - slot: var
-    - action: hex
-    - mode: hex
-    - item_id: uint16
-    - checksum: uint24
+    inventory_id: var[W+2][R-2]
+    slot: var
+    action: hex
+    mode: hex
+    item_id: uint16
+    checksum: uint24
 
 InventoryClose:
   fields:
 
 RequestChunk:
   fields:
-    - x: int16
-    - z: int16
+    x: int16
+    z: int16
 
 RequestChunks:
   fields:
-    - chunks: Array<int16>
+    chunks: Array<int16>
 
 ChatMessage:
   fields:
-    - message: string
+    message: string
 
 BlockUpdate:
   fields:
-    - block: Block
+    block: Block
 
 BlockInteract:
   fields:
-    - pos: BlockPosition
+    pos: BlockPosition
 
 BlockDestroy:
   fields:
-    - pos: BlockPosition
+    pos: BlockPosition
 
 BlockRegionUpdate:
   fields:
-    - block: BlockRegion
+    block: BlockRegion
 
 BlockRegionInteract:
   fields:
-    - pos: BlockRegionPosition
+    pos: BlockRegionPosition
 
 BlockRegionDestroy:
   fields:
-    - pos: BlockRegionPosition
+    pos: BlockRegionPosition
 
 PackEvent:
   fields:
-    - pack: string
-    - event: string
-    - bytes: bytearray
+    pack: string
+    event: string
+    bytes: bytearray
 
 PackEnv:
   fields:
-    - pack: string
-    - env: string
-    - key: string
-    - value: any
+    pack: string
+    env: string
+    key: string
+    value: any
 
 EntitySpawnAttempt:
   fields:
-    - def: uint16
-    - args: bson
+    def: uint16
+    args: bson
 
 EntityDespawn:
   fields:
-    - uid: var
+    uid: var
 
-# action - 0: Сущность была атакована
-# action - 1: Сущность была использована (как странно это звучит)
+# action 0: Сущность была атакована
+# action 1: Сущность была использована (как странно это звучит)
 EntityInteract:
   fields:
-    - uid: var
-    - action: hex
+    uid: var
+    action: hex

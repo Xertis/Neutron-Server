@@ -68,17 +68,10 @@ local function gen_ids(side)
     end
 end
 
-local function get_one(tbl)
-    for key, val in pairs(tbl) do
-        return key, val
-    end
-end
-
 local function get_fields(annotation, letter, name, prefix)
     local fields = {}
 
-    for _, type_entry in ipairs(letter.fields or {}) do
-        local key, val = get_one(type_entry)
+    for key, val in pairs(letter.fields or {}) do
         local full_key = prefix and (prefix .. "." .. key) or key
         local base_type = get_base_type(val)
 
