@@ -7,6 +7,15 @@ local function send_responce(client, responce)
     client:queue_response(utf8.tobytes(responce))
 end
 
+local function read_versions(list)
+    local packs = {}
+    for _, pack in ipairs(list) do
+        packs[pack] = {}
+        packs[pack].version = json.parse(file.read(string.format("%s:package.json", pack))).version or "0.0.0"
+    end
+    return packs
+end
+
 local matches = switcher.new(function(packet, client)
     local error = string.format("Path '%s' does not exist.", packet.path)
     logger.log(string.format('http 404 error: "%s", additional information in server.log', error))
@@ -38,8 +47,8 @@ matches:add_case("/status", function(packet, client)
         friends_states[indx] = table.has(players, friend)
     end
 
-    local packs = pack.get_installed()
-    local plugins = CONFIG.game.plugins
+    local packs = read_versions(pack.get_installed())
+    local plugins = read_versions(CONFIG.game.plugins)
 
     table.filter(packs, function(_, p)
         if p == "server" or table.has(plugins, p) then
