@@ -95,7 +95,21 @@ export default defineConfig({
                 {
                     text: 'Оболочки и расширения',
                     items: [
-                        { text: 'Обзор', link: '/shells/' },
+                      { text: 'Обзор', link: '/shells/' },
+                    ],
+                },
+                {
+                    text: 'Контракт',
+                    collapsed: false,
+                    items: [
+                        { text: 'Игроки', link: '/shells/players' },
+                    ],
+                },
+                {
+                    text: 'Встроенные библиотеки расширений',
+                    collapsed: false,
+                    items: [
+                      { text: 'Песочница', link: '/shells/sandbox' },
                     ],
                 },
             ],
