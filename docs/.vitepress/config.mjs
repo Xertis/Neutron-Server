@@ -102,14 +102,14 @@ export default defineConfig({
                     text: 'Контракт',
                     collapsed: false,
                     items: [
-                        { text: 'Игроки', link: '/shells/players' },
+                        { text: 'Игроки', link: '/shells/contract/players' },
                     ],
                 },
                 {
                     text: 'Встроенные библиотеки расширений',
                     collapsed: false,
                     items: [
-                      { text: 'Песочница', link: '/shells/sandbox' },
+                      { text: 'Песочница', link: '/shells/libraries/sandbox' },
                     ],
                 },
             ],
