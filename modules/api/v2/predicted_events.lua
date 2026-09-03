@@ -23,27 +23,27 @@ function PredictedEvent.new(pack, event, schema, config)
             request_id = "var",
             data = schema
         }),
-        c_interrupt = Messages.new(pack, event .. "0", {
+        c_interrupt = Messages.new(pack, event .. "@", {
             event_id = "var"
         }),
-        s_ack = Messages.new(pack, event .. "2", {
+        s_ack = Messages.new(pack, event .. "#", {
             request_id = "var",
             event_id = "Nilable<var>",
             accepted = "boolean"
         }),
-        s_observe_start = Messages.new(pack, event .. "3", {
+        s_observe_start = Messages.new(pack, event .. "$", {
             event_id = "var",
             progress = "norm16",
             data = schema
         }),
-        s_progress = Messages.new(pack, event .. "4", {
+        s_progress = Messages.new(pack, event .. "%", {
             event_id = "var",
             progress = "norm16"
         }),
-        s_finish = Messages.new(pack, event .. "5", {
+        s_finish = Messages.new(pack, event .. "^", {
             event_id = "var"
         }),
-        s_interrupt = Messages.new(pack, event .. "6", {
+        s_interrupt = Messages.new(pack, event .. "&", {
             event_id = "var"
         })
     }
