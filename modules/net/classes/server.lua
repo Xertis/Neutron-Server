@@ -47,43 +47,31 @@ function server:start_main()
             return
         end
 
-        table.insert(self.tasks, { socket = client_socket, storage = self.main_clients })
+        table.insert(self.tasks, client_socket)
     end)
 
     self.main_socket = self.main_network:tcp_open(self.port)
 end
 
-function server:start_http()
-    local http_port = self.port + 1
-    logger.log(string.format("Starting http server on port: %s", http_port))
-
-    self.http_network = Network.new("server", function(client_socket)
-        client_socket:set_nodelay(true)
-        local address, _ = client_socket:get_address()
-
-        if (not table.has(CONFIG.server.whitelist_ip, address) and #CONFIG.server.whitelist_ip > 0) then
-            client_socket:close()
-            return
-        end
-
-        if table.has(self.tasks, client_socket) then
-            client_socket:close()
-            logger.log(
-                "The client is trying to reconnect while its previous session is still active and queued for processing. Aborted",
-                "W")
-            return
-        end
-
-        table.insert(self.tasks, { socket = client_socket, storage = self.http_clients })
-    end)
-
-    self.http_socket = self.http_network:tcp_open(http_port)
-end
-
 function server:do_tasks()
     for j = #self.tasks, 1, -1 do
-        local client_socket = self.tasks[j].socket
-        local storage = self.tasks[j].storage
+        local client_socket = self.tasks[j]
+        local storage = nil
+
+        if client_socket:available() > 0 then
+            local storage_flag = client_socket:peek(1)[1]
+
+            if storage_flag == 0 then
+                client_socket:recv(1)
+                storage = self.main_clients
+            elseif CONFIG.server.http_enabled then
+                storage = self.http_clients
+            else
+                table.remove(self.tasks, j)
+            end
+        else
+            goto continue
+        end
 
         local address, port = client_socket:get_address()
         local client = Client.new(false, client_socket, address, port)
@@ -104,6 +92,8 @@ function server:do_tasks()
 
         table.insert(storage, client)
         table.remove(self.tasks, j)
+
+        ::continue::
     end
 end
 

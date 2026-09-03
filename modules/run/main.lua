@@ -58,10 +58,6 @@ local function main()
     server = server.new(CONFIG.server.port)
     server:start_main()
 
-    if CONFIG.server.http_enabled then
-        server:start_http()
-    end
-
     logger.log("server is started")
 
     timeout_executor.push(
