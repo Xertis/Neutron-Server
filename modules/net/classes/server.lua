@@ -11,11 +11,18 @@ local server = {}
 server.__index = server
 
 function server.new(port)
+    if SERVER_OBJECT then
+        logger.log("There can be only one server object", "P")
+        error("There can be only one server object")
+    end
+
     local self = setmetatable({}, server)
 
     self.port = port
     self.main_network = nil
     self.http_network = nil
+
+    self.host = nil
 
     self.main_clients = {}
     self.http_clients = {}
@@ -24,6 +31,8 @@ function server.new(port)
     self.tps = { timestamp = time.uptime(), tick = 0, target_tps = TARGET_TPS }
     self.tasks = {}
     container.clients_all.set(self.main_clients)
+
+    SERVER_OBJECT = self
 
     return self
 end
@@ -55,6 +64,7 @@ end
 
 function server:do_tasks()
     for j = #self.tasks, 1, -1 do
+        local is_host = false
         local client_socket = self.tasks[j]
         local storage = nil
 
@@ -64,10 +74,20 @@ function server:do_tasks()
             if storage_flag == 0 then
                 client_socket:recv(1)
                 storage = self.main_clients
+            elseif storage_flag == 1 then
+                client_socket:recv(1)
+                storage = self.main_clients
+                if not self.host and IS_STANDALONE then
+                    is_host = true
+                else
+                    table.remove(self.tasks, j)
+                    goto continue
+                end
             elseif CONFIG.server.http_enabled then
                 storage = self.http_clients
             else
                 table.remove(self.tasks, j)
+                goto continue
             end
         else
             goto continue
@@ -75,6 +95,11 @@ function server:do_tasks()
 
         local address, port = client_socket:get_address()
         local client = Client.new(false, client_socket, address, port)
+
+        if is_host then
+            self.host = client
+            logger.log("The host client was set up", "W")
+        end
 
         for i = #storage, 1, -1 do
             local server_client = storage[i]

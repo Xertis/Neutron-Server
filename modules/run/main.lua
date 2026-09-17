@@ -26,7 +26,7 @@ local function main()
     import "init/engine_patcher"
     import "init/server"
 
-    if IS_FIRST_RUN then
+    if IS_FIRST_RUN and not IS_STANDALONE then
         logger.log("The first startup was detected, server has been stopped.")
         logger.log(
             "A configuration file was created on the config:server_config.json. Please configure the settings and restart.")

@@ -1,9 +1,15 @@
+IS_STANDALONE = vc.get_project_arg("standalone")
+
 PACK_ID = "server"
 
 --Конфиг
-CONFIG_PATH = "config:server_config.json"
+CONFIG_PATH = IS_STANDALONE and "config:server_config.json" or "config:server_config.json"
 CONFIG = {} --Инициализируется в std
 LAST_SERVER_UPDATE = -1
+
+--Метадата
+METADATA_PLAYERS_PATH = "world:players_data.bjson"
+METADATA_SERVER_PATH = IS_STANDALONE and "world:server.bjson" or "config:server.bjson"
 
 --Песочница
 VIEW_DISTANCE = 0
@@ -34,6 +40,7 @@ IS_RELEASE = false
 IS_HEADLESS = true
 PROTOCOL_VERSION = "3.8"
 API_VERSION = "2"
+SERVER_OBJECT = nil
 PROTOCOL_STATES = {
     Status = 0,
     Login = 1,
