@@ -312,7 +312,7 @@ api.entities.sync(name: string)
 
 
 ```lua
-entities.server_to_client_uid(uid: int)
+api.entities.server_to_client_uid(uid: int)
 ```
 
 Принимает `uid` сущности на сервере и возвращает `uid` сущности на клиенте
