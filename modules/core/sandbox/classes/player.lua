@@ -7,7 +7,8 @@ local TEMPED_DATA = {
     pending_inventories = {},
     entity_observers = {},
     predicted_observers = {},
-    entity_id = -1
+    entity_id = -1,
+    view_distance = VIEW_DISTANCE
 }
 
 function Player.__index(self, key)
@@ -35,7 +36,6 @@ function Player.new(username, identity)
             pid = nil,
             world = nil,
             region_pos = { x = 0, y = 0, z = 0 },
-            view_distance = VIEW_DISTANCE,
             view_padding = VIEW_PADDING_DEFAULT,
             invid = 0,
             is_crouching = false,
