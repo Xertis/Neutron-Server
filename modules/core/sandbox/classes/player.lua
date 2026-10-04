@@ -44,6 +44,8 @@ function Player.new(username, identity)
         players_proxy[identity] = self
     end
 
+    self.rules = self.rules or {}
+
     self.active = true
 
     return setmetatable(self, Player)
