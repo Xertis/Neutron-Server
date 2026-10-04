@@ -1,28 +1,47 @@
 local metadata = import "lib/data/metadata"
 local Player = {}
 
-
-local TEMPED_DATA = {
-    temp = {},
-    pending_inventories = {},
-    entity_observers = {},
-    predicted_observers = {},
+local TEMPED_DEFAULTS = {
+    temp = function() return {} end,
+    pending_inventories = function() return {} end,
+    entity_observers = function() return {} end,
+    predicted_observers = function() return {} end,
     entity_id = -1,
     view_distance = VIEW_DISTANCE,
     view_padding = VIEW_PADDING_DEFAULT,
     is_crouching = false
 }
 
+local TEMPED_DATA = {}
+for key in pairs(TEMPED_DEFAULTS) do
+    TEMPED_DATA[key] = setmetatable({}, { __mode = "k" })
+end
+
 function Player.__index(self, key)
-    if TEMPED_DATA[key] then
-        local t = TEMPED_DATA[key][self]
-        if not t then
-            t = {}
-            TEMPED_DATA[key][self] = t
+    local storage = TEMPED_DATA[key]
+    if storage then
+        local value = storage[self]
+        if value == nil then
+            local default = TEMPED_DEFAULTS[key]
+            if type(default) == "function" then
+                value = default()
+                storage[self] = value
+            else
+                value = default
+            end
         end
-        return t
+        return value
     end
     return Player[key]
+end
+
+function Player.__newindex(self, key, value)
+    local storage = TEMPED_DATA[key]
+    if storage then
+        storage[self] = value
+    else
+        rawset(self, key, value)
+    end
 end
 
 local players_proxy = metadata.proxy("players")
