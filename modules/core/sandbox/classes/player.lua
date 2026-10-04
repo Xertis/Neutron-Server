@@ -8,7 +8,9 @@ local TEMPED_DATA = {
     entity_observers = {},
     predicted_observers = {},
     entity_id = -1,
-    view_distance = VIEW_DISTANCE
+    view_distance = VIEW_DISTANCE,
+    view_padding = VIEW_PADDING_DEFAULT,
+    is_crouching = false
 }
 
 function Player.__index(self, key)
@@ -36,9 +38,7 @@ function Player.new(username, identity)
             pid = nil,
             world = nil,
             region_pos = { x = 0, y = 0, z = 0 },
-            view_padding = VIEW_PADDING_DEFAULT,
             invid = 0,
-            is_crouching = false,
             rules = {}
         }
         players_proxy[identity] = self
