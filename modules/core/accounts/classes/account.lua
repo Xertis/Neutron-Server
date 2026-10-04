@@ -2,23 +2,33 @@ local metadata = import "lib/data/metadata"
 local lib = import "lib/utils/min"
 local Account = {}
 
-local TEMPED_DATA = {
-    last_session = nil,
+local TEMPED_DEFAULTS = {
+    last_session = false,
     is_logged = false,
 }
 
+local TEMPED_DATA = {}
+for key in pairs(TEMPED_DEFAULTS) do
+    TEMPED_DATA[key] = setmetatable({}, { __mode = "k" })
+end
+
 function Account.__index(self, key)
-    if TEMPED_DATA[key] then
-        local t = TEMPED_DATA[key][self]
-        if not t then
-            t = {}
-            TEMPED_DATA[key][self] = t
+    local storage = TEMPED_DATA[key]
+    if storage then
+        local value = storage[self]
+        if value == nil then
+            local default = TEMPED_DEFAULTS[key]
+            if type(default) == "function" then
+                value = default()
+                storage[self] = value
+            else
+                value = default
+            end
         end
-        return t
+        return value
     end
     return Account[key]
 end
-
 
 local accounts_proxy = metadata.proxy("server", "accounts")
 
