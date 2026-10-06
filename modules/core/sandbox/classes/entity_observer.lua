@@ -175,9 +175,23 @@ end
 
 function Observer:process()
     local player_pos = { player.get_pos(self.player.pid) }
-    local current_state, dirty = get_states(self.entity, player_pos, self.sended_state, self.config, self.is_own_entity)
+    local current_state, dirty = get_states(
+        self.entity,
+        player_pos,
+        self.sended_state,
+        self.config,
+        self.is_own_entity
+    )
 
-    self.sended_state = current_state
+    for category, fields in pairs(dirty) do
+        local sent = table.set_default(self.sended_state, category, {})
+        for name, value in pairs(fields) do
+            if type(value) == "table" then
+                value = table.deep_copy(value)
+            end
+            sent[name] = value
+        end
+    end
 
     send_dirty(self, dirty)
 end
