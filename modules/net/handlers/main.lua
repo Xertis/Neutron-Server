@@ -960,6 +960,8 @@ function(packet, client)
     if SERVER_OBJECT.host == client then
         CONFIG.server.chunks_loading_distance = packet.distance
 
+        app.set_setting("chunks.load-distance", packet.distance)
+
         echo.put_event(function (_client)
             if _client.active ~= true then return end
 
