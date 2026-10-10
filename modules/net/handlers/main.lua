@@ -328,7 +328,7 @@ Incorrect VoxelCore version:
             pid = account_player.pid,
             game_time = time.day_time_to_uint16(world.get_day_time()),
             rules = array_rules,
-            chunks_loading_distance = math.clamp(CONFIG.server.chunks_loading_distance, 0, 255),
+            max_view_distance = math.clamp(CONFIG.server.chunks_loading_distance, 0, 255),
             spawn_chunk = world.get_chunk_data(
                 math.floor(state.x / 16),
                 math.floor(state.z / 16)
@@ -956,6 +956,16 @@ end
 handlers[protocol.ClientMsg.ViewDistance] =
 function(packet, client)
     client.player.view_distance = packet.distance
+
+    if SERVER_OBJECT.host == client then
+        CONFIG.server.chunks_loading_distance = packet.distance
+
+        echo.put_event(function (_client)
+            if _client.active ~= true then return end
+
+            _client:push_packet(protocol.ServerMsg.MaxViewDistanceUpdate, { distance = packet.distance })
+        end)
+    end
 end
 
 handlers[protocol.ClientMsg.PlayerCrouching] =
