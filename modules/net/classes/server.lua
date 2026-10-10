@@ -90,6 +90,8 @@ function server:do_tasks()
                 goto continue
             end
         else
+            client_socket:close()
+            table.remove(self.tasks, j)
             goto continue
         end
 
