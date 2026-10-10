@@ -106,7 +106,7 @@ local function get_states(entity, player_pos, prev_state, config, is_own_entity)
         end
     end
 
-    return current_data, dirty
+    return dirty
 end
 
 local function send_dirty(observer, dirty)
@@ -175,7 +175,7 @@ end
 
 function Observer:process()
     local player_pos = { player.get_pos(self.player.pid) }
-    local current_state, dirty = get_states(
+    local dirty = get_states(
         self.entity,
         player_pos,
         self.sended_state,
