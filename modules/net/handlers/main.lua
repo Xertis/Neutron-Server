@@ -731,7 +731,6 @@ function(packet, client)
         return
     end
 
-    packet = packet.block
     local pid = client.player.pid
 
     if not infinite_items_check(pid, packet.id) then return end
