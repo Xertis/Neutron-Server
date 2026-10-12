@@ -720,6 +720,7 @@ function(packet, client)
         return
     end
 
+    packet = packet.block
     local x, y, z = packet.pos.x, packet.pos.y, packet.pos.z
 
     if not can_interact_with_block(client.player, x, y, z, true) then
