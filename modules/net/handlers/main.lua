@@ -974,7 +974,7 @@ handlers[protocol.ClientMsg.PlayerCrouching] =
 function(packet, client)
     local player = client.player
     player.is_crouching = packet.is_crouching
-    if player.entity_id then
+    if player.entity_id and player.entity_id > 0 then
         local entity = entities.get(player.entity_id)
         entity.rigidbody:set_crouching(packet.is_crouching)
     end
