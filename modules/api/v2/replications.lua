@@ -1,6 +1,10 @@
 local messages = import "api/v2/messages"
 local server_echo = import "lib/flow/server_echo"
 
+local wrap_keys = {
+    "create_public_replica", "create_private_replica", "get_replica", "remove_replica"
+}
+
 local Replication = {}
 
 local REPLICATORS = {}
@@ -96,6 +100,17 @@ end
 local Replicator = {}
 Replicator.__index = Replicator
 
+local function unwrap(proxy)
+    if not proxy.__value then
+        local schema = proxy.schema_provider();
+
+        proxy.schema = schema;
+        proxy.__value = Replicator.new(proxy.pack, proxy.event, schema);
+    end
+
+    return proxy.__value;
+end
+
 function Replication.new(pack, event, schema)
     if has_null(schema) then
         error("Replication схема не может иметь Nilable тип")
@@ -119,6 +134,20 @@ function Replication.new(pack, event, schema)
     REPLICATORS[replicator_id] = self
 
     return self
+end
+
+function Replication.lazy_new(pack, event, schema_provider)
+    local proxy = { pack = pack, event = event, schema_provider = schema_provider };
+
+    for _, key in ipairs(wrap_keys) do
+        proxy[key] = function(_, ...)
+            local msg = unwrap(proxy);
+
+            return msg[key](msg, ...);
+        end
+    end
+
+    return proxy;
 end
 
 function Replicator:create_public_replica(id, initial_value, need_send)

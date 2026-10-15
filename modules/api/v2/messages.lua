@@ -2,6 +2,10 @@ local protocol = import "net/protocol/protocol"
 local compiler = import "net/protocol/compiler"
 local events = import "api/v2/events"
 
+local wrap_keys = {
+    "encode", "decode", "tell", "echo", "selective_echo", "on"
+}
+
 local function schema_to_fields(schema, prefix, out)
     out = out or {}
     for key, typ in pairs(schema) do
@@ -18,6 +22,17 @@ end
 local Message = {}
 Message.__index = Message
 
+local function unwrap(proxy)
+    if not proxy.__value then
+        local schema = proxy.schema_provider();
+
+        proxy.schema = schema;
+        proxy.__value = Message.new(proxy.pack, proxy.event, schema);
+    end
+
+    return proxy.__value;
+end
+
 function Message.new(pack, event, schema)
     local fields = schema_to_fields(schema)
 
@@ -33,6 +48,20 @@ function Message.new(pack, event, schema)
     }, Message)
 
     return self
+end
+
+function Message.lazy_new(pack, event, schema_provider)
+    local proxy = { pack = pack, event = event, schema_provider = schema_provider };
+
+    for _, key in ipairs(wrap_keys) do
+        proxy[key] = function(_, ...)
+            local msg = unwrap(proxy);
+
+            return msg[key](msg, ...);
+        end
+    end
+
+    return proxy;
 end
 
 function Message:encode(buf, data)
