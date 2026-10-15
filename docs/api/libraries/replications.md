@@ -1,6 +1,7 @@
 # replications
 
 **Содержание**
+
 - [Сервер](#сервер)
   - [Создание репликатора](#создание-репликатора)
   - [Схема репликатора](#схема-репликатора)
@@ -29,6 +30,22 @@ local PosReplication = Replication.new("mypack", "pos_sync", {
     y = "float32",
     z = "float32"
 })
+```
+
+```lua
+Replication.wrap_new(pack: string, event: string, schema_provider: (function() -> table)) -> Replicator
+```
+
+```lua
+local PosReplication = Replication.wrap_new("mypack", "pos_sync", 
+    function()
+        return {
+            x = "float32",
+            y = "float32",
+            z = "float32"
+        }
+    end
+)
 ```
 
 - `pack` — имя пака, внутри которого репликатор.

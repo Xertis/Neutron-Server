@@ -1,6 +1,7 @@
 # messages
 
 **Содержание**
+
 - [Создание сообщения](#создание-сообщения)
 - [Схема сообщения](#схема-сообщения)
 - [Доступные типы](#доступные-типы)
@@ -20,6 +21,21 @@ local PingMessage = Message.new("mypack", "ping", {
     id = "string",
     data = "Array<int32>"
 })
+```
+
+```lua
+Message.wrap_new(pack: string, event: string, schema_provider: (function() -> table)) -> Message
+```
+
+```lua
+local PingMessage = Message.wrap_new("mypack", "ping",
+    function()
+        return {
+            id = "string",
+            data = "Array<int32>"
+        }
+    end
+)
 ```
 
 - `pack` — имя пака, внутри которого находится сообщение.
@@ -54,7 +70,7 @@ local SpawnMessage = Message.new("mypack", "spawn", {
 ## Доступные типы
 
 | Тип | Размер | Описание |
-|-----|--------|----------|
+| ----- | -------- | ---------- |
 | `boolean` | 1 бит | Логическое значение |
 | `uint8` | 1 байт | Целое без знака, 0..255 |
 | `int8` | 1 байт | Целое со знаком, -127..127 |
@@ -76,7 +92,7 @@ local SpawnMessage = Message.new("mypack", "spawn", {
 ### Generic-обёртки
 
 | Тип | Описание |
-|-----|----------|
+| ----- | ---------- |
 | `Array<T>` | Список элементов типа `T` переменной длины |
 | `Nilable<T>` | Опциональное значение типа `T` |
 | `Pair<T, U>` | Хранит ровно два элемента произвольных типов |
