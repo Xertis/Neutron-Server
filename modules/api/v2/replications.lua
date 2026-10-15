@@ -105,7 +105,7 @@ local function unwrap(proxy)
         local schema = proxy.schema_provider();
 
         proxy.schema = schema;
-        proxy.__value = Replicator.new(proxy.pack, proxy.event, schema);
+        proxy.__value = Replication.new(proxy.pack, proxy.event, schema);
     end
 
     return proxy.__value;
