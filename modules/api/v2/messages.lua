@@ -50,7 +50,7 @@ function Message.new(pack, event, schema)
     return self
 end
 
-function Message.wrap_new(pack, event, schema_provider)
+function Message.lazy_new(pack, event, schema_provider)
     local proxy = { pack = pack, event = event, schema_provider = schema_provider };
 
     for _, key in ipairs(wrap_keys) do

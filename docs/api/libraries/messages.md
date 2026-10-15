@@ -12,6 +12,8 @@
 
 ## Создание сообщения
 
+Сообщение можно сразу, в момент вызова new.
+
 ```lua
 Message.new(pack: string, event: string, schema: table) -> Message
 ```
@@ -23,12 +25,14 @@ local PingMessage = Message.new("mypack", "ping", {
 })
 ```
 
+Также его можно создать с отложенной компиляцией схемы - схема соберётся, когда будет вызван один из его методов.
+
 ```lua
-Message.wrap_new(pack: string, event: string, schema_provider: (function() -> table)) -> Message
+Message.lazy_new(pack: string, event: string, schema_provider: (function() -> table)) -> Message
 ```
 
 ```lua
-local PingMessage = Message.wrap_new("mypack", "ping",
+local PingMessage = Message.lazy_new("mypack", "ping",
     function()
         return {
             id = "string",
@@ -37,6 +41,9 @@ local PingMessage = Message.wrap_new("mypack", "ping",
     end
 )
 ```
+
+- `Message.new` - нужен в случае, когда схема доступна сразу.
+- `Message.lazy_new` - нужен в случае, когда схема собирается в рантайме (момент загрузки мира и тп).
 
 - `pack` — имя пака, внутри которого находится сообщение.
 - `event` — строковый идентификатор сообщения внутри пака.

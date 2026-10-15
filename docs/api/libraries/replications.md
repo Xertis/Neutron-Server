@@ -20,6 +20,8 @@
 
 ### Создание репликатора
 
+Репликатора можно сразу, в момент вызова new.
+
 ```lua
 Replication.new(pack: string, event: string, schema: table) -> Replicator
 ```
@@ -32,12 +34,14 @@ local PosReplication = Replication.new("mypack", "pos_sync", {
 })
 ```
 
+Также его можно создать с отложенной компиляцией схемы - схема соберётся, когда будет вызван один из его методов.
+
 ```lua
 Replication.wrap_new(pack: string, event: string, schema_provider: (function() -> table)) -> Replicator
 ```
 
 ```lua
-local PosReplication = Replication.wrap_new("mypack", "pos_sync", 
+local PosReplication = Replication.lazy_new("mypack", "pos_sync", 
     function()
         return {
             x = "float32",
@@ -47,6 +51,9 @@ local PosReplication = Replication.wrap_new("mypack", "pos_sync",
     end
 )
 ```
+
+- `Replication.new` - нужен в случае, когда схема доступна сразу.
+- `Replication.lazy_new` - нужен в случае, когда схема собирается в рантайме (момент загрузки мира и тп).
 
 - `pack` — имя пака, внутри которого репликатор.
 - `event` — имя ивента, который будет использоваться репликатором.
