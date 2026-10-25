@@ -6,7 +6,7 @@ logger.log("std initialized")
 
 --Проверка на наличие файла конфига
 do
-    if not file.exists(CONFIG_PATH) then
+    if not file.exists(CONFIG_PATH) and not IS_STANDALONE then
         logger.log(file.read(PACK_ID .. ":resources/server_config.json") .. CONFIG_PATH)
         file.write(CONFIG_PATH, file.read(PACK_ID .. ":resources/server_config.json"))
         if IS_HEADLESS then IS_FIRST_RUN = true end
@@ -16,11 +16,18 @@ end
 --Загружаем конфиг
 do
     local default_config = json.parse(file.read(PACK_ID .. ":resources/server_config.json"))
-    CONFIG = json.parse(file.read(CONFIG_PATH))
+    CONFIG = nil
+
+    if vc.get_project_arg("config") then
+        CONFIG = json.parse(vc.get_project_arg("config"))
+    else
+        CONFIG = json.parse(file.read(CONFIG_PATH))
+    end
+
     table.apply(CONFIG, default_config)
 
-    CONFIG.game.main_world = vc.get_project_arg("world_name") or CONFIG.game.main_world
-    CONFIG.server.port = vc.get_project_arg("server_port") or CONFIG.server.port
+    CONFIG.game.main_world = CONFIG.game.main_world
+    CONFIG.server.port = CONFIG.server.port
 
     if CONFIG.server.chunks_loading_distance > 255 then
         CONFIG.server.chunks_loading_distance = 255
