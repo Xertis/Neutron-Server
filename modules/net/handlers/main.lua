@@ -536,6 +536,10 @@ function(packet, client)
     inventories_manager.close_inventory(client.player, true)
 
     events.emit("server:client_disconnected", client)
+
+    if SERVER_OBJECT.host == client then
+        console.execute("stop")
+    end
 end
 
 --------
