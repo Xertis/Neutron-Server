@@ -3,7 +3,7 @@ IS_STANDALONE = vc.get_project_arg("standalone")
 PACK_ID = "server"
 
 --Конфиг
-CONFIG_PATH = IS_STANDALONE and "world:server_config.json" or "config:server_config.json"
+CONFIG_PATH = IS_STANDALONE and string.format("user:worlds/%s/server_config.json", vc.get_project_arg("world_name")) or "config:server_config.json"
 CONFIG = {} --Инициализируется в std
 LAST_SERVER_UPDATE = -1
 
