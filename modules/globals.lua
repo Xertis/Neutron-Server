@@ -78,6 +78,7 @@ TPS = {
 --Прочее
 USER_ICON_PATH = "user:icon.png"
 DEFAULT_ICON_PATH = "server:resources/server-icon.png"
+PACKS_CACHE_PATH = "export:packs_cache/"
 HAPPY_NEW_YEAR = true
 EVENT = nil
 

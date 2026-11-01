@@ -6,6 +6,7 @@ local server_echo = import "lib/flow/server_echo"
 local server_matches = import "net/handlers/main"
 local Network = import "net/classes/network"
 local protocol = import "net/protocol/protocol"
+local content_loader = import "init/content_loader"
 
 local server = {}
 server.__index = server
@@ -179,6 +180,7 @@ function server:tick()
                 if socket and socket:is_alive() then
                     socket:close()
                 end
+                content_loader.stop(client)
             end
         end
     end

@@ -603,16 +603,21 @@ end
 
 -- FILE
 
-function file.recursive_list(path)
+function file.recursive_list(path, exclude_hidden)
     local paths = {}
     for _, unit in ipairs(file.list(path)) do
         unit = unit:gsub(":/+", ":")
+        if (exclude_hidden == true and file.name(unit):starts_with(".")) then
+            goto continue
+        end
 
         if file.isfile(unit) then
             table.insert(paths, unit)
         else
-            table.merge(paths, file.recursive_list(unit))
+            table.merge(paths, file.recursive_list(unit, exclude_hidden))
         end
+        
+        ::continue::
     end
 
     return paths
@@ -887,4 +892,17 @@ end
 
 function tohex(num)
     return string.format("%x", num)
+end
+
+function hash_to_string(hash)
+    local hex_chars = "0123456789abcdef"
+    local result = ""
+
+    for i = 1, #hash do
+        local byte = string.byte(hash[i])
+        result = result .. hex_chars[bit.band(bit.rshift(byte, 4), 0xF) + 1]
+        result = result .. hex_chars[bit.band(byte, 0xF) + 1]
+    end
+
+    return result
 end

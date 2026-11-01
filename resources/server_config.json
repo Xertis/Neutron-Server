@@ -1,6 +1,6 @@
 {
   "game": {
-    "content_packs": ["base"],
+    "content_packs": [ "base" ],
     "plugins": [],
     "worlds": {
       "overworld": {
@@ -53,5 +53,10 @@
         "time_management": true
       }
     }
+  },
+  "content_loader": {
+    "enabled": true,
+    "clear_unused_cache": true,
+    "max_speed": 500000
   }
 }

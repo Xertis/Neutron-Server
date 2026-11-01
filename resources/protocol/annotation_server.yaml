@@ -59,7 +59,12 @@ JoinSuccess:
     max_view_distance: uint8
     player: PlayerEntity
     spawn_chunk: bytearray
+    content_hash_indexes: string
 
+ContentData:
+  fields:
+    next_state: uint8
+    bytes: bytearray
 # -----------------------------------------------------------------
 # In-Game
 # -----------------------------------------------------------------
@@ -265,3 +270,4 @@ WeatherChanged:
 Disconnect:
   fields:
     reason: string
+    download_content: string
