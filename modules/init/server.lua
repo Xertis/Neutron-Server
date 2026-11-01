@@ -28,6 +28,9 @@ do
             "Chunks distance is too high. Please select a value in the range of 0-255. The current chunks distance is set to 255",
             'W')
     end
+    if (CONFIG.content_loader.max_speed < 1000) then
+        CONFIG.content_loader.max_speed = 1000
+    end
 
     VIEW_DISTANCE = CONFIG.server.chunks_loading_distance
 end

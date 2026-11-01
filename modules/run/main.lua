@@ -46,6 +46,10 @@ local function main()
     world.open_main()
     logger.log("world loop is started")
 
+    if CONFIG.content_loader.enabled then
+        require(PACK_ID .. ":init/content_loader").create_cache()
+    end
+
     local save_interval = CONFIG.server.auto_save_interval * 60
     local shutdown_timeout = (CONFIG.server.shutdown_timeout or -1) * 60
     local last_time_save = 0

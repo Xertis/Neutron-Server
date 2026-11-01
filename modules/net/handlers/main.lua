@@ -13,6 +13,7 @@ local chunks_manager = import "core/sandbox/managers/chunks"
 local lib = import "lib/utils/min"
 local mfsm = import "lib/flow/multifsm"
 local perform_task = import "lib/flow/perform_task"
+local content_loader = import "init/content_loader"
 
 local hashed_packs = nil
 
@@ -32,9 +33,16 @@ local fsm = {
     general_fsm = mfsm.new(),
     status_fsm = mfsm.new(),
     joining_fsm = mfsm.new(),
+    content_request_fsm = mfsm.new(),
 }
 
 local actions = {}
+
+local function get_pack_info(pack_id)
+    local cache_info = content_loader.get_pack_info(pack_id)
+    cache_info.version = pack.get_info(pack_id).version
+    return cache_info
+end
 
 local function check_mods(hashes)
     local server_packs = pack.get_installed()
@@ -46,33 +54,59 @@ local function check_mods(hashes)
     if not hashed_packs then
         hashed_packs = {}
         for _, pack_name in ipairs(server_packs) do
-            hashed_packs[pack_name] = lib.hash.hash_mods({ pack_name })
+            hashed_packs[pack_name] = lib.hash.hash_pack(pack_name)
         end
     end
 
     local client_mods = {}
     for _, hash in ipairs(hashes) do
-        client_mods[hash.pack] = hash.hash
+        if (client_mods[hash.pack] == nil) then
+            client_mods[hash.pack] = {}
+        end
+        table.insert(client_mods[hash.pack], hash.hash)
     end
 
     local incorrect_messages = {}
+    local content_hash_indexes = {}
+    local missing_packs = {}
     local counter = 1
 
     for _, pack_name in ipairs(server_packs) do
         if not client_mods[pack_name] then
+            if (CONFIG.content_loader.enabled == true) then
+                missing_packs[pack_name] = get_pack_info(pack_name)
+            end
             table.insert(incorrect_messages, string.format("\n%s. %s (missing)", counter, pack_name))
             counter = counter + 1
         elseif not CONFIG.server.shallow_dev_mode then
             local server_hash = hashed_packs[pack_name]
-            local client_hash = client_mods[pack_name]
+            local found = false
 
-            if server_hash ~= client_hash then
+            for index, client_hash in ipairs(client_mods[pack_name]) do
+                if (server_hash == client_hash) then
+                    content_hash_indexes[pack_name] = index
+                    found = true
+                    break
+                end
+            end
+
+            if found == false then
+                if (CONFIG.content_loader.enabled == true) then
+                    missing_packs[pack_name] = get_pack_info(pack_name)
+                end
                 table.insert(incorrect_messages, string.format("\n%s. %s (hash mismatch)", counter, pack_name))
                 counter = counter + 1
             end
 
             client_mods[pack_name] = nil
         else
+            local server_hash = hashed_packs[pack_name]
+            for index, client_hash in ipairs(client_mods[pack_name]) do
+                if (server_hash == client_hash) then
+                    content_hash_indexes[pack_name] = index
+                    break
+                end
+            end
             client_mods[pack_name] = nil
         end
     end
@@ -84,16 +118,25 @@ local function check_mods(hashes)
     end
 
     local error_message = table.concat(incorrect_messages)
-    return error_message == '', error_message
+    return error_message == '', error_message, content_hash_indexes, missing_packs
 end
 
-
-function actions.Disconnect(client, reason)
+function actions.Disconnect(client, reason, missing_packs)
     reason = reason or "No reason"
 
     logger.log("Aborted message: " .. reason, 'W')
 
-    client:push_packet(protocol.ServerMsg.Disconnect, { reason = reason })
+    local download_content = {
+        allowed = CONFIG.content_loader.enabled
+    }
+    if (CONFIG.content_loader.enabled) then
+        download_content.missing_packs = missing_packs
+    end
+
+    client:push_packet(protocol.ServerMsg.Disconnect, {
+        reason = reason,
+        download_content = json.tostring(download_content)
+    })
     client:kick()
 end
 
@@ -114,6 +157,16 @@ fsm.general_fsm:add_state("idle", {
                 fsm.joining_fsm:transition_to(client, "awaiting_join_game")
                 return "joining"
             end
+        elseif event.packet_type == protocol.ClientMsg.ContentRequest then
+            if (CONFIG.content_loader.enabled == false) then
+                return
+            end
+            if event.next_state == 1 then
+                client.ping.last_upd = time.uptime()
+            elseif event.next_state == 0 then
+                content_loader.register_client(client, event.content_list)
+            end
+            fsm.content_request_fsm:transition_to(client, "content_request")
         end
     end
 })
@@ -127,6 +180,36 @@ fsm.general_fsm:add_state("status", {
 fsm.general_fsm:add_state("joining", {
     on_event = function(client, event)
         fsm.joining_fsm:handle_event(client, event)
+    end
+})
+
+fsm.content_request_fsm:add_state("awaiting_content_request", {
+    on_event = function (client, event)
+        if event.packet_type == protocol.ClientMsg.ContentRequest then
+            return "content_request"
+        end
+    end,
+})
+
+fsm.content_request_fsm:add_state("content_request", {
+    on_enter = function (client, event)
+        local byte_array = content_loader.get_bytes(client)
+
+        if (byte_array == nil) then
+            client:push_packet(protocol.ServerMsg.ContentData, {
+                next_state = 1,
+                bytes = {}
+            })
+            fsm.content_request_fsm:clear(client)
+            content_loader.stop(client)
+            client:kick()
+            return
+        end
+
+        client:push_packet(protocol.ServerMsg.ContentData, {
+            next_state = 0,
+            bytes = byte_array
+        })
     end
 })
 
@@ -178,6 +261,7 @@ fsm.status_fsm:add_state("sending_status", {
 
         client:kick()
         fsm.status_fsm:clear(client)
+        fsm.content_request_fsm:clear(client)
         fsm.general_fsm:transition_to(client, "idle")
     end
 })
@@ -231,11 +315,11 @@ fsm.joining_fsm:add_state("joining", {
         local packet = fsm.joining_fsm:get_data(client, "join_game")
         local hashes = fsm.joining_fsm:get_data(client, "packs_hashes")
 
-        local hash_status, hash_reason = check_mods(hashes)
+        local hash_status, hash_reason, content_hash_indexes, missing_packs = check_mods(hashes)
 
         if not hash_status and (not CONFIG.server.dev_mode or CONFIG.server.shallow_dev_mode) then
             logger.log("JoinSuccess has been aborted")
-            actions.Disconnect(client, "Inconsistencies in mods:" .. hash_reason)
+            actions.Disconnect(client, "Inconsistencies in mods:" .. hash_reason, missing_packs)
             close()
             return
         elseif handshake.protocol_version ~= protocol.Version or handshake.protocol_reference ~= "Neutron" then
@@ -340,7 +424,8 @@ Incorrect VoxelCore version:
                 infinite_items = state.infinite_items,
                 instant_destruction = state.instant_destruction,
                 interaction_distance = state.interaction_distance
-            }
+            },
+            content_hash_indexes = json.tostring(content_hash_indexes)
         })
         logger.log("JoinSuccess has been sended")
 

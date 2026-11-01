@@ -51,6 +51,13 @@ StatusRequest:
   packet_id: 1
   fields:
 
+# next_state 0: Начать скачивание паков из content_list
+# next_state 1: Подтвердить получение пакета ServerMsg.ContentData
+ContentRequest:
+  fields:
+    next_state: uint8
+    content_list: Array<string>
+
 JoinGame:
   fields:
     username: string
